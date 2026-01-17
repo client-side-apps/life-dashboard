@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Life Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
+    <script type="importmap">
+    {
+        "imports": {
+            "leaflet": "https://esm.sh/leaflet@1.9.4",
+            "chart.js": "https://esm.sh/chart.js@4.4.1/auto"
+        }
+    }
+    </script>
+    <script type="module" src="app.js"></script>
+</head>
+
+<body>
+    <header class="app-header">
+        <div class="header-left">
+            <h1>Life Dashboard</h1>
+        </div>
+        <nav class="main-nav">
+            <button class="nav-btn active" data-view="map">Map</button>
+            <button class="nav-btn" data-view="timeline">Timeline</button>
+            <button class="nav-btn" data-view="health">Health</button>
+            <button class="nav-btn" data-view="finance">Finance</button>
+            <button class="nav-btn" data-view="energy">Energy</button>
+            <button class="nav-btn" data-view="movies">Movies</button>
+            <button class="nav-btn" data-view="data">Data</button>
+        </nav>
+        <div class="header-right">
+            <button id="theme-toggle" class="icon-btn" aria-label="Toggle Theme">
+                <svg class="icon-sun" viewBox="0 0 24 24" width="24" height="24">
+                    <path fill="currentColor"
+                        d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37c-.39-.39-1.03-.39-1.41 0-.39.39-.39 1.03 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0 .39-.39.39-1.03 0-1.41l-1.06-1.06zm1.06-10.96c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06zM7.05 18.36c.39-.39.39-1.03 0-1.41-.39-.39-1.03-.39-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z" />
+                </svg>
+                <svg class="icon-moon" viewBox="0 0 24 24" width="24" height="24" style="display:none">
+                    <path fill="currentColor"
+                        d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z" />
+                </svg>
+            </button>
+            <div class="db-controls">
+                <input type="file" id="db-input" accept=".sqlite,.db,.sqlite3" style="display: none;">
+                <button id="select-db-btn" class="primary-btn">Select Database</button>
+                <button id="import-data-btn" class="secondary-btn">Import Data</button>
+            </div>
+        </div>
+    </header>
+
+    <main id="app-content">
+        <!-- Views will be injected here -->
+        <div id="view-container" class="view-container">
+            <div class="placeholder-message">
+                <h2>Welcome to Life Dashboard</h2>
+                <p>Please select a database file to get started.</p>
+                <button class="primary-btn" onclick="document.getElementById('db-input').click()">Load Database</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- View Templates -->
+    <template id="map-view-template">
+        <div class="map-overlay">
+            <select id="map-table-select" class="select-input">
+                <option value="" disabled>Select Table</option>
+            </select>
+            <div id="map-stats" class="map-stats"></div>
+        </div>
+        <div id="leaflet-map" class="full-map"></div>
+    </template>
+
+    <template id="timeline-view-template">
+        <div class="timeline-controls">
+            <select id="timeline-table-select" class="select-input">
+                <option value="" disabled>Select Table</option>
+            </select>
+            <input type="date" id="timeline-date-picker" class="date-input">
+            <span id="timeline-stats"></span>
+        </div>
+        <div id="timeline-content" class="timeline-content">
+            <p>Select a table with a timestamp column.</p>
+        </div>
+    </template>
+
+    <template id="health-view-template">
+        <div class="health-nav">
+            <button class="secondary-btn active" data-subview="dashboard">Dashboard</button>
+            <button class="secondary-btn" data-subview="heart">Heart</button>
+            <button class="secondary-btn" data-subview="activity">Activity</button>
+            <button class="secondary-btn" data-subview="body">Body</button>
+            <button class="secondary-btn" data-subview="sleep">Sleep</button>
+            <button class="secondary-btn" data-subview="biomarkers">Biomarkers</button>
+            <button class="secondary-btn" data-subview="vaccines">Vaccines</button>
+        </div>
+        <div id="health-content" class="health-content">
+            <!-- Charts will go here -->
+        </div>
+    </template>
+
+    <template id="finance-view-template">
+        <div class="finance-dashboard">
+            <div class="card">
+                <h3>Total Available</h3>
+                <p class="amount primary" id="total-money">Loading...</p>
+            </div>
+            <div class="card">
+                <h3>Retirement</h3>
+                <p class="amount secondary" id="retirement-money">Loading...</p>
+            </div>
+            <div class="card">
+                <h3>To Sell</h3>
+                <p class="amount accent" id="sell-money">Loading...</p>
+            </div>
+        </div>
+
+        <div class="finance-controls">
+            <select id="finance-account-select" class="select-input" style="min-width: 200px;">
+                <option value="">All Accounts</option>
+            </select>
+        </div>
+
+        <div class="transaction-list">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th width="20%">Date</th>
+                        <th width="60%">Description</th>
+                        <th width="20%" class="align-right">Amount</th>
+                    </tr>
+                </thead>
+                <tbody id="transaction-body">
+                </tbody>
+            </table>
+        </div>
+    </template>
+
+    <template id="energy-view-template">
+        <div class="charts-grid">
+            <div class="chart-container">
+                <h3>Electricity: Solar vs Consumption</h3>
+                <canvas id="solar-chart"></canvas>
+            </div>
+            <div class="chart-container">
+                <h3>Electricity Import</h3>
+                <canvas id="elec-import-chart"></canvas>
+            </div>
+            <div class="chart-container">
+                <h3>Gas Import</h3>
+                <canvas id="gas-chart"></canvas>
+            </div>
+        </div>
+    </template>
+
+    <template id="movies-view-template">
+        <div id="movies-grid" class="movies-grid">
+            Loading...
+        </div>
+    </template>
+
+    <template id="data-view-template">
+        <div class="data-controls">
+            <select id="data-table-select" class="select-input" style="min-width: 200px;">
+                <option value="" disabled selected>Select Table</option>
+            </select>
+            <span id="data-count" style="margin-left: 1rem; font-size: 0.9rem;"></span>
+        </div>
+        <div class="table-wrapper">
+            <table id="data-table" class="generic-table">
+                <thead></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </template>
+
+    <template id="import-view-template">
+        <div class="import-card">
+            <h2 style="margin-bottom: 1.5rem;">Import Data</h2>
+
+            <div class="form-group">
+                <label class="form-label">Select File</label>
+                <input type="file" id="import-file" class="file-input full-width">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Data Type</label>
+                <select id="import-type" class="select-input full-width">
+                    <option value="generic">Generic CSV/JSON</option>
+                    <option value="location">Location History</option>
+                    <option value="finance">Bank Statement</option>
+                    <option value="health">Health Export</option>
+                </select>
+            </div>
+
+            <button id="do-import-btn" class="primary-btn full-width">Import</button>
+        </div>
+    </template>
+
+    <div id="modal-overlay" class="modal-overlay hidden">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+</body>
+
+</html>
