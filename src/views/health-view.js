@@ -15,21 +15,33 @@ export class HealthView extends HTMLElement {
         const content = template.content.cloneNode(true);
         this.appendChild(content);
 
-        this.querySelectorAll('.health-nav a').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.querySelectorAll('.health-nav a').forEach(b => b.classList.remove('active'));
-                e.target.classList.add('active');
-                this.loadSubView(e.target.dataset.subview);
-            });
+        // Sub-navigation is now handled by the main router calling loadSubView
+        // We just ensure the links are correct
+        const links = this.querySelectorAll('.health-nav a');
+        links.forEach(link => {
+            const subview = link.dataset.subview;
+            link.setAttribute('href', `#/health/${subview}`);
         });
 
-        // Default view
-        this.loadSubView('dashboard');
+        // Initial load will be triggered by router if subview is present in hash
+        // or we default it here if not (router passes null/undefined)
     }
 
     async loadSubView(subview) {
+        // Default to dashboard if no subview
+        if (!subview) subview = 'dashboard';
+
+        // Update active class
+        this.querySelectorAll('.health-nav a').forEach(a => {
+            if (a.dataset.subview === subview) {
+                a.classList.add('active');
+            } else {
+                a.classList.remove('active');
+            }
+        });
+
         const content = this.querySelector('#health-content');
+        if (!content) return;
 
         content.innerHTML = ''; // Clear
 

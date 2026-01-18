@@ -44,14 +44,9 @@ function setupEventListeners() {
         applyTheme(state.theme);
     });
 
-    // Navigation
-    elements.navButtons.forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            e.preventDefault();
-            const view = e.target.dataset.view;
-            switchView(view);
-        });
-    });
+    // Routing
+    window.addEventListener('hashchange', handleRouting);
+    window.addEventListener('load', handleRouting);
 
     // DB Selection (Event Delegation)
     document.addEventListener('change', async (e) => {
@@ -73,9 +68,7 @@ function setupEventListeners() {
 
     // Import Data View
     elements.importDataBtn.addEventListener('click', () => {
-        // Remove active class from nav buttons
-        elements.navButtons.forEach(btn => btn.classList.remove('active'));
-        switchView('import');
+        window.location.hash = '#/import';
     });
 }
 
@@ -95,20 +88,47 @@ function applyTheme(theme) {
     }
 }
 
-function switchView(viewName) {
-    state.currentView = viewName;
+async function handleRouting() {
+    const hash = window.location.hash || '#/map';
+    // Format: #/viewName/subViewName
+    const parts = hash.slice(1).split('/').filter(p => p);
 
-    // Update Nav
+    // Default to map if empty
+    if (parts.length === 0) {
+        window.location.hash = '#/map';
+        return;
+    }
+
+    const viewName = parts[0];
+    const subViewName = parts[1] || null;
+
+    if (state.currentView !== viewName) {
+        await renderView(viewName);
+        state.currentView = viewName;
+    }
+
+    // Update Nav Activity
     elements.navButtons.forEach(btn => {
-        if (btn.dataset.view === viewName) {
+        // Match href to hash
+        // We will update hrefs in HTML to be #/view
+        const btnHash = btn.getAttribute('href');
+        if (btnHash === `#/${viewName}`) {
             btn.classList.add('active');
         } else {
             btn.classList.remove('active');
         }
     });
 
-    // Render View (Placeholder for now)
-    renderView(viewName);
+    // Handle Subview
+    if (state.currentViewInstance && typeof state.currentViewInstance.loadSubView === 'function') {
+        // If subview is null, the view might have a default
+        state.currentViewInstance.loadSubView(subViewName);
+    }
+}
+
+// Deprecated in favor of direct hash manipulation, but kept for compatibility if needed
+function switchView(viewName) {
+    window.location.hash = `#/${viewName}`;
 }
 
 async function renderView(viewName) {
@@ -120,7 +140,7 @@ async function renderView(viewName) {
     }
     state.currentViewInstance = null;
 
-    if (!state.isDbLoaded && viewName !== 'data') {
+    if (!state.isDbLoaded && viewName !== 'data' && viewName !== 'import') {
         if (dbService.db === null) {
             elements.viewContainer.innerHTML = `
                 <div class="placeholder-message">
