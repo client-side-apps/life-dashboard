@@ -43,7 +43,7 @@ export class EnergyView extends HTMLElement {
             return;
         }
 
-        const data = dbService.query(`SELECT * FROM "${tableName}" ORDER BY time DESC LIMIT 30`);
+        const data = dbService.query(`SELECT * FROM "${tableName}" ORDER BY time DESC LIMIT 1000`);
         data.reverse();
 
         const labels = data.map(d => new Date(d.time || d.date).toLocaleDateString());
@@ -73,7 +73,7 @@ export class EnergyView extends HTMLElement {
             return;
         }
 
-        const data = dbService.query(`SELECT * FROM "${tableName}" ORDER BY time DESC LIMIT 30`);
+        const data = dbService.query(`SELECT * FROM "${tableName}" ORDER BY time DESC LIMIT 1000`);
         data.reverse();
 
         const labels = data.map(d => new Date(d.time || d.date).toLocaleDateString());

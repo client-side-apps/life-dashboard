@@ -21,3 +21,11 @@ Then open http://localhost:8000 in your browser.
 ```bash
 npx -y serve
 ```
+
+## Running Tests
+
+Run tests locally using Node.js:
+
+```bash
+node --test
+```

@@ -1,0 +1,45 @@
+﻿
+Name,JOHN DOE
+Address,"1234 STREET, MOUNTAIN VIEW CA 900003863"
+Account Number,8505089847
+Service,Service 1
+
+TYPE,DATE,START TIME,END TIME,USAGE (therms),COST,NOTES
+Natural gas usage,2025-11-14,00:00,23:59,0.00,$0.00
+Natural gas usage,2025-11-15,00:00,23:59,0.00,$0.00
+Natural gas usage,2025-11-16,00:00,23:59,0.00,$0.00
+Natural gas usage,2025-11-17,00:00,23:59,0.00,$0.00
+Natural gas usage,2025-11-18,00:00,23:59,0.00,$0.00
+Natural gas usage,2025-11-19,00:00,23:59,0.00,$0.00
+Natural gas usage,2025-11-20,00:00,23:59,0.00,$0.00
+Natural gas usage,2025-11-21,00:00,23:59,0.00,$0.00
+Natural gas usage,2025-11-22,00:00,23:59,0.00,$0.00
+Natural gas usage,2025-11-23,00:00,23:59,0.00,$0.00
+Natural gas usage,2025-11-24,00:00,23:59,0.00,$0.00
+Natural gas usage,2025-11-25,00:00,23:59,0.00,$0.00
+Natural gas usage,2025-11-26,00:00,23:59,0.00,$0.00
+Natural gas usage,2025-11-27,00:00,23:59,0.00,$0.00
+Natural gas usage,2025-11-28,00:00,23:59,0.00,$0.00
+Natural gas usage,2025-11-29,00:00,23:59,0.00,$0.00
+Natural gas usage,2025-11-30,00:00,23:59,0.00,$0.00
+Natural gas usage,2025-12-01,00:00,23:59,0.00,$0.00
+Natural gas usage,2025-12-02,00:00,23:59,0.00,$0.00
+Natural gas usage,2025-12-03,00:00,23:59,0.00,$0.00
+Natural gas usage,2025-12-04,00:00,23:59,0.00,$0.00
+Natural gas usage,2025-12-05,00:00,23:59,0.00,$0.00
+Natural gas usage,2025-12-06,00:00,23:59,0.00,$0.00
+Natural gas usage,2025-12-07,00:00,23:59,0.00,$0.00
+Natural gas usage,2025-12-08,00:00,23:59,0.00,$0.00
+Natural gas usage,2025-12-09,00:00,23:59,0.00,$0.00
+Natural gas usage,2025-12-10,00:00,23:59,0.00,$0.00
+Natural gas usage,2025-12-11,00:00,23:59,0.00,$0.00
+Natural gas usage,2025-12-12,00:00,23:59,0.00,$0.00
+Natural gas usage,2025-12-13,00:00,23:59,5.19,$15.43
+Natural gas usage,2025-12-14,00:00,23:59,0.00,$0.00
+Natural gas usage,2025-12-15,00:00,23:59,0.00,$0.00
+Natural gas usage,2025-12-16,00:00,23:59,0.00,$0.00
+Natural gas usage,2025-12-17,00:00,23:59,0.00,$0.00
+Natural gas usage,2025-12-18,00:00,23:59,0.00,$0.00
+Natural gas usage,2025-12-19,00:00,23:59,0.00,$0.00
+Natural gas usage,2025-12-20,00:00,23:59,0.00,$0.00
+Natural gas usage,2025-12-21,00:00,23:59,0.00,$0.00
