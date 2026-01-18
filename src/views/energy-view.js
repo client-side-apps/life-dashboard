@@ -1,17 +1,25 @@
 import { dbService } from '../db.js';
 import Chart from 'chart.js';
 
-export class EnergyView {
+export class EnergyView extends HTMLElement {
     constructor() {
-        this.container = null;
+        super();
         this.charts = {};
     }
 
-    async render(container) {
-        this.container = container;
+    connectedCallback() {
+        this.render();
+    }
+
+    disconnectedCallback() {
+        Object.values(this.charts).forEach(c => c.destroy());
+    }
+
+    async render() {
+        this.innerHTML = '';
         const template = document.getElementById('energy-view-template');
         const content = template.content.cloneNode(true);
-        container.appendChild(content);
+        this.appendChild(content);
 
         await this.loadCharts();
     }
@@ -92,8 +100,6 @@ export class EnergyView {
             options: { responsive: true }
         });
     }
-
-    destroy() {
-        Object.values(this.charts).forEach(c => c.destroy());
-    }
 }
+
+customElements.define('energy-view', EnergyView);

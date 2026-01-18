@@ -1,21 +1,29 @@
 import { dbService } from '../db.js';
 import Chart from 'chart.js';
 
-export class HealthView {
+export class HealthView extends HTMLElement {
     constructor() {
-        this.container = null;
+        super();
         this.charts = {}; // Store chart instances to destroy them
     }
 
-    async render(container) {
-        this.container = container;
+    connectedCallback() {
+        this.render();
+    }
+
+    disconnectedCallback() {
+        Object.values(this.charts).forEach(chart => chart.destroy());
+    }
+
+    async render() {
+        this.innerHTML = '';
         const template = document.getElementById('health-view-template');
         const content = template.content.cloneNode(true);
-        container.appendChild(content);
+        this.appendChild(content);
 
-        this.container.querySelectorAll('.health-nav button').forEach(btn => {
+        this.querySelectorAll('.health-nav button').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                this.container.querySelectorAll('.health-nav button').forEach(b => b.classList.remove('active'));
+                this.querySelectorAll('.health-nav button').forEach(b => b.classList.remove('active'));
                 e.target.classList.add('active');
                 this.loadSubView(e.target.dataset.subview);
             });
@@ -26,7 +34,7 @@ export class HealthView {
     }
 
     async loadSubView(subview) {
-        const content = this.container.querySelector('#health-content');
+        const content = this.querySelector('#health-content');
 
         // Destroy existing charts
         Object.values(this.charts).forEach(chart => chart.destroy());
@@ -107,8 +115,6 @@ export class HealthView {
         const tables = dbService.getTables();
         return tables.includes(tableName);
     }
-
-    destroy() {
-        Object.values(this.charts).forEach(chart => chart.destroy());
-    }
 }
+
+customElements.define('health-view', HealthView);

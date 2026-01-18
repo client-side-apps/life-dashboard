@@ -1,22 +1,27 @@
 import { dbService } from '../db.js';
 
-export class MoviesView {
+export class MoviesView extends HTMLElement {
     constructor() {
-        this.container = null;
+        super();
     }
 
-    async render(container) {
-        this.container = container;
+    connectedCallback() {
+        this.render();
+    }
+
+    async render() {
+        // Clear current content if any
+        this.innerHTML = '';
 
         const template = document.getElementById('movies-view-template');
         const content = template.content.cloneNode(true);
-        container.appendChild(content);
+        this.appendChild(content);
 
         this.loadMovies();
     }
 
     async loadMovies() {
-        const grid = this.container.querySelector('#movies-grid');
+        const grid = this.querySelector('#movies-grid');
 
         const tables = dbService.getTables();
         if (!tables.includes('movies')) {
@@ -54,6 +59,6 @@ export class MoviesView {
             `;
         }).join('');
     }
-
-    destroy() { }
 }
+
+customElements.define('movies-view', MoviesView);

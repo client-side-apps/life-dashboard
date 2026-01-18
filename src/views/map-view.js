@@ -1,20 +1,31 @@
 import { dbService } from '../db.js';
 import L from 'leaflet';
 
-export class MapView {
+export class MapView extends HTMLElement {
     constructor() {
+        super();
         this.map = null;
-        this.container = null;
         this.currentTable = 'location_history';
         this.markersLayer = null;
+        this.tileLayer = null;
     }
 
-    async render(container) {
-        this.container = container;
+    connectedCallback() {
+        this.render();
+    }
 
+    disconnectedCallback() {
+        if (this.map) {
+            this.map.remove();
+            this.map = null;
+        }
+    }
+
+    async render() {
+        this.innerHTML = '';
         const template = document.getElementById('map-view-template');
         const content = template.content.cloneNode(true);
-        container.appendChild(content);
+        this.appendChild(content);
 
         this.initMap();
         this.loadTableOptions();
@@ -52,7 +63,7 @@ export class MapView {
 
     loadTableOptions() {
         const tables = dbService.getTables();
-        const select = this.container.querySelector('#map-table-select');
+        const select = this.querySelector('#map-table-select');
 
         if (tables.length === 0) {
             select.innerHTML = '<option>No tables found</option>';
@@ -87,7 +98,7 @@ export class MapView {
         }
         this.markersLayer = L.layerGroup().addTo(this.map);
 
-        const statsDiv = this.container.querySelector('#map-stats');
+        const statsDiv = this.querySelector('#map-stats');
         statsDiv.textContent = 'Loading...';
 
         try {
@@ -149,11 +160,6 @@ export class MapView {
             statsDiv.textContent = 'Error loading data';
         }
     }
-
-    destroy() {
-        if (this.map) {
-            this.map.remove();
-            this.map = null;
-        }
-    }
 }
+
+customElements.define('map-view', MapView);

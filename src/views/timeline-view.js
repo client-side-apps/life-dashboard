@@ -1,33 +1,36 @@
 import { dbService } from '../db.js';
 
-export class TimelineView {
+export class TimelineView extends HTMLElement {
     constructor() {
-        this.container = null;
+        super();
         this.currentTable = 'location_history'; // Default, but allow selection
     }
 
-    async render(container) {
-        this.container = container;
+    connectedCallback() {
+        this.render();
+    }
 
+    async render() {
+        this.innerHTML = '';
         const template = document.getElementById('timeline-view-template');
         const content = template.content.cloneNode(true);
-        container.appendChild(content);
+        this.appendChild(content);
 
         this.loadTableOptions();
 
-        this.container.querySelector('#timeline-table-select').addEventListener('change', (e) => {
+        this.querySelector('#timeline-table-select').addEventListener('change', (e) => {
             this.currentTable = e.target.value;
             this.loadData();
         });
 
-        this.container.querySelector('#timeline-date-picker').addEventListener('change', (e) => {
+        this.querySelector('#timeline-date-picker').addEventListener('change', (e) => {
             this.loadData(e.target.value);
         });
     }
 
     loadTableOptions() {
         const tables = dbService.getTables();
-        const select = this.container.querySelector('#timeline-table-select');
+        const select = this.querySelector('#timeline-table-select');
 
         if (tables.length === 0) {
             select.innerHTML = '<option>No tables found</option>';
@@ -48,7 +51,7 @@ export class TimelineView {
     }
 
     loadData(dateFilter = null) {
-        const content = this.container.querySelector('#timeline-content');
+        const content = this.querySelector('#timeline-content');
         content.innerHTML = 'Loading...';
 
         // Find time column
@@ -109,6 +112,6 @@ export class TimelineView {
             </div>
         `;
     }
-
-    destroy() { }
 }
+
+customElements.define('timeline-view', TimelineView);

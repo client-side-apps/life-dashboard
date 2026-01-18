@@ -1,18 +1,21 @@
 import { dbService } from '../db.js';
 
-export class FinanceView {
+export class FinanceView extends HTMLElement {
     constructor() {
-        this.container = null;
+        super();
         this.accounts = [];
         this.currentAccount = null;
     }
 
-    async render(container) {
-        this.container = container;
+    connectedCallback() {
+        this.render();
+    }
 
+    async render() {
+        this.innerHTML = '';
         const template = document.getElementById('finance-view-template');
         const content = template.content.cloneNode(true);
-        container.appendChild(content);
+        this.appendChild(content);
 
         this.loadSummary();
         this.loadTransactions();
@@ -48,7 +51,7 @@ export class FinanceView {
             this.updateAmount('sell-money', sell);
 
             // Populate select
-            const select = this.container.querySelector('#finance-account-select');
+            const select = this.querySelector('#finance-account-select');
             accounts.forEach(acc => {
                 const opt = document.createElement('option');
                 opt.value = acc.id || acc.account_id || acc.name;
@@ -62,14 +65,14 @@ export class FinanceView {
             });
 
         } else {
-            this.container.querySelector('#total-money').textContent = 'No data';
-            this.container.querySelector('#retirement-money').textContent = 'No data';
-            this.container.querySelector('#sell-money').textContent = 'No data';
+            this.querySelector('#total-money').textContent = 'No data';
+            this.querySelector('#retirement-money').textContent = 'No data';
+            this.querySelector('#sell-money').textContent = 'No data';
         }
     }
 
     async loadTransactions() {
-        const tbody = this.container.querySelector('#transaction-body');
+        const tbody = this.querySelector('#transaction-body');
         tbody.innerHTML = '<tr><td colspan="3" class="text-center p-1">Loading...</td></tr>';
 
         const tables = dbService.getTables();
@@ -115,12 +118,12 @@ export class FinanceView {
     }
 
     updateAmount(id, amount) {
-        this.container.querySelector(`#${id}`).textContent = this.formatCurrency(amount);
+        this.querySelector(`#${id}`).textContent = this.formatCurrency(amount);
     }
 
     formatCurrency(amount) {
         return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
     }
-
-    destroy() { }
 }
+
+customElements.define('finance-view', FinanceView);

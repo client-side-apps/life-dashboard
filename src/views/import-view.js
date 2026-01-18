@@ -1,19 +1,22 @@
-export class ImportView {
+export class ImportView extends HTMLElement {
     constructor() {
-        this.container = null;
+        super();
     }
 
-    async render(container) {
-        this.container = container;
+    connectedCallback() {
+        this.render();
+    }
 
+    async render() {
+        this.innerHTML = '';
         const template = document.getElementById('import-view-template');
         const content = template.content.cloneNode(true);
-        container.appendChild(content);
+        this.appendChild(content);
 
-        this.container.querySelector('#do-import-btn').addEventListener('click', () => {
+        this.querySelector('#do-import-btn').addEventListener('click', () => {
             alert('Import functionality is not yet implemented.');
         });
     }
-
-    destroy() { }
 }
+
+customElements.define('import-view', ImportView);

@@ -129,39 +129,41 @@ async function renderView(viewName) {
         }
     }
 
-    let ViewClass;
+    let tagName;
+
     switch (viewName) {
         case 'map':
-            ViewClass = MapView;
+            tagName = 'map-view';
             break;
         case 'timeline':
-            ViewClass = TimelineView;
+            tagName = 'timeline-view';
             break;
         case 'health':
-            ViewClass = HealthView;
+            tagName = 'health-view';
             break;
         case 'finance':
-            ViewClass = FinanceView;
+            tagName = 'finance-view';
             break;
         case 'energy':
-            ViewClass = EnergyView;
+            tagName = 'energy-view';
             break;
         case 'movies':
-            ViewClass = MoviesView;
+            tagName = 'movies-view';
             break;
         case 'data':
-            ViewClass = DataView;
+            tagName = 'data-view';
             break;
         case 'import':
-            ViewClass = ImportView;
+            tagName = 'import-view';
             break;
         default:
-            ViewClass = null;
+            tagName = null;
     }
 
-    if (ViewClass) {
-        state.currentViewInstance = new ViewClass();
-        await state.currentViewInstance.render(elements.viewContainer);
+    if (tagName) {
+        const element = document.createElement(tagName);
+        elements.viewContainer.appendChild(element);
+        state.currentViewInstance = element;
     } else {
         elements.viewContainer.innerHTML = `
             <div style="padding: 2rem; text-align: center;">
