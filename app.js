@@ -24,8 +24,6 @@ const elements = {
     themeToggle: document.getElementById('theme-toggle'),
     viewContainer: document.getElementById('view-container'),
     navButtons: document.querySelectorAll('.nav-btn'),
-    dbInput: document.getElementById('db-input'),
-    selectDbBtn: document.getElementById('select-db-btn'),
     importDataBtn: document.getElementById('import-data-btn'),
     iconSun: document.querySelector('.icon-sun'),
     iconMoon: document.querySelector('.icon-moon')
@@ -55,16 +53,14 @@ function setupEventListeners() {
         });
     });
 
-    // DB Selection
-    elements.selectDbBtn.addEventListener('click', () => {
-        elements.dbInput.click();
-    });
-
-    elements.dbInput.addEventListener('change', async (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            console.log('File selected:', file.name);
-            await loadDatabase(file);
+    // DB Selection (Event Delegation)
+    document.addEventListener('change', async (e) => {
+        if (e.target && e.target.id === 'start-db-input') {
+            const file = e.target.files[0];
+            if (file) {
+                console.log('File selected:', file.name);
+                await loadDatabase(file);
+            }
         }
     });
 
@@ -128,16 +124,7 @@ async function renderView(viewName) {
                 </div>
             `;
 
-            // Add listener to the injected input
-            const startInput = document.getElementById('start-db-input');
-            if (startInput) {
-                startInput.addEventListener('change', async (e) => {
-                    const file = e.target.files[0];
-                    if (file) {
-                        await loadDatabase(file);
-                    }
-                });
-            }
+            // Event listener is handled via delegation in setupEventListeners
             return;
         }
     }
