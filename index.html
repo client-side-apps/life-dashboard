@@ -143,18 +143,9 @@
 
     <template id="energy-view-template">
         <div class="charts-grid">
-            <div class="chart-container">
-                <h3>Electricity: Solar vs Consumption</h3>
-                <canvas id="solar-chart"></canvas>
-            </div>
-            <div class="chart-container">
-                <h3>Electricity Import</h3>
-                <canvas id="elec-import-chart"></canvas>
-            </div>
-            <div class="chart-container">
-                <h3>Gas Import</h3>
-                <canvas id="gas-chart"></canvas>
-            </div>
+            <chart-card title="Electricity: Solar vs Consumption" chart-id="solar-chart"></chart-card>
+            <chart-card title="Electricity Import" chart-id="elec-import-chart"></chart-card>
+            <chart-card title="Gas Import" chart-id="gas-chart"></chart-card>
         </div>
     </template>
 

@@ -46,18 +46,9 @@ export class HealthView extends HTMLElement {
         if (subview === 'dashboard') {
             content.innerHTML = `
                 <div class="dashboard-grid">
-                    <div class="chart-container">
-                        <h3>Weight</h3>
-                        <canvas id="weight-chart"></canvas>
-                    </div>
-                    <div class="chart-container">
-                        <h3>Sleep</h3>
-                        <canvas id="sleep-chart"></canvas>
-                    </div>
-                    <div class="chart-container">
-                        <h3>Steps</h3>
-                        <canvas id="steps-chart"></canvas>
-                    </div>
+                    <chart-card title="Weight" chart-id="weight-chart"></chart-card>
+                    <chart-card title="Sleep Duration" chart-id="sleep-chart"></chart-card>
+                    <chart-card title="Steps" chart-id="steps-chart"></chart-card>
                 </div>
             `;
 

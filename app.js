@@ -7,6 +7,7 @@ import { EnergyView } from './src/views/energy-view.js';
 import { MoviesView } from './src/views/movies-view.js';
 import { DataView } from './src/views/data-view.js';
 import { ImportView } from './src/views/import-view.js';
+import './src/components/chart-card.js';
 
 // Main App Entry Point
 
