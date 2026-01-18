@@ -84,12 +84,14 @@ body {
 .nav-btn:hover {
     background-color: rgba(128, 128, 128, 0.1);
     opacity: 1;
+    text-decoration: none;
 }
 
 .nav-btn.active {
     background-color: var(--primary-color);
     color: white;
     opacity: 1;
+    text-decoration: none;
 }
 
 .header-right {
@@ -107,6 +109,8 @@ body {
     cursor: pointer;
     font-weight: 500;
     font-size: 0.9rem;
+    text-decoration: none;
+    display: inline-block;
 }
 
 .primary-btn {
