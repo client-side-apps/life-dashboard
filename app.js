@@ -48,6 +48,7 @@ function setupEventListeners() {
     // Navigation
     elements.navButtons.forEach(btn => {
         btn.addEventListener('click', (e) => {
+            e.preventDefault();
             const view = e.target.dataset.view;
             switchView(view);
         });
@@ -121,10 +122,21 @@ async function renderView(viewName) {
                 <div class="placeholder-message">
                     <h2>Welcome to Life Dashboard</h2>
                     <p>Please select a database file to get started.</p>
-                    <button class="primary-btn" onclick="document.getElementById('db-input').click()">Load Database</button>
+                    <input type="file" id="start-db-input" accept=".sqlite,.db,.sqlite3" class="file-input">
                     <p style="margin-top:1rem; font-size:0.8rem; opacity:0.7">Or for testing, <a href="#" onclick="alert('Demo functionality to be implemented')">load demo data</a>.</p>
                 </div>
             `;
+
+            // Add listener to the injected input
+            const startInput = document.getElementById('start-db-input');
+            if (startInput) {
+                startInput.addEventListener('change', async (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        await loadDatabase(file);
+                    }
+                });
+            }
             return;
         }
     }

@@ -27,13 +27,13 @@
             <h1>Life Dashboard</h1>
         </div>
         <nav class="main-nav">
-            <button class="nav-btn active" data-view="map">Map</button>
-            <button class="nav-btn" data-view="timeline">Timeline</button>
-            <button class="nav-btn" data-view="health">Health</button>
-            <button class="nav-btn" data-view="finance">Finance</button>
-            <button class="nav-btn" data-view="energy">Energy</button>
-            <button class="nav-btn" data-view="movies">Movies</button>
-            <button class="nav-btn" data-view="data">Data</button>
+            <a href="#" class="nav-btn active" data-view="map">Map</a>
+            <a href="#" class="nav-btn" data-view="timeline">Timeline</a>
+            <a href="#" class="nav-btn" data-view="health">Health</a>
+            <a href="#" class="nav-btn" data-view="finance">Finance</a>
+            <a href="#" class="nav-btn" data-view="energy">Energy</a>
+            <a href="#" class="nav-btn" data-view="movies">Movies</a>
+            <a href="#" class="nav-btn" data-view="data">Data</a>
         </nav>
         <div class="header-right">
             <button id="theme-toggle" class="icon-btn" aria-label="Toggle Theme">
@@ -60,7 +60,7 @@
             <div class="placeholder-message">
                 <h2>Welcome to Life Dashboard</h2>
                 <p>Please select a database file to get started.</p>
-                <button class="primary-btn" onclick="document.getElementById('db-input').click()">Load Database</button>
+                <input type="file" id="start-db-input" accept=".sqlite,.db,.sqlite3" class="file-input">
             </div>
         </div>
     </main>
@@ -91,13 +91,13 @@
 
     <template id="health-view-template">
         <div class="health-nav">
-            <button class="secondary-btn active" data-subview="dashboard">Dashboard</button>
-            <button class="secondary-btn" data-subview="heart">Heart</button>
-            <button class="secondary-btn" data-subview="activity">Activity</button>
-            <button class="secondary-btn" data-subview="body">Body</button>
-            <button class="secondary-btn" data-subview="sleep">Sleep</button>
-            <button class="secondary-btn" data-subview="biomarkers">Biomarkers</button>
-            <button class="secondary-btn" data-subview="vaccines">Vaccines</button>
+            <a href="#" class="secondary-btn active" data-subview="dashboard">Dashboard</a>
+            <a href="#" class="secondary-btn" data-subview="heart">Heart</a>
+            <a href="#" class="secondary-btn" data-subview="activity">Activity</a>
+            <a href="#" class="secondary-btn" data-subview="body">Body</a>
+            <a href="#" class="secondary-btn" data-subview="sleep">Sleep</a>
+            <a href="#" class="secondary-btn" data-subview="biomarkers">Biomarkers</a>
+            <a href="#" class="secondary-btn" data-subview="vaccines">Vaccines</a>
         </div>
         <div id="health-content" class="health-content">
             <!-- Charts will go here -->

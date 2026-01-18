@@ -21,9 +21,10 @@ export class HealthView extends HTMLElement {
         const content = template.content.cloneNode(true);
         this.appendChild(content);
 
-        this.querySelectorAll('.health-nav button').forEach(btn => {
+        this.querySelectorAll('.health-nav a').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                this.querySelectorAll('.health-nav button').forEach(b => b.classList.remove('active'));
+                e.preventDefault();
+                this.querySelectorAll('.health-nav a').forEach(b => b.classList.remove('active'));
                 e.target.classList.add('active');
                 this.loadSubView(e.target.dataset.subview);
             });
