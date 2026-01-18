@@ -64,6 +64,13 @@ function setupEventListeners() {
         }
     });
 
+    document.addEventListener('click', async (e) => {
+        if (e.target && e.target.id === 'load-demo-btn') {
+            e.preventDefault();
+            await loadDemoDatabase();
+        }
+    });
+
     // Import Data View
     elements.importDataBtn.addEventListener('click', () => {
         // Remove active class from nav buttons
@@ -120,7 +127,9 @@ async function renderView(viewName) {
                     <h2>Welcome to Life Dashboard</h2>
                     <p>Please select a database file to get started.</p>
                     <input type="file" id="start-db-input" accept=".sqlite,.db,.sqlite3" class="file-input">
-                    <p style="margin-top:1rem; font-size:0.8rem; opacity:0.7">Or for testing, <a href="#" onclick="alert('Demo functionality to be implemented')">load demo data</a>.</p>
+                    <div style="margin-top: 1rem;">
+                        <button id="load-demo-btn" class="secondary-btn">Load Demo Database</button>
+                    </div>
                 </div>
             `;
 
@@ -195,6 +204,31 @@ async function loadDatabase(file) {
                 <h2>Error</h2>
                 <p>Failed to load database. Please ensure it is a valid SQLite file.</p>
                 <button class="primary-btn" onclick="document.getElementById('db-input').click()">Try Again</button>
+            `;
+        }
+    }
+}
+
+async function loadDemoDatabase() {
+    try {
+        const placeholder = document.querySelector('.placeholder-message');
+        if (placeholder) placeholder.innerHTML = '<p>Loading demo database...</p>';
+
+        const response = await fetch('demo.sqlite');
+        if (!response.ok) throw new Error('Failed to fetch demo database');
+
+        const blob = await response.blob();
+        const file = new File([blob], 'demo.sqlite', { type: 'application/x-sqlite3' });
+
+        await loadDatabase(file);
+    } catch (err) {
+        console.error('Failed to load demo database:', err);
+        const placeholder = document.querySelector('.placeholder-message');
+        if (placeholder) {
+            placeholder.innerHTML = `
+                <h2>Error</h2>
+                <p>Failed to load demo database. Please ensure 'demo.sqlite' is in the root directory.</p>
+                <button class="primary-btn" onclick="location.reload()">Reload</button>
             `;
         }
     }
