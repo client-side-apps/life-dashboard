@@ -1,18 +1,12 @@
 import { dbService } from '../db.js';
-import Chart from 'chart.js';
 
 export class HealthView extends HTMLElement {
     constructor() {
         super();
-        this.charts = {}; // Store chart instances to destroy them
     }
 
     connectedCallback() {
         this.render();
-    }
-
-    disconnectedCallback() {
-        Object.values(this.charts).forEach(chart => chart.destroy());
     }
 
     async render() {
@@ -37,10 +31,6 @@ export class HealthView extends HTMLElement {
     async loadSubView(subview) {
         const content = this.querySelector('#health-content');
 
-        // Destroy existing charts
-        Object.values(this.charts).forEach(chart => chart.destroy());
-        this.charts = {};
-
         content.innerHTML = ''; // Clear
 
         if (subview === 'dashboard') {
@@ -61,15 +51,15 @@ export class HealthView extends HTMLElement {
         }
     }
 
-    async createChart(canvasId, label, tableName, valueCol, color) {
-        const ctx = document.getElementById(canvasId);
-        if (!ctx) return;
+    async createChart(chartId, label, tableName, valueCol, color) {
+        const chartCard = this.querySelector(`chart-card[chart-id="${chartId}"]`);
+        if (!chartCard) return;
 
         // Fetch data
         // Assume table has specific structure or try generic time/value
         const valid = await this.checkTable(tableName);
         if (!valid) {
-            ctx.parentNode.innerHTML += `<p>Table "${tableName}" not found.</p>`;
+            chartCard.innerHTML += `<p>Table "${tableName}" not found.</p>`;
             return;
         }
 
@@ -80,7 +70,7 @@ export class HealthView extends HTMLElement {
         const labels = data.map(d => new Date(d.time || d.date).toLocaleDateString());
         const values = data.map(d => d.value || d[valueCol] || 0);
 
-        this.charts[canvasId] = new Chart(ctx, {
+        chartCard.setConfiguration({
             type: 'line',
             data: {
                 labels: labels,

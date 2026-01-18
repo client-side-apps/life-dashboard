@@ -1,18 +1,12 @@
 import { dbService } from '../db.js';
-import Chart from 'chart.js';
 
 export class EnergyView extends HTMLElement {
     constructor() {
         super();
-        this.charts = {};
     }
 
     connectedCallback() {
         this.render();
-    }
-
-    disconnectedCallback() {
-        Object.values(this.charts).forEach(c => c.destroy());
     }
 
     async render() {
@@ -35,9 +29,9 @@ export class EnergyView extends HTMLElement {
         await this.createSingleLineChart('gas-chart', 'Gas Import', 'gas', 'import', '#e74c3c');
     }
 
-    async createMultiLineChart(canvasId, tableName, datasetsConfig) {
-        const ctx = document.getElementById(canvasId);
-        if (!ctx) return;
+    async createMultiLineChart(chartId, tableName, datasetsConfig) {
+        const chartCard = this.querySelector(`chart-card[chart-id="${chartId}"]`);
+        if (!chartCard) return;
 
         // Check table
         const tables = dbService.getTables();
@@ -45,7 +39,7 @@ export class EnergyView extends HTMLElement {
             // Try to find a partial match or fail gracefully
             // For redundancy, check if we have data columns in another table? 
             // Simplification: just show "No data" if table missing
-            ctx.parentNode.innerHTML += `<p>Table "${tableName}" not found.</p>`;
+            chartCard.innerHTML += `<p>Table "${tableName}" not found.</p>`;
             return;
         }
 
@@ -62,20 +56,20 @@ export class EnergyView extends HTMLElement {
             fill: false
         }));
 
-        this.charts[canvasId] = new Chart(ctx, {
+        chartCard.setConfiguration({
             type: 'line',
             data: { labels, datasets },
             options: { responsive: true }
         });
     }
 
-    async createSingleLineChart(canvasId, label, tableName, valueCol, color) {
-        const ctx = document.getElementById(canvasId);
-        if (!ctx) return;
+    async createSingleLineChart(chartId, label, tableName, valueCol, color) {
+        const chartCard = this.querySelector(`chart-card[chart-id="${chartId}"]`);
+        if (!chartCard) return;
 
         const tables = dbService.getTables();
         if (!tables.includes(tableName)) {
-            ctx.parentNode.innerHTML += `<p>Table "${tableName}" not found.</p>`;
+            chartCard.innerHTML += `<p>Table "${tableName}" not found.</p>`;
             return;
         }
 
@@ -85,7 +79,7 @@ export class EnergyView extends HTMLElement {
         const labels = data.map(d => new Date(d.time || d.date).toLocaleDateString());
         const values = data.map(d => d[valueCol] || 0);
 
-        this.charts[canvasId] = new Chart(ctx, {
+        chartCard.setConfiguration({
             type: 'line',
             data: {
                 labels: labels,
