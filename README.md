@@ -1,6 +1,7 @@
 # Life Dashboard
 
-A personal dashboard to visualize and manage life data including Map, Timeline, Health, Finance, Energy, and Movies.
+A personal dashboard to visualize and manage life data including Map, Timeline, Health, Finance, Energy, and Movies. 
+See [supported data sources](docs/importers.md).
 
 Everything happens locally in your browser. All data is stored in a local SQLite database (`.sqlite` file) and never leaves your machine.
 
@@ -52,4 +53,8 @@ node --test
 *   **Clean Code**: Maintain reusable CSS and avoid presentational class names (e.g., no "centered").
 
 ### Database
+*   **Schema**: Expected tables and columns are documented in [docs/schema.md](docs/schema.md).
 *   **Naming Convention**: Database columns must have the unit in the name (e.g., `energy_kwh`, `duration_minutes`).
+
+### Data Import
+*   **Importers**: Supported data importers and file formats are documented in [docs/importers.md](docs/importers.md).
