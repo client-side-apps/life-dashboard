@@ -7,7 +7,7 @@ export class BaseImporter {
      * @returns {boolean} - True if this importer can handle the data
      */
     static detect(rows) {
-        throw new Error("mthod 'detect' must be implemented");
+        throw new Error("method 'detect' must be implemented");
     }
 
     /**

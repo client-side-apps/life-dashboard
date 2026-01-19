@@ -1,8 +1,8 @@
 import { CSVParser } from '../utils/csv-parser.js';
 import { dbService } from '../db.js';
-import { PgeImporter } from './importers/energy/pge.js';
-import { TeslaImporter } from './importers/energy/tesla.js';
-import { SfcuImporter } from './importers/finance/sfcu.js';
+import { PgeImporter } from '../importers/energy/pge.js';
+import { TeslaImporter } from '../importers/energy/tesla.js';
+import { SfcuImporter } from '../importers/finance/sfcu.js';
 
 export class DataImporter {
 

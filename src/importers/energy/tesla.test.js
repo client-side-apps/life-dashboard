@@ -3,10 +3,10 @@ import assert from 'node:assert';
 import fs from 'node:fs';
 import path from 'node:path';
 import { TeslaImporter } from './tesla.js';
-import { CSVParser } from '../../../utils/csv-parser.js';
+import { CSVParser } from '../../utils/csv-parser.js';
 
 test('TeslaImporter with Real Data', async (t) => {
-    const samplePath = path.resolve(import.meta.dirname, '../../../../data-samples/energy/tesla/data');
+    const samplePath = path.resolve(import.meta.dirname, '../../../data-samples/energy/tesla/data');
     const content = fs.readFileSync(samplePath, 'utf-8');
     const rows = CSVParser.parse(content);
 
