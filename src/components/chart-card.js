@@ -4,6 +4,19 @@ export class ChartCard extends HTMLElement {
     constructor() {
         super();
         this.chartInstance = null;
+        this._startDate = null;
+        this._endDate = null;
+    }
+
+    get startDate() { return this._startDate; }
+    set startDate(val) { this._startDate = val; }
+
+    get endDate() { return this._endDate; }
+    set endDate(val) { this._endDate = val; }
+
+    setDateRange(start, end) {
+        this.startDate = start;
+        this.endDate = end;
     }
 
     connectedCallback() {

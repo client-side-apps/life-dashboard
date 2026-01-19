@@ -15,21 +15,64 @@ export class EnergyView extends HTMLElement {
         const content = template.content.cloneNode(true);
         this.appendChild(content);
 
+        // Date selection logic
+        const startInput = this.querySelector('#energy-start-date');
+        const endInput = this.querySelector('#energy-end-date');
+        const updateBtn = this.querySelector('#energy-update-btn');
+
+        // Set default dates
+        const today = new Date().toISOString().split('T')[0];
+        endInput.value = today;
+
+        // Find oldest date
+        let oldestDate = today;
+        try {
+            const tables = dbService.getTables();
+            let minDates = [];
+            if (tables.includes('electricity')) {
+                const res = dbService.query('SELECT MIN(time) as min_time FROM electricity');
+                if (res.length > 0 && res[0].min_time) minDates.push(res[0].min_time);
+            }
+            if (tables.includes('gas')) {
+                const res = dbService.query('SELECT MIN(time) as min_time FROM gas');
+                if (res.length > 0 && res[0].min_time) minDates.push(res[0].min_time);
+            }
+
+            if (minDates.length > 0) {
+                minDates.sort();
+                oldestDate = minDates[0].split('T')[0];
+            }
+        } catch (e) {
+            console.warn('Error fetching oldest date:', e);
+        }
+        startInput.value = oldestDate;
+
+        const reloadHandler = () => this.loadCharts();
+        startInput.addEventListener('change', reloadHandler);
+        endInput.addEventListener('change', reloadHandler);
+
         await this.loadCharts();
     }
 
     async loadCharts() {
+        const startInput = this.querySelector('#energy-start-date');
+        const endInput = this.querySelector('#energy-end-date');
+
+        const startDate = startInput ? startInput.value : null;
+        const endDate = endInput ? endInput.value : null;
+
         // Hypothetical table names: electricity, gas
         await this.createMultiLineChart('solar-chart', 'electricity',
             [{ label: 'Solar Production', col: 'solar_kwh', color: '#f1c40f' },
-            { label: 'Consumption', col: 'consumption_kwh', color: '#2ecc71' }]);
+            { label: 'Consumption', col: 'consumption_kwh', color: '#2ecc71' }],
+            startDate, endDate);
 
-        await this.createSingleLineChart('elec-import-chart', 'Electricity Import', 'electricity', 'import_kwh', '#3498db');
+        await this.createSingleLineChart('elec-import-chart', 'Electricity Import', 'electricity', 'import_kwh', '#3498db', startDate, endDate);
 
-        await this.createSingleLineChart('gas-chart', 'Gas Import', 'gas', 'import_kwh', '#e74c3c');
+        await this.createSingleLineChart('gas-chart', 'Gas Import', 'gas', 'import_kwh', '#e74c3c', startDate, endDate);
     }
 
-    async createMultiLineChart(chartId, tableName, datasetsConfig) {
+    async createMultiLineChart(chartId, tableName, datasetsConfig, startDate, endDate) {
         const chartCard = this.querySelector(`chart-card[chart-id="${chartId}"]`);
         if (!chartCard) return;
 
@@ -43,8 +86,22 @@ export class EnergyView extends HTMLElement {
             return;
         }
 
-        const data = dbService.query(`SELECT * FROM "${tableName}" ORDER BY time DESC LIMIT 1000`);
-        data.reverse();
+        let query = `SELECT * FROM "${tableName}"`;
+        let params = [];
+
+        if (startDate && endDate) {
+            query += ` WHERE time >= ? AND time <= ?`;
+            // Add time component to end date to cover the full day if needed, or if stored as ISO string
+            // Assuming simplified YYYY-MM-DD string comparison or ISO
+            params.push(startDate);
+            params.push(endDate + 'T23:59:59');
+        }
+        query += ` ORDER BY time ASC`; // Chart.js usually cleaner with sorted data if we use dates
+
+        const data = dbService.query(query, params);
+        // data.reverse(); // If ASC, no need to reverse
+
+        chartCard.setDateRange(startDate, endDate);
 
         const labels = data.map(d => new Date(d.time || d.date).toLocaleDateString());
 
@@ -63,7 +120,7 @@ export class EnergyView extends HTMLElement {
         });
     }
 
-    async createSingleLineChart(chartId, label, tableName, valueCol, color) {
+    async createSingleLineChart(chartId, label, tableName, valueCol, color, startDate, endDate) {
         const chartCard = this.querySelector(`chart-card[chart-id="${chartId}"]`);
         if (!chartCard) return;
 
@@ -73,8 +130,19 @@ export class EnergyView extends HTMLElement {
             return;
         }
 
-        const data = dbService.query(`SELECT * FROM "${tableName}" ORDER BY time DESC LIMIT 1000`);
-        data.reverse();
+        let query = `SELECT * FROM "${tableName}"`;
+        let params = [];
+
+        if (startDate && endDate) {
+            query += ` WHERE time >= ? AND time <= ?`;
+            params.push(startDate);
+            params.push(endDate + 'T23:59:59');
+        }
+        query += ` ORDER BY time ASC`;
+
+        const data = dbService.query(query, params);
+
+        chartCard.setDateRange(startDate, endDate);
 
         const labels = data.map(d => new Date(d.time || d.date).toLocaleDateString());
         const values = data.map(d => d[valueCol] || 0);

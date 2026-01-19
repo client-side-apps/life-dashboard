@@ -140,6 +140,10 @@
     </template>
 
     <template id="energy-view-template">
+        <div class="date-controls" style="margin-bottom: 1rem; display: flex; gap: 1rem; align-items: center;">
+            <label>Start: <input type="date" id="energy-start-date" class="date-input"></label>
+            <label>End: <input type="date" id="energy-end-date" class="date-input"></label>
+        </div>
         <div class="charts-grid">
             <chart-card title="Electricity: Solar vs Consumption" chart-id="solar-chart"></chart-card>
             <chart-card title="Electricity Import" chart-id="elec-import-chart"></chart-card>
