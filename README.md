@@ -8,6 +8,12 @@ Everything happens locally in your browser. All data is stored in a local SQLite
 
 You can serve the application locally using Python or Node.js:
 
+### Node.js (via npx)
+
+```bash
+npx -y serve -p 8000
+```
+
 ### Python
 
 ```bash
@@ -15,12 +21,6 @@ python -m http.server 8000
 ```
 
 Then open http://localhost:8000 in your browser.
-
-### Node.js (via npx)
-
-```bash
-npx -y serve
-```
 
 ## Running Tests
 

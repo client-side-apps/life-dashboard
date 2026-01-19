@@ -89,10 +89,10 @@ db.serialize(() => {
     stmtTrans.finalize();
 
     // 4. Energy Data
-    db.run(`CREATE TABLE IF NOT EXISTS electricity (id INTEGER PRIMARY KEY, time TEXT, solar REAL, consumption REAL, import REAL)`);
-    db.run(`CREATE TABLE IF NOT EXISTS gas (id INTEGER PRIMARY KEY, time TEXT, import REAL)`);
-    const stmtElec = db.prepare("INSERT INTO electricity (time, solar, consumption, import) VALUES (?, ?, ?, ?)");
-    const stmtGas = db.prepare("INSERT INTO gas (time, import) VALUES (?, ?)");
+    db.run(`CREATE TABLE IF NOT EXISTS electricity (id INTEGER PRIMARY KEY, time TEXT, solar_kwh REAL, consumption_kwh REAL, import_kwh REAL)`);
+    db.run(`CREATE TABLE IF NOT EXISTS gas (id INTEGER PRIMARY KEY, time TEXT, import_kwh REAL)`);
+    const stmtElec = db.prepare("INSERT INTO electricity (time, solar_kwh, consumption_kwh, import_kwh) VALUES (?, ?, ?, ?)");
+    const stmtGas = db.prepare("INSERT INTO gas (time, import_kwh) VALUES (?, ?)");
 
     for (let i = 0; i < 24 * 7; i++) {
         const time = new Date(Date.now() - i * 3600000).toISOString();

@@ -17,9 +17,9 @@ export class TeslaImporter extends BaseImporter {
             table: 'electricity',
             data: {
                 time: isoTime,
-                solar: parseFloat(row['Solar Energy (kWh)']) || 0,
-                consumption: parseFloat(row['Home (kWh)']) || 0,
-                import: parseFloat(row['From Grid (kWh)']) || 0
+                solar_kwh: parseFloat(row['Solar Energy (kWh)']) || 0,
+                consumption_kwh: parseFloat(row['Home (kWh)']) || 0,
+                import_kwh: parseFloat(row['From Grid (kWh)']) || 0
             }
         };
     }

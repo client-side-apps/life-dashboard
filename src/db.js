@@ -64,8 +64,8 @@ class DatabaseService {
             `CREATE TABLE IF NOT EXISTS steps (id INTEGER PRIMARY KEY, value INTEGER, time TEXT)`,
             `CREATE TABLE IF NOT EXISTS accounts (id INTEGER PRIMARY KEY, name TEXT, balance REAL, type TEXT)`,
             `CREATE TABLE IF NOT EXISTS transactions (id INTEGER PRIMARY KEY, date TEXT, description TEXT, amount REAL, account_id INTEGER)`,
-            `CREATE TABLE IF NOT EXISTS electricity (id INTEGER PRIMARY KEY, time TEXT, solar REAL, consumption REAL, import REAL)`,
-            `CREATE TABLE IF NOT EXISTS gas (id INTEGER PRIMARY KEY, time TEXT, import REAL)`,
+            `CREATE TABLE IF NOT EXISTS electricity (id INTEGER PRIMARY KEY, time TEXT, solar_kwh REAL, consumption_kwh REAL, import_kwh REAL)`,
+            `CREATE TABLE IF NOT EXISTS gas (id INTEGER PRIMARY KEY, time TEXT, import_kwh REAL)`,
             `CREATE TABLE IF NOT EXISTS movies (id INTEGER PRIMARY KEY, title TEXT, year INTEGER, rating INTEGER, time_watched TEXT, poster_url TEXT)`
         ];
 

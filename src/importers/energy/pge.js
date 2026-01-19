@@ -24,10 +24,10 @@ export class PgeImporter extends BaseImporter {
                 table: 'electricity',
                 data: {
                     time: isoTime,
-                    solar: null, // PG&E doesn't provide solar generation
-                    consumption: null, // PG&E 'consumption' is just 'import', but Tesla provides full home & solar. 
+                    solar_kwh: null, // PG&E doesn't provide solar generation
+                    consumption_kwh: null, // PG&E 'consumption' is just 'import', but Tesla provides full home & solar. 
                     // We let Tesla populate this.
-                    import: parseFloat(row['IMPORT (kWh)']) || 0
+                    import_kwh: parseFloat(row['IMPORT (kWh)']) || 0
                 }
             };
         } else if (type === 'Natural gas usage') {
@@ -41,7 +41,7 @@ export class PgeImporter extends BaseImporter {
                 table: 'gas',
                 data: {
                     time: isoTime,
-                    import: usage
+                    import_kwh: usage
                 }
             };
         }

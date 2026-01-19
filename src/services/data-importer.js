@@ -135,18 +135,18 @@ export class DataImporter {
     static async insert(table, data) {
         if (table === 'electricity') {
             // Handle nulls
-            const solar = data.solar !== null ? data.solar : 0;
-            const consumption = data.consumption !== null ? data.consumption : 0;
-            const imp = data.import !== null ? data.import : 0;
+            const solar = data.solar_kwh !== null ? data.solar_kwh : 0;
+            const consumption = data.consumption_kwh !== null ? data.consumption_kwh : 0;
+            const imp = data.import_kwh !== null ? data.import_kwh : 0;
 
             dbService.query(
-                'INSERT INTO electricity (time, solar, consumption, import) VALUES (?, ?, ?, ?)',
+                'INSERT INTO electricity (time, solar_kwh, consumption_kwh, import_kwh) VALUES (?, ?, ?, ?)',
                 [data.time, solar, consumption, imp]
             );
         } else if (table === 'gas') {
             dbService.query(
-                'INSERT INTO gas (time, import) VALUES (?, ?)',
-                [data.time, data.import]
+                'INSERT INTO gas (time, import_kwh) VALUES (?, ?)',
+                [data.time, data.import_kwh]
             );
         } else if (table === 'transactions') {
             dbService.query(

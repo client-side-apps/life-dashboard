@@ -3,11 +3,11 @@ import assert from 'node:assert';
 import fs from 'node:fs';
 import path from 'node:path';
 import { PgeImporter } from './pge.js';
-import { CSVParser } from '../../../utils/csv-parser.js';
+import { CSVParser } from '../../utils/csv-parser.js';
 
 test('PgeImporter with Real Data', async (t) => {
     // Resolve path to sample file
-    const samplePath = path.resolve(import.meta.dirname, '../../../../data-samples/energy/pge/pge_electric_usage_interval_data_Service 2_2_2025-11-14_to_2025-12-21.csv');
+    const samplePath = path.resolve(import.meta.dirname, '../../../data-samples/energy/pge/pge_electric_usage_interval_data_Service 2_2_2025-11-14_to_2025-12-21.csv');
     const content = fs.readFileSync(samplePath, 'utf-8');
 
     await t.test('detects PGE data from file content', () => {
@@ -47,13 +47,13 @@ test('PgeImporter with Real Data', async (t) => {
 
         const mapped = PgeImporter.mapRow(firstRow);
         assert.strictEqual(mapped.table, 'electricity');
-        assert.strictEqual(mapped.data.consumption, null);
+        assert.strictEqual(mapped.data.consumption_kwh, null);
         assert.strictEqual(mapped.data.time, new Date('2025-11-14 07:00').toISOString());
     });
 
     await t.test('detects and maps Gas data', () => {
         // Read real gas file
-        const gasSamplePath = path.resolve(import.meta.dirname, '../../../../data-samples/energy/pge/pge_natural_gas_usage_interval_data_Service 1_1_2025-11-14_to_2025-12-21.csv');
+        const gasSamplePath = path.resolve(import.meta.dirname, '../../../data-samples/energy/pge/pge_natural_gas_usage_interval_data_Service 1_1_2025-11-14_to_2025-12-21.csv');
         const gasContent = fs.readFileSync(gasSamplePath, 'utf-8');
 
         // Strip preamble logic similar to main import (mimicked here for unit test)
@@ -67,7 +67,7 @@ test('PgeImporter with Real Data', async (t) => {
         // 5.19 therms
         const mapped = PgeImporter.mapRow(gasRow);
         assert.strictEqual(mapped.table, 'gas');
-        assert.strictEqual(mapped.data.import, 5.19);
+        assert.strictEqual(mapped.data.import_kwh, 5.19);
     });
 });
 

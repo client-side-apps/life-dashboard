@@ -21,12 +21,12 @@ export class EnergyView extends HTMLElement {
     async loadCharts() {
         // Hypothetical table names: electricity, gas
         await this.createMultiLineChart('solar-chart', 'electricity',
-            [{ label: 'Solar Production', col: 'solar', color: '#f1c40f' },
-            { label: 'Consumption', col: 'consumption', color: '#2ecc71' }]);
+            [{ label: 'Solar Production', col: 'solar_kwh', color: '#f1c40f' },
+            { label: 'Consumption', col: 'consumption_kwh', color: '#2ecc71' }]);
 
-        await this.createSingleLineChart('elec-import-chart', 'Electricity Import', 'electricity', 'import', '#3498db');
+        await this.createSingleLineChart('elec-import-chart', 'Electricity Import', 'electricity', 'import_kwh', '#3498db');
 
-        await this.createSingleLineChart('gas-chart', 'Gas Import', 'gas', 'import', '#e74c3c');
+        await this.createSingleLineChart('gas-chart', 'Gas Import', 'gas', 'import_kwh', '#e74c3c');
     }
 
     async createMultiLineChart(chartId, tableName, datasetsConfig) {
