@@ -140,9 +140,8 @@
     </template>
 
     <template id="energy-view-template">
-        <div class="date-controls" style="margin-bottom: 1rem; display: flex; gap: 1rem; align-items: center;">
-            <label>Start: <input type="date" id="energy-start-date" class="date-input"></label>
-            <label>End: <input type="date" id="energy-end-date" class="date-input"></label>
+        <div class="date-controls" style="margin-bottom: 1rem;">
+            <date-range-picker id="energy-date-picker"></date-range-picker>
         </div>
         <div class="charts-grid">
             <chart-card title="Electricity: Solar vs Consumption" chart-id="solar-chart"></chart-card>
@@ -158,13 +157,15 @@
     </template>
 
     <template id="data-view-template">
-        <div class="data-controls">
+        <div class="data-controls"
+            style="margin-bottom: 1rem; display: flex; flex-wrap: wrap; gap: 1rem; align-items: center;">
             <select id="data-table-select" class="select-input" style="min-width: 200px;">
                 <option value="" disabled selected>Select Table</option>
             </select>
-            <button id="import-data-btn" class="secondary-btn" style="margin-left: 1rem;">Import Data</button>
-            <button id="download-db-btn" class="secondary-btn" style="margin-left: 1rem;">Download DB</button>
-            <span id="data-count" style="margin-left: 1rem; font-size: 0.9rem;"></span>
+            <date-range-picker id="data-date-picker"></date-range-picker>
+            <button id="import-data-btn" class="secondary-btn">Import Data</button>
+            <button id="download-db-btn" class="secondary-btn">Download DB</button>
+            <span id="data-count" style="font-size: 0.9rem;"></span>
         </div>
         <div class="table-wrapper">
             <table id="data-table" class="generic-table">

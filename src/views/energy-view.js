@@ -16,13 +16,10 @@ export class EnergyView extends HTMLElement {
         this.appendChild(content);
 
         // Date selection logic
-        const startInput = this.querySelector('#energy-start-date');
-        const endInput = this.querySelector('#energy-end-date');
-        const updateBtn = this.querySelector('#energy-update-btn');
+        const datePicker = this.querySelector('#energy-date-picker');
 
         // Set default dates
         const today = new Date().toISOString().split('T')[0];
-        endInput.value = today;
 
         // Find oldest date
         let oldestDate = today;
@@ -49,21 +46,20 @@ export class EnergyView extends HTMLElement {
         } catch (e) {
             console.warn('Error fetching oldest date:', e);
         }
-        startInput.value = oldestDate;
 
-        const reloadHandler = () => this.loadCharts();
-        startInput.addEventListener('change', reloadHandler);
-        endInput.addEventListener('change', reloadHandler);
+        datePicker.startDate = oldestDate;
+        datePicker.endDate = today;
+
+        datePicker.addEventListener('date-change', () => this.loadCharts());
 
         await this.loadCharts();
     }
 
     async loadCharts() {
-        const startInput = this.querySelector('#energy-start-date');
-        const endInput = this.querySelector('#energy-end-date');
+        const datePicker = this.querySelector('#energy-date-picker');
 
-        const startDate = startInput ? startInput.value : null;
-        const endDate = endInput ? endInput.value : null;
+        const startDate = datePicker ? datePicker.startDate : null;
+        const endDate = datePicker ? datePicker.endDate : null;
 
         // Hypothetical table names: electricity, gas
         await this.createMultiLineChart('solar-chart', 'electricity_solar_hourly',
