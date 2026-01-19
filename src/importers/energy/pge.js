@@ -21,12 +21,9 @@ export class PgeImporter extends BaseImporter {
 
             const isoTime = new Date(`${dateStr} ${timeStr}`).toISOString();
             return {
-                table: 'electricity',
+                table: 'electricity_grid_hourly',
                 data: {
                     time: isoTime,
-                    solar_kwh: null, // PG&E doesn't provide solar generation
-                    consumption_kwh: null, // PG&E 'consumption' is just 'import', but Tesla provides full home & solar. 
-                    // We let Tesla populate this.
                     import_kwh: parseFloat(row['IMPORT (kWh)']) || 0
                 }
             };
@@ -38,10 +35,10 @@ export class PgeImporter extends BaseImporter {
             const isoTime = new Date(`${dateStr} ${timeStr}`).toISOString();
             const usage = parseFloat(row['Usage']) || parseFloat(row['USAGE (therms)']) || 0;
             return {
-                table: 'gas',
+                table: 'gas_daily',
                 data: {
                     time: isoTime,
-                    import_kwh: usage
+                    usage_therms: usage
                 }
             };
         }

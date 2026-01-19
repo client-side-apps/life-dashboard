@@ -99,12 +99,9 @@ export class DataImporter {
     }
 
     static async findExisting(table, data) {
-        if (table === 'electricity') {
+        if (['electricity_grid_hourly', 'electricity_solar_hourly', 'gas_daily'].includes(table)) {
             // Unique key: time
-            const result = dbService.query('SELECT id FROM electricity WHERE time = ?', [data.time]);
-            return result.length > 0 ? result[0].id : null;
-        } else if (table === 'gas') {
-            const result = dbService.query('SELECT id FROM gas WHERE time = ?', [data.time]);
+            const result = dbService.query(`SELECT id FROM "${table}" WHERE time = ?`, [data.time]);
             return result.length > 0 ? result[0].id : null;
         } else if (table === 'transactions') {
             // Unique composite: date, description, amount
@@ -133,20 +130,20 @@ export class DataImporter {
     }
 
     static async insert(table, data) {
-        if (table === 'electricity') {
-            // Handle nulls
-            const solar = data.solar_kwh !== null ? data.solar_kwh : 0;
-            const consumption = data.consumption_kwh !== null ? data.consumption_kwh : 0;
-            const imp = data.import_kwh !== null ? data.import_kwh : 0;
-
+        if (table === 'electricity_grid_hourly') {
             dbService.query(
-                'INSERT INTO electricity (time, solar_kwh, consumption_kwh, import_kwh) VALUES (?, ?, ?, ?)',
-                [data.time, solar, consumption, imp]
+                'INSERT INTO electricity_grid_hourly (time, import_kwh) VALUES (?, ?)',
+                [data.time, data.import_kwh || 0]
             );
-        } else if (table === 'gas') {
+        } else if (table === 'electricity_solar_hourly') {
             dbService.query(
-                'INSERT INTO gas (time, import_kwh) VALUES (?, ?)',
-                [data.time, data.import_kwh]
+                'INSERT INTO electricity_solar_hourly (time, solar_kwh, consumption_kwh) VALUES (?, ?, ?)',
+                [data.time, data.solar_kwh || 0, data.consumption_kwh || 0]
+            );
+        } else if (table === 'gas_daily') {
+            dbService.query(
+                'INSERT INTO gas_daily (time, usage_therms) VALUES (?, ?)',
+                [data.time, data.usage_therms || 0]
             );
         } else if (table === 'transactions') {
             dbService.query(

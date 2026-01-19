@@ -46,8 +46,8 @@ test('PgeImporter with Real Data', async (t) => {
         assert.ok(firstRow, 'Should find electricity row');
 
         const mapped = PgeImporter.mapRow(firstRow);
-        assert.strictEqual(mapped.table, 'electricity');
-        assert.strictEqual(mapped.data.consumption_kwh, null);
+        assert.strictEqual(mapped.table, 'electricity_grid_hourly');
+        assert.strictEqual(mapped.data.import_kwh, 3.39); // Value from the csv: 3.39
         assert.strictEqual(mapped.data.time, new Date('2025-11-14 07:00').toISOString());
     });
 
@@ -66,8 +66,8 @@ test('PgeImporter with Real Data', async (t) => {
 
         // 5.19 therms
         const mapped = PgeImporter.mapRow(gasRow);
-        assert.strictEqual(mapped.table, 'gas');
-        assert.strictEqual(mapped.data.import_kwh, 5.19);
+        assert.strictEqual(mapped.table, 'gas_daily');
+        assert.strictEqual(mapped.data.usage_therms, 5.19);
     });
 });
 

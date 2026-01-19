@@ -60,8 +60,10 @@ async function run() {
             db.run(`CREATE TABLE IF NOT EXISTS transactions (id INTEGER PRIMARY KEY, date TEXT, description TEXT, amount REAL, account_id INTEGER)`);
 
             // Energy Data
-            db.run(`CREATE TABLE IF NOT EXISTS electricity (id INTEGER PRIMARY KEY, time TEXT, solar_kwh REAL, consumption_kwh REAL, import_kwh REAL)`);
-            db.run(`CREATE TABLE IF NOT EXISTS gas (id INTEGER PRIMARY KEY, time TEXT, import_kwh REAL)`);
+            // Energy Data
+            db.run(`CREATE TABLE IF NOT EXISTS electricity_grid_hourly (id INTEGER PRIMARY KEY, time TEXT, import_kwh REAL)`);
+            db.run(`CREATE TABLE IF NOT EXISTS electricity_solar_hourly (id INTEGER PRIMARY KEY, time TEXT, solar_kwh REAL, consumption_kwh REAL)`);
+            db.run(`CREATE TABLE IF NOT EXISTS gas_daily (id INTEGER PRIMARY KEY, time TEXT, usage_therms REAL)`);
 
             // Movies
             db.run(`CREATE TABLE IF NOT EXISTS movies (id INTEGER PRIMARY KEY, title TEXT, year INTEGER, rating INTEGER, time_watched TEXT, poster_url TEXT)`);
@@ -226,26 +228,25 @@ async function processFile(filePath) {
 }
 
 function insertData(table, data) {
-    if (table === 'electricity') {
-        const solar = data.solar_kwh !== null ? data.solar_kwh : 0;
-        const consumption = data.consumption_kwh !== null ? data.consumption_kwh : 0;
+    if (table === 'electricity_grid_hourly') {
         const imp = data.import_kwh !== null ? data.import_kwh : 0;
-
-        // Check for duplicates? For demo gen, we probably don't need to check, 
-        // assuming files don't overlap or we just want last write wins or verify later.
-        // Actually, let's just insert. Duplicate keys might error if we enforce them, but we don't have Unique constraints on Time yet?
-        // The Create Table doesn't enforce UNIQUE on time. So we'll get duplicates if files overlap.
-        // That's acceptable for a demo script update unless specified.
-
         db.run(
-            'INSERT INTO electricity (time, solar_kwh, consumption_kwh, import_kwh) VALUES (?, ?, ?, ?)',
-            [data.time, solar, consumption, imp],
+            'INSERT INTO electricity_grid_hourly (time, import_kwh) VALUES (?, ?)',
+            [data.time, imp],
             (err) => { if (err) console.error(err.message); }
         );
-    } else if (table === 'gas') {
+    } else if (table === 'electricity_solar_hourly') {
+        const solar = data.solar_kwh !== null ? data.solar_kwh : 0;
+        const consumption = data.consumption_kwh !== null ? data.consumption_kwh : 0;
         db.run(
-            'INSERT INTO gas (time, import_kwh) VALUES (?, ?)',
-            [data.time, data.import_kwh],
+            'INSERT INTO electricity_solar_hourly (time, solar_kwh, consumption_kwh) VALUES (?, ?, ?)',
+            [data.time, solar, consumption],
+            (err) => { if (err) console.error(err.message); }
+        );
+    } else if (table === 'gas_daily') {
+        db.run(
+            'INSERT INTO gas_daily (time, usage_therms) VALUES (?, ?)',
+            [data.time, data.usage_therms],
             (err) => { if (err) console.error(err.message); }
         );
     } else if (table === 'transactions') {

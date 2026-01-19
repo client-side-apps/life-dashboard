@@ -13,14 +13,20 @@ const DB_PATH = join(__dirname, '../demo.sqlite');
 const db = new sqlite3.Database(DB_PATH);
 
 db.serialize(() => {
-    console.log("Checking electricity table schema:");
-    db.all("PRAGMA table_info(electricity)", (err, rows) => {
+    console.log("Checking electricity_grid_hourly table schema:");
+    db.all("PRAGMA table_info(electricity_grid_hourly)", (err, rows) => {
         if (err) console.error(err);
         else console.table(rows);
     });
 
-    console.log("Checking gas table schema:");
-    db.all("PRAGMA table_info(gas)", (err, rows) => {
+    console.log("Checking electricity_solar_hourly table schema:");
+    db.all("PRAGMA table_info(electricity_solar_hourly)", (err, rows) => {
+        if (err) console.error(err);
+        else console.table(rows);
+    });
+
+    console.log("Checking gas_daily table schema:");
+    db.all("PRAGMA table_info(gas_daily)", (err, rows) => {
         if (err) console.error(err);
         else console.table(rows);
     });
@@ -32,8 +38,9 @@ db.serialize(() => {
     });
 
     // Check row counts
-    db.each("SELECT count(*) as count FROM electricity", (err, row) => console.log('Electricity rows:', row.count));
-    db.each("SELECT count(*) as count FROM gas", (err, row) => console.log('Gas rows:', row.count));
+    db.each("SELECT count(*) as count FROM electricity_grid_hourly", (err, row) => console.log('Electricity Grid rows:', row.count));
+    db.each("SELECT count(*) as count FROM electricity_solar_hourly", (err, row) => console.log('Electricity Solar rows:', row.count));
+    db.each("SELECT count(*) as count FROM gas_daily", (err, row) => console.log('Gas rows:', row.count));
     db.each("SELECT count(*) as count FROM transactions", (err, row) => console.log('Transactions rows:', row.count));
 });
 

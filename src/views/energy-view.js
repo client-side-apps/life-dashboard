@@ -29,12 +29,16 @@ export class EnergyView extends HTMLElement {
         try {
             const tables = dbService.getTables();
             let minDates = [];
-            if (tables.includes('electricity')) {
-                const res = dbService.query('SELECT MIN(time) as min_time FROM electricity');
+            if (tables.includes('electricity_solar_hourly')) {
+                const res = dbService.query('SELECT MIN(time) as min_time FROM electricity_solar_hourly');
                 if (res.length > 0 && res[0].min_time) minDates.push(res[0].min_time);
             }
-            if (tables.includes('gas')) {
-                const res = dbService.query('SELECT MIN(time) as min_time FROM gas');
+            if (tables.includes('electricity_grid_hourly')) {
+                const res = dbService.query('SELECT MIN(time) as min_time FROM electricity_grid_hourly');
+                if (res.length > 0 && res[0].min_time) minDates.push(res[0].min_time);
+            }
+            if (tables.includes('gas_daily')) {
+                const res = dbService.query('SELECT MIN(time) as min_time FROM gas_daily');
                 if (res.length > 0 && res[0].min_time) minDates.push(res[0].min_time);
             }
 
@@ -62,14 +66,14 @@ export class EnergyView extends HTMLElement {
         const endDate = endInput ? endInput.value : null;
 
         // Hypothetical table names: electricity, gas
-        await this.createMultiLineChart('solar-chart', 'electricity',
+        await this.createMultiLineChart('solar-chart', 'electricity_solar_hourly',
             [{ label: 'Solar Production', col: 'solar_kwh', color: '#f1c40f' },
             { label: 'Consumption', col: 'consumption_kwh', color: '#2ecc71' }],
             startDate, endDate);
 
-        await this.createSingleLineChart('elec-import-chart', 'Electricity Import', 'electricity', 'import_kwh', '#3498db', startDate, endDate);
+        await this.createSingleLineChart('elec-import-chart', 'Electricity Import', 'electricity_grid_hourly', 'import_kwh', '#3498db', startDate, endDate);
 
-        await this.createSingleLineChart('gas-chart', 'Gas Import', 'gas', 'import_kwh', '#e74c3c', startDate, endDate);
+        await this.createSingleLineChart('gas-chart', 'Gas Import', 'gas_daily', 'usage_therms', '#e74c3c', startDate, endDate);
     }
 
     async createMultiLineChart(chartId, tableName, datasetsConfig, startDate, endDate) {

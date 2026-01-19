@@ -14,17 +14,16 @@ export class TeslaImporter extends BaseImporter {
         const isoTime = new Date(timeStr).toISOString();
 
         return {
-            table: 'electricity',
+            table: 'electricity_solar_hourly',
             data: {
                 time: isoTime,
                 solar_kwh: parseFloat(row['Solar Energy (kWh)']) || 0,
-                consumption_kwh: parseFloat(row['Home (kWh)']) || 0,
-                import_kwh: parseFloat(row['From Grid (kWh)']) || 0
+                consumption_kwh: parseFloat(row['Home (kWh)']) || 0
             }
         };
     }
 
     static getTable() {
-        return 'electricity';
+        return 'electricity_solar_hourly';
     }
 }
