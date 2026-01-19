@@ -11,7 +11,7 @@ export class TeslaImporter extends BaseImporter {
         const timeStr = row['Date time'];
         if (!timeStr) return null;
 
-        const isoTime = new Date(timeStr).toISOString();
+        const isoTime = new Date(timeStr).getTime();
 
         return {
             table: 'electricity_solar_hourly',

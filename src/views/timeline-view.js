@@ -73,12 +73,12 @@ export class TimelineView extends HTMLElement {
         let params = [];
 
         if (dateFilter) {
-            // Assuming ISO string or similar in DB. Simple string match for date or range query needed.
-            // If timestamp is integer (unix), this is harder.
-            // For now, let's assume ISO string which is common in SQLite for readability or ints.
-            // We'll try a LIKE query for string dates first.
-            query += ` WHERE "${timeCol}" LIKE ?`;
-            params.push(`${dateFilter}%`);
+            // Assume input is YYYY-MM-DD
+            const startTs = new Date(dateFilter + 'T00:00:00').getTime();
+            const endTs = new Date(dateFilter + 'T23:59:59.999').getTime();
+            query += ` WHERE "${timeCol}" >= ? AND "${timeCol}" <= ?`;
+            params.push(startTs);
+            params.push(endTs);
         }
 
         query += ` ORDER BY "${timeCol}" DESC LIMIT 100`; // Limit for performance

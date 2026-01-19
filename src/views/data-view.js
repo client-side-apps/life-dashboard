@@ -98,9 +98,11 @@ export class DataView extends HTMLElement {
 
         if (dateColumn && startDate && endDate) {
             query += ` WHERE "${dateColumn}" >= ? AND "${dateColumn}" <= ?`;
-            params.push(startDate);
-            // Append end of day time for end date
-            params.push(endDate + (endDate.includes('T') ? '' : 'T23:59:59'));
+            // Convert to integer timestamp (Local Day)
+            const startTs = new Date(startDate + 'T00:00:00').getTime();
+            const endTs = new Date(endDate + 'T23:59:59.999').getTime();
+            params.push(startTs);
+            params.push(endTs);
             query += ` ORDER BY "${dateColumn}" DESC`;
         } else if (dateColumn) {
             query += ` ORDER BY "${dateColumn}" DESC`;
@@ -109,6 +111,14 @@ export class DataView extends HTMLElement {
         query += ` LIMIT 100`;
 
         const data = dbService.query(query, params);
+
+        if (data.length > 0) {
+            console.log(`Loaded table ${this.currentTable}. Columns:`, Object.keys(data[0]));
+        } else {
+            // If data is empty, we can't easily see columns unless we use PRAGMA
+            const info = dbService.query(`PRAGMA table_info("${this.currentTable}")`);
+            console.log(`Loaded table ${this.currentTable} (empty). Schema:`, info);
+        }
 
         const table = this.querySelector('#data-table');
         const thead = table.querySelector('thead');
@@ -141,7 +151,12 @@ export class DataView extends HTMLElement {
             const tr = document.createElement('tr');
             columns.forEach(col => {
                 const td = document.createElement('td');
-                td.textContent = row[col];
+                // Format timestamp if it's the probable date column and is a number
+                if (col === dateColumn && typeof row[col] === 'number') {
+                    td.textContent = new Date(row[col]).toLocaleString();
+                } else {
+                    td.textContent = row[col];
+                }
                 tr.appendChild(td);
             });
             tbody.appendChild(tr);

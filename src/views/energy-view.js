@@ -40,8 +40,9 @@ export class EnergyView extends HTMLElement {
             }
 
             if (minDates.length > 0) {
-                minDates.sort();
-                oldestDate = minDates[0].split('T')[0];
+                // minDates are integers (timestamps)
+                minDates.sort((a, b) => a - b);
+                oldestDate = new Date(minDates[0]).toISOString().split('T')[0];
             }
         } catch (e) {
             console.warn('Error fetching oldest date:', e);
@@ -91,12 +92,13 @@ export class EnergyView extends HTMLElement {
 
         if (startDate && endDate) {
             query += ` WHERE timestamp >= ? AND timestamp <= ?`;
-            // Add time component to end date to cover the full day if needed, or if stored as ISO string
-            // Assuming simplified YYYY-MM-DD string comparison or ISO
-            params.push(startDate);
-            params.push(endDate + 'T23:59:59');
+            // Convert String dates to Integer timestamps (Local Day boundaries)
+            const startTs = new Date(startDate + 'T00:00:00').getTime();
+            const endTs = new Date(endDate + 'T23:59:59.999').getTime();
+            params.push(startTs);
+            params.push(endTs);
         }
-        query += ` ORDER BY timestamp ASC`; // Chart.js usually cleaner with sorted data if we use dates
+        query += ` ORDER BY timestamp ASC`;
 
         const data = dbService.query(query, params);
         // data.reverse(); // If ASC, no need to reverse
@@ -135,8 +137,10 @@ export class EnergyView extends HTMLElement {
 
         if (startDate && endDate) {
             query += ` WHERE timestamp >= ? AND timestamp <= ?`;
-            params.push(startDate);
-            params.push(endDate + 'T23:59:59');
+            const startTs = new Date(startDate + 'T00:00:00').getTime();
+            const endTs = new Date(endDate + 'T23:59:59.999').getTime();
+            params.push(startTs);
+            params.push(endTs);
         }
         query += ` ORDER BY timestamp ASC`;
 

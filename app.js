@@ -230,7 +230,7 @@ async function loadDemoDatabase() {
         const placeholder = document.querySelector('.placeholder-message');
         if (placeholder) placeholder.innerHTML = '<p>Loading demo database...</p>';
 
-        const response = await fetch('demo.sqlite');
+        const response = await fetch(`demo.sqlite?v=${Date.now()}`);
         if (!response.ok) throw new Error('Failed to fetch demo database');
 
         const blob = await response.blob();

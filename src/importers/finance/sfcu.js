@@ -11,7 +11,7 @@ export class SfcuImporter extends BaseImporter {
         const dateStr = row['Post Date'];
         if (!dateStr) return null;
 
-        const isoDate = new Date(dateStr).toISOString();
+        const isoDate = new Date(dateStr).getTime();
         const description = row['Description'];
 
         // Parse amount (Debit or Credit)

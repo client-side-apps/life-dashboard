@@ -19,7 +19,7 @@ export class PgeImporter extends BaseImporter {
             const timeStr = row['START TIME'];
             if (!dateStr || !timeStr) return null;
 
-            const isoTime = new Date(`${dateStr} ${timeStr}`).toISOString();
+            const isoTime = new Date(`${dateStr} ${timeStr}`).getTime();
             return {
                 table: 'electricity_grid_hourly',
                 data: {
@@ -32,7 +32,7 @@ export class PgeImporter extends BaseImporter {
             const timeStr = row['Start time'] || row['START TIME'];
             if (!dateStr || !timeStr) return null;
 
-            const isoTime = new Date(`${dateStr} ${timeStr}`).toISOString();
+            const isoTime = new Date(`${dateStr} ${timeStr}`).getTime();
             const usage = parseFloat(row['Usage']) || parseFloat(row['USAGE (therms)']) || 0;
             return {
                 table: 'gas_daily',
