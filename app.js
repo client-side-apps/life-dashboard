@@ -65,11 +65,6 @@ function setupEventListeners() {
             await loadDemoDatabase();
         }
     });
-
-    // Import Data View
-    elements.importDataBtn.addEventListener('click', () => {
-        window.location.hash = '#/import';
-    });
 }
 
 function applyTheme(theme) {

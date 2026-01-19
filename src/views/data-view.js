@@ -20,6 +20,18 @@ export class DataView extends HTMLElement {
     }
 
     loadTableOptions() {
+        const downloadBtn = this.querySelector('#download-db-btn');
+        if (downloadBtn) {
+            downloadBtn.addEventListener('click', () => this.downloadDatabase());
+        }
+
+        const importBtn = this.querySelector('#import-data-btn');
+        if (importBtn) {
+            importBtn.addEventListener('click', () => {
+                window.location.hash = '#/import';
+            });
+        }
+
         const tables = dbService.getTables();
         const select = this.querySelector('#data-table-select');
 
@@ -35,11 +47,6 @@ export class DataView extends HTMLElement {
             this.currentTable = e.target.value;
             this.loadTableData();
         });
-
-        const downloadBtn = this.querySelector('#download-db-btn');
-        if (downloadBtn) {
-            downloadBtn.addEventListener('click', () => this.downloadDatabase());
-        }
     }
 
     async downloadDatabase() {
