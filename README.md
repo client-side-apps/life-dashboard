@@ -29,3 +29,27 @@ Run tests locally using Node.js:
 ```bash
 node --test
 ```
+
+## Development
+
+### Technology Stack
+*   **Vanilla JavaScript Only**: Do not use TypeScript. Use modern JavaScript (ESM imports, `await`, `fetch`...).
+*   **No Frameworks**: No Angular, React, Next.js, or other JS frameworks.
+*   **Web Standards**: Optimize for using standard web APIs. Utilize Web Components and Custom Elements where appropriate.
+
+### Dependencies & Build
+*   **No Build Step**: The app should run by serving `index.html` from a (local) web server.
+*   **Libraries**: Minimal library usage allowed only for charting, mapping, and database access.
+*   **Import Maps**: Use import maps to de-couple from library locations.
+
+### HTML Structure
+*   **Native Elements**: Prefer native HTML elements over custom ones (e.g., `<select>`, `<input type="date">`, `<input type="file">`).
+*   **Semantic HTML**: Use tags like `<main>`, `<nav>`, `<footer>`, `<header>`.
+
+### Styling
+*   **Pure CSS**: Use classes and plain CSS. No Tailwind or shadcn/ui.
+*   **Modern Features**: Use CSS variables, color functions, etc.
+*   **Clean Code**: Maintain reusable CSS and avoid presentational class names (e.g., no "centered").
+
+### Database
+*   **Naming Convention**: Database columns must have the unit in the name (e.g., `energy_kwh`, `duration_minutes`).
