@@ -121,6 +121,11 @@ class DatabaseService {
     getAll(tableName, limit = 1000) {
         return this.query(`SELECT * FROM "${tableName}" LIMIT ?`, [limit]);
     }
+
+    export() {
+        if (!this.db) throw new Error("Database not connected");
+        return this.db.export();
+    }
 }
 
 export const dbService = new DatabaseService();

@@ -35,6 +35,31 @@ export class DataView extends HTMLElement {
             this.currentTable = e.target.value;
             this.loadTableData();
         });
+
+        const downloadBtn = this.querySelector('#download-db-btn');
+        if (downloadBtn) {
+            downloadBtn.addEventListener('click', () => this.downloadDatabase());
+        }
+    }
+
+    async downloadDatabase() {
+        try {
+            const data = dbService.export();
+            const blob = new Blob([data], { type: 'application/octet-stream' });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'life-dashboard.sqlite';
+            document.body.appendChild(a);
+            a.click();
+
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error('Failed to export database:', error);
+            alert('Failed to export database');
+        }
     }
 
     async loadTableData() {
