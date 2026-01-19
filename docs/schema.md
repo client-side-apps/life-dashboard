@@ -12,7 +12,7 @@ Stores daily history of location coordinates.
 | `id` | INTEGER | Primary Key |
 | `lat` | REAL | Latitude |
 | `lng` | REAL | Longitude |
-| `time` | TEXT | Timestamp (ISO 8601) |
+| `timestamp` | TEXT | Timestamp (ISO 8601) |
 
 ### `weight`
 Stores body weight measurements.
@@ -21,7 +21,7 @@ Stores body weight measurements.
 | :--- | :--- | :--- |
 | `id` | INTEGER | Primary Key |
 | `value` | REAL | Weight value (e.g., in kg or lbs) |
-| `time` | TEXT | Date/Time of measurement |
+| `timestamp` | TEXT | Date/Time of measurement |
 
 ### `sleep`
 Stores sleep duration or quality metrics.
@@ -30,7 +30,7 @@ Stores sleep duration or quality metrics.
 | :--- | :--- | :--- |
 | `id` | INTEGER | Primary Key |
 | `value` | REAL | Sleep duration (likely in hours) or score |
-| `time` | TEXT | Date of sleep record |
+| `timestamp` | TEXT | Date of sleep record |
 
 ### `steps`
 Stores daily step counts.
@@ -39,7 +39,7 @@ Stores daily step counts.
 | :--- | :--- | :--- |
 | `id` | INTEGER | Primary Key |
 | `value` | INTEGER | Number of steps |
-| `time` | TEXT | Date of record |
+| `timestamp` | TEXT | Date of record |
 
 ### `accounts`
 Stores financial account information.
@@ -57,7 +57,7 @@ Stores financial transactions associated with accounts.
 | Column | Type | Description |
 | :--- | :--- | :--- |
 | `id` | INTEGER | Primary Key |
-| `date` | TEXT | Date of transaction |
+| `timestamp` | TEXT | Date of transaction |
 | `description` | TEXT | Description/Payee |
 | `amount` | REAL | Transaction amount |
 | `account_id` | INTEGER | Foreign Key linking to `accounts.id` |
@@ -68,7 +68,7 @@ Stores hourly electricity import data from the grid.
 | Column | Type | Description |
 | :--- | :--- | :--- |
 | `id` | INTEGER | Primary Key |
-| `time` | TEXT | Hourly timestamp |
+| `timestamp` | TEXT | Hourly timestamp |
 | `import_kwh` | REAL | Electricity imported from grid (kWh) |
 
 ### `electricity_solar_hourly`
@@ -77,7 +77,7 @@ Stores hourly solar production and home consumption data.
 | Column | Type | Description |
 | :--- | :--- | :--- |
 | `id` | INTEGER | Primary Key |
-| `time` | TEXT | Hourly timestamp |
+| `timestamp` | TEXT | Hourly timestamp |
 | `solar_kwh` | REAL | Solar energy produced (kWh) |
 | `consumption_kwh`| REAL | Energy consumed by home (kWh) |
 
@@ -87,7 +87,7 @@ Stores daily gas usage data.
 | Column | Type | Description |
 | :--- | :--- | :--- |
 | `id` | INTEGER | Primary Key |
-| `time` | TEXT | Daily timestamp |
+| `timestamp` | TEXT | Daily timestamp |
 | `usage_therms` | REAL | Gas usage in therms |
 
 ### `movies`
@@ -99,5 +99,5 @@ Stores a log of watched movies.
 | `title` | TEXT | Movie title |
 | `year` | INTEGER | Release year |
 | `rating` | INTEGER | User rating |
-| `time_watched` | TEXT | Date/Time when watched |
+| `timestamp` | TEXT | Date/Time when watched |
 | `poster_url` | TEXT | URL to movie poster image |

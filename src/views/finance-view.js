@@ -90,7 +90,7 @@ export class FinanceView extends HTMLElement {
             params.push(this.currentAccount);
         }
 
-        query += ' ORDER BY date DESC LIMIT 50';
+        query += ' ORDER BY timestamp DESC LIMIT 50';
 
         const transactions = dbService.query(query, params);
 
@@ -100,7 +100,7 @@ export class FinanceView extends HTMLElement {
         }
 
         tbody.innerHTML = transactions.map(t => {
-            const date = new Date(t.date || t.timestamp).toLocaleDateString();
+            const date = new Date(t.timestamp).toLocaleDateString();
             const desc = t.description || t.payee || 'Unknown';
             const amount = parseFloat(t.amount || t.value || 0);
             const amountClass = amount >= 0 ? '' : 'accent-color';

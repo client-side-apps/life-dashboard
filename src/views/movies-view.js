@@ -29,7 +29,7 @@ export class MoviesView extends HTMLElement {
             return;
         }
 
-        const movies = dbService.query('SELECT * FROM movies ORDER BY time_watched DESC LIMIT 50');
+        const movies = dbService.query('SELECT * FROM movies ORDER BY timestamp DESC LIMIT 50');
 
         if (movies.length === 0) {
             grid.innerHTML = 'No movies found.';
@@ -40,7 +40,7 @@ export class MoviesView extends HTMLElement {
             const title = m.title || m.name || 'Unknown Title';
             const year = m.year || '';
             const rating = m.rating || m.my_rating || '';
-            const watched = m.time_watched || m.date_watched;
+            const watched = m.timestamp;
             const watchedStr = watched ? new Date(watched).toLocaleDateString() : 'Unknown date';
             const poster = m.poster_url || m.image || null; // Optional
 

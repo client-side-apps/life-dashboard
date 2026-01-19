@@ -47,26 +47,26 @@ async function run() {
                 id INTEGER PRIMARY KEY, 
                 lat REAL, 
                 lng REAL, 
-                time TEXT
+                timestamp TEXT
             )`);
 
             // Health Data
-            db.run(`CREATE TABLE IF NOT EXISTS weight (id INTEGER PRIMARY KEY, value REAL, time TEXT)`);
-            db.run(`CREATE TABLE IF NOT EXISTS sleep (id INTEGER PRIMARY KEY, value REAL, time TEXT)`);
-            db.run(`CREATE TABLE IF NOT EXISTS steps (id INTEGER PRIMARY KEY, value INTEGER, time TEXT)`);
+            db.run(`CREATE TABLE IF NOT EXISTS weight (id INTEGER PRIMARY KEY, value REAL, timestamp TEXT)`);
+            db.run(`CREATE TABLE IF NOT EXISTS sleep (id INTEGER PRIMARY KEY, value REAL, timestamp TEXT)`);
+            db.run(`CREATE TABLE IF NOT EXISTS steps (id INTEGER PRIMARY KEY, value INTEGER, timestamp TEXT)`);
 
             // Finance Data
             db.run(`CREATE TABLE IF NOT EXISTS accounts (id INTEGER PRIMARY KEY, name TEXT, balance REAL, type TEXT)`);
-            db.run(`CREATE TABLE IF NOT EXISTS transactions (id INTEGER PRIMARY KEY, date TEXT, description TEXT, amount REAL, account_id INTEGER)`);
+            db.run(`CREATE TABLE IF NOT EXISTS transactions (id INTEGER PRIMARY KEY, timestamp TEXT, description TEXT, amount REAL, account_id INTEGER)`);
 
             // Energy Data
             // Energy Data
-            db.run(`CREATE TABLE IF NOT EXISTS electricity_grid_hourly (id INTEGER PRIMARY KEY, time TEXT, import_kwh REAL)`);
-            db.run(`CREATE TABLE IF NOT EXISTS electricity_solar_hourly (id INTEGER PRIMARY KEY, time TEXT, solar_kwh REAL, consumption_kwh REAL)`);
-            db.run(`CREATE TABLE IF NOT EXISTS gas_daily (id INTEGER PRIMARY KEY, time TEXT, usage_therms REAL)`);
+            db.run(`CREATE TABLE IF NOT EXISTS electricity_grid_hourly (id INTEGER PRIMARY KEY, timestamp TEXT, import_kwh REAL)`);
+            db.run(`CREATE TABLE IF NOT EXISTS electricity_solar_hourly (id INTEGER PRIMARY KEY, timestamp TEXT, solar_kwh REAL, consumption_kwh REAL)`);
+            db.run(`CREATE TABLE IF NOT EXISTS gas_daily (id INTEGER PRIMARY KEY, timestamp TEXT, usage_therms REAL)`);
 
             // Movies
-            db.run(`CREATE TABLE IF NOT EXISTS movies (id INTEGER PRIMARY KEY, title TEXT, year INTEGER, rating INTEGER, time_watched TEXT, poster_url TEXT)`);
+            db.run(`CREATE TABLE IF NOT EXISTS movies (id INTEGER PRIMARY KEY, title TEXT, year INTEGER, rating INTEGER, timestamp TEXT, poster_url TEXT)`);
 
 
             // ==========================================
@@ -76,7 +76,7 @@ async function run() {
             console.log("Generating random data for: Location, Health, Movies...");
 
             // Location
-            const stmtLocation = db.prepare("INSERT INTO location_history (lat, lng, time) VALUES (?, ?, ?)");
+            const stmtLocation = db.prepare("INSERT INTO location_history (lat, lng, timestamp) VALUES (?, ?, ?)");
             const baseLat = 37.7749;
             const baseLng = -122.4194;
             for (let i = 0; i < 100; i++) {
@@ -88,7 +88,7 @@ async function run() {
             stmtLocation.finalize();
 
             // Health
-            const stmtWeight = db.prepare("INSERT INTO weight (value, time) VALUES (?, ?)");
+            const stmtWeight = db.prepare("INSERT INTO weight (value, timestamp) VALUES (?, ?)");
             let weight = 70.0;
             for (let i = 0; i < 30; i++) {
                 weight += (Math.random() - 0.5) * 1.0;
@@ -97,7 +97,7 @@ async function run() {
             }
             stmtWeight.finalize();
 
-            const stmtSleep = db.prepare("INSERT INTO sleep (value, time) VALUES (?, ?)");
+            const stmtSleep = db.prepare("INSERT INTO sleep (value, timestamp) VALUES (?, ?)");
             for (let i = 0; i < 30; i++) {
                 const hours = 6.0 + Math.random() * 3.0;
                 const time = new Date(Date.now() - i * 86400000).toISOString();
@@ -105,7 +105,7 @@ async function run() {
             }
             stmtSleep.finalize();
 
-            const stmtSteps = db.prepare("INSERT INTO steps (value, time) VALUES (?, ?)");
+            const stmtSteps = db.prepare("INSERT INTO steps (value, timestamp) VALUES (?, ?)");
             for (let i = 0; i < 30; i++) {
                 const steps = Math.floor(4000 + Math.random() * 10000);
                 const time = new Date(Date.now() - i * 86400000).toISOString();
@@ -123,7 +123,7 @@ async function run() {
             stmtAccounts.finalize();
 
             // Movies
-            const stmtMovies = db.prepare("INSERT INTO movies (title, year, rating, time_watched, poster_url) VALUES (?, ?, ?, ?, ?)");
+            const stmtMovies = db.prepare("INSERT INTO movies (title, year, rating, timestamp, poster_url) VALUES (?, ?, ?, ?, ?)");
             const moviesList = [
                 ["Inception", 2010, 5, "https://image.tmdb.org/t/p/w200/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg"],
                 ["The Matrix", 1999, 5, "https://image.tmdb.org/t/p/w200/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg"],
@@ -231,28 +231,28 @@ function insertData(table, data) {
     if (table === 'electricity_grid_hourly') {
         const imp = data.import_kwh !== null ? data.import_kwh : 0;
         db.run(
-            'INSERT INTO electricity_grid_hourly (time, import_kwh) VALUES (?, ?)',
-            [data.time, imp],
+            'INSERT INTO electricity_grid_hourly (timestamp, import_kwh) VALUES (?, ?)',
+            [data.timestamp, imp],
             (err) => { if (err) console.error(err.message); }
         );
     } else if (table === 'electricity_solar_hourly') {
         const solar = data.solar_kwh !== null ? data.solar_kwh : 0;
         const consumption = data.consumption_kwh !== null ? data.consumption_kwh : 0;
         db.run(
-            'INSERT INTO electricity_solar_hourly (time, solar_kwh, consumption_kwh) VALUES (?, ?, ?)',
-            [data.time, solar, consumption],
+            'INSERT INTO electricity_solar_hourly (timestamp, solar_kwh, consumption_kwh) VALUES (?, ?, ?)',
+            [data.timestamp, solar, consumption],
             (err) => { if (err) console.error(err.message); }
         );
     } else if (table === 'gas_daily') {
         db.run(
-            'INSERT INTO gas_daily (time, usage_therms) VALUES (?, ?)',
-            [data.time, data.usage_therms],
+            'INSERT INTO gas_daily (timestamp, usage_therms) VALUES (?, ?)',
+            [data.timestamp, data.usage_therms],
             (err) => { if (err) console.error(err.message); }
         );
     } else if (table === 'transactions') {
         db.run(
-            'INSERT INTO transactions (date, description, amount, account_id) VALUES (?, ?, ?, ?)',
-            [data.date, data.description, data.amount, data.account_id],
+            'INSERT INTO transactions (timestamp, description, amount, account_id) VALUES (?, ?, ?, ?)',
+            [data.timestamp, data.description, data.amount, data.account_id],
             (err) => { if (err) console.error(err.message); }
         );
     }

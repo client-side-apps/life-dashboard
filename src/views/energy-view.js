@@ -30,15 +30,15 @@ export class EnergyView extends HTMLElement {
             const tables = dbService.getTables();
             let minDates = [];
             if (tables.includes('electricity_solar_hourly')) {
-                const res = dbService.query('SELECT MIN(time) as min_time FROM electricity_solar_hourly');
+                const res = dbService.query('SELECT MIN(timestamp) as min_time FROM electricity_solar_hourly');
                 if (res.length > 0 && res[0].min_time) minDates.push(res[0].min_time);
             }
             if (tables.includes('electricity_grid_hourly')) {
-                const res = dbService.query('SELECT MIN(time) as min_time FROM electricity_grid_hourly');
+                const res = dbService.query('SELECT MIN(timestamp) as min_time FROM electricity_grid_hourly');
                 if (res.length > 0 && res[0].min_time) minDates.push(res[0].min_time);
             }
             if (tables.includes('gas_daily')) {
-                const res = dbService.query('SELECT MIN(time) as min_time FROM gas_daily');
+                const res = dbService.query('SELECT MIN(timestamp) as min_time FROM gas_daily');
                 if (res.length > 0 && res[0].min_time) minDates.push(res[0].min_time);
             }
 
@@ -94,20 +94,20 @@ export class EnergyView extends HTMLElement {
         let params = [];
 
         if (startDate && endDate) {
-            query += ` WHERE time >= ? AND time <= ?`;
+            query += ` WHERE timestamp >= ? AND timestamp <= ?`;
             // Add time component to end date to cover the full day if needed, or if stored as ISO string
             // Assuming simplified YYYY-MM-DD string comparison or ISO
             params.push(startDate);
             params.push(endDate + 'T23:59:59');
         }
-        query += ` ORDER BY time ASC`; // Chart.js usually cleaner with sorted data if we use dates
+        query += ` ORDER BY timestamp ASC`; // Chart.js usually cleaner with sorted data if we use dates
 
         const data = dbService.query(query, params);
         // data.reverse(); // If ASC, no need to reverse
 
         chartCard.setDateRange(startDate, endDate);
 
-        const labels = data.map(d => new Date(d.time || d.date).toLocaleDateString());
+        const labels = data.map(d => new Date(d.timestamp || d.date).toLocaleDateString());
 
         const datasets = datasetsConfig.map(cfg => ({
             label: cfg.label,
@@ -138,17 +138,17 @@ export class EnergyView extends HTMLElement {
         let params = [];
 
         if (startDate && endDate) {
-            query += ` WHERE time >= ? AND time <= ?`;
+            query += ` WHERE timestamp >= ? AND timestamp <= ?`;
             params.push(startDate);
             params.push(endDate + 'T23:59:59');
         }
-        query += ` ORDER BY time ASC`;
+        query += ` ORDER BY timestamp ASC`;
 
         const data = dbService.query(query, params);
 
         chartCard.setDateRange(startDate, endDate);
 
-        const labels = data.map(d => new Date(d.time || d.date).toLocaleDateString());
+        const labels = data.map(d => new Date(d.timestamp || d.date).toLocaleDateString());
         const values = data.map(d => d[valueCol] || 0);
 
         chartCard.setConfiguration({

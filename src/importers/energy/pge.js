@@ -23,7 +23,7 @@ export class PgeImporter extends BaseImporter {
             return {
                 table: 'electricity_grid_hourly',
                 data: {
-                    time: isoTime,
+                    timestamp: isoTime,
                     import_kwh: parseFloat(row['IMPORT (kWh)']) || 0
                 }
             };
@@ -37,7 +37,7 @@ export class PgeImporter extends BaseImporter {
             return {
                 table: 'gas_daily',
                 data: {
-                    time: isoTime,
+                    timestamp: isoTime,
                     usage_therms: usage
                 }
             };

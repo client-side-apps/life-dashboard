@@ -55,6 +55,7 @@ node --test
 ### Database
 *   **Schema**: Expected tables and columns are documented in [docs/schema.md](docs/schema.md).
 *   **Naming Convention**: Database columns must have the unit in the name (e.g., `energy_kwh`, `duration_minutes`).
+*   **Timestamps**: Any column representing a date or time must be named `timestamp`.
 
 ### Data Import
 *   **Importers**: Supported data importers and file formats are documented in [docs/importers.md](docs/importers.md).

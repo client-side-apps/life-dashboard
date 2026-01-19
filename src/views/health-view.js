@@ -75,11 +75,11 @@ export class HealthView extends HTMLElement {
             return;
         }
 
-        const data = dbService.query(`SELECT * FROM "${tableName}" ORDER BY time DESC LIMIT 30`);
+        const data = dbService.query(`SELECT * FROM "${tableName}" ORDER BY timestamp DESC LIMIT 30`);
         // Reverse for chart (oldest to newest)
         data.reverse();
 
-        const labels = data.map(d => new Date(d.time || d.date).toLocaleDateString());
+        const labels = data.map(d => new Date(d.timestamp || d.date).toLocaleDateString());
         const values = data.map(d => d.value || d[valueCol] || 0);
 
         chartCard.setConfiguration({

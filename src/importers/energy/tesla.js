@@ -16,7 +16,7 @@ export class TeslaImporter extends BaseImporter {
         return {
             table: 'electricity_solar_hourly',
             data: {
-                time: isoTime,
+                timestamp: isoTime,
                 solar_kwh: parseFloat(row['Solar Energy (kWh)']) || 0,
                 consumption_kwh: parseFloat(row['Home (kWh)']) || 0
             }

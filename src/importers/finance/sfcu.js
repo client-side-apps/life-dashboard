@@ -25,7 +25,7 @@ export class SfcuImporter extends BaseImporter {
         return {
             table: 'transactions',
             data: {
-                date: isoDate,
+                timestamp: isoDate,
                 description: description,
                 amount: amount,
                 // category: ... logic todo
