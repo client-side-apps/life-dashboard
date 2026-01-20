@@ -8,7 +8,7 @@ import { MoviesView } from './src/views/movies-view.js';
 import { DataView } from './src/views/data-view.js';
 import { ImportView } from './src/views/import-view.js';
 import './src/components/chart-card.js';
-import './src/components/date-range-picker.js';
+import './src/components/date-range-picker/date-range-picker.js';
 
 // Main App Entry Point
 

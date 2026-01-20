@@ -80,9 +80,6 @@ export class EnergyView extends HTMLElement {
         // Check table
         const tables = dbService.getTables();
         if (!tables.includes(tableName)) {
-            // Try to find a partial match or fail gracefully
-            // For redundancy, check if we have data columns in another table? 
-            // Simplification: just show "No data" if table missing
             chartCard.innerHTML += `<p>Table "${tableName}" not found.</p>`;
             return;
         }
@@ -101,24 +98,21 @@ export class EnergyView extends HTMLElement {
         query += ` ORDER BY timestamp ASC`;
 
         const data = dbService.query(query, params);
-        // data.reverse(); // If ASC, no need to reverse
 
         chartCard.setDateRange(startDate, endDate);
 
-        const labels = data.map(d => new Date(d.timestamp || d.date).toLocaleDateString());
+        // Deduce interval from table name
+        const interval = tableName.includes('hourly') ? 'hourly' : 'daily';
 
-        const datasets = datasetsConfig.map(cfg => ({
-            label: cfg.label,
-            data: data.map(d => d[cfg.col] || 0),
-            borderColor: cfg.color,
-            tension: 0.1,
-            fill: false
-        }));
-
-        chartCard.setConfiguration({
-            type: 'line',
-            data: { labels, datasets },
-            options: { responsive: true }
+        chartCard.setTimeSeriesData(data, {
+            series: datasetsConfig.map(cfg => ({
+                label: cfg.label,
+                key: cfg.col,
+                color: cfg.color
+            })),
+            interval: interval,
+            startDate: startDate,
+            endDate: endDate
         });
     }
 
@@ -148,22 +142,18 @@ export class EnergyView extends HTMLElement {
 
         chartCard.setDateRange(startDate, endDate);
 
-        const labels = data.map(d => new Date(d.timestamp || d.date).toLocaleDateString());
-        const values = data.map(d => d[valueCol] || 0);
+        // Deduce interval from table name
+        const interval = tableName.includes('hourly') ? 'hourly' : 'daily';
 
-        chartCard.setConfiguration({
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: label,
-                    data: values,
-                    borderColor: color,
-                    tension: 0.1,
-                    fill: false
-                }]
-            },
-            options: { responsive: true }
+        chartCard.setTimeSeriesData(data, {
+            series: [{
+                label: label,
+                key: valueCol,
+                color: color
+            }],
+            interval: interval,
+            startDate: startDate,
+            endDate: endDate
         });
     }
 }
