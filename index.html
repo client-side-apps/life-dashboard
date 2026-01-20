@@ -69,6 +69,9 @@
             <select id="map-table-select" class="select-input">
                 <option value="" disabled>Select Table</option>
             </select>
+            <div class="date-controls">
+                <date-range-picker id="map-date-picker"></date-range-picker>
+            </div>
             <div id="map-stats" class="map-stats"></div>
         </div>
         <div id="leaflet-map" class="full-map"></div>
@@ -79,7 +82,7 @@
             <select id="timeline-table-select" class="select-input">
                 <option value="" disabled>Select Table</option>
             </select>
-            <input type="date" id="timeline-date-picker" class="date-input">
+            <date-range-picker id="timeline-date-picker"></date-range-picker>
             <span id="timeline-stats"></span>
         </div>
         <div id="timeline-content" class="timeline-content">
@@ -125,6 +128,7 @@
             <select id="finance-account-select" class="select-input" style="min-width: 200px;">
                 <option value="">All Accounts</option>
             </select>
+            <date-range-picker id="finance-date-picker"></date-range-picker>
         </div>
 
         <div class="transaction-list">
@@ -154,12 +158,15 @@
     </template>
 
     <template id="movies-view-template">
+        <div class="date-controls" style="margin-bottom: 1rem;">
+            <date-range-picker id="movies-date-picker"></date-range-picker>
+        </div>
         <div id="movies-grid" class="movies-grid">
             Loading...
         </div>
     </template>
 
-    <template id="data-view-template">
+    <template id="raw-data-view-template">
         <div class="data-controls"
             style="margin-bottom: 1rem; display: flex; flex-wrap: wrap; gap: 1rem; align-items: center;">
             <select id="data-table-select" class="select-input" style="min-width: 200px;">

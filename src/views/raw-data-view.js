@@ -1,22 +1,28 @@
 import { dbService } from '../db.js';
+import { DataView } from '../components/data-view/data-view.js';
 
-export class DataView extends HTMLElement {
+export class RawDataView extends DataView {
     constructor() {
         super();
         this.currentTable = null;
     }
 
     connectedCallback() {
+        super.connectedCallback();
         this.render();
     }
 
     async render() {
         this.innerHTML = '';
-        const template = document.getElementById('data-view-template');
+        const template = document.getElementById('raw-data-view-template');
         const content = template.content.cloneNode(true);
         this.appendChild(content);
 
         this.loadTableOptions();
+    }
+
+    onDateRangeChanged() {
+        this.loadTableData();
     }
 
     loadTableOptions() {
@@ -49,10 +55,9 @@ export class DataView extends HTMLElement {
         });
 
         // Date picker listener
-        const datePicker = this.querySelector('#data-date-picker');
-        if (datePicker) {
-            datePicker.addEventListener('date-change', () => this.loadTableData());
-        }
+        // DataView handles this via onDateRangeChanged
+        // The picker in the template needs to be detected by DataView's mechanism
+        // Since we render from template, DataView's observer will pick it up
     }
 
     async downloadDatabase() {
@@ -78,9 +83,8 @@ export class DataView extends HTMLElement {
     async loadTableData() {
         if (!this.currentTable) return;
 
-        const datePicker = this.querySelector('#data-date-picker');
-        const startDate = datePicker ? datePicker.startDate : null;
-        const endDate = datePicker ? datePicker.endDate : null;
+        const startDate = this.startDate;
+        const endDate = this.endDate;
 
         let query = `SELECT * FROM "${this.currentTable}"`;
         let params = [];
@@ -164,5 +168,5 @@ export class DataView extends HTMLElement {
     }
 }
 
-customElements.define('data-view', DataView);
+customElements.define('raw-data-view', RawDataView);
 

@@ -5,10 +5,11 @@ import { HealthView } from './src/views/health-view.js';
 import { FinanceView } from './src/views/finance-view.js';
 import { EnergyView } from './src/views/energy-view.js';
 import { MoviesView } from './src/views/movies-view.js';
-import { DataView } from './src/views/data-view.js';
+import { RawDataView } from './src/views/raw-data-view.js';
 import { ImportView } from './src/views/import-view.js';
-import './src/components/chart-card.js';
+import './src/components/chart-card/chart-card.js';
 import './src/components/date-range-picker/date-range-picker.js';
+import './src/components/data-view/data-view.js';
 
 // Main App Entry Point
 
@@ -176,7 +177,7 @@ async function renderView(viewName) {
             tagName = 'movies-view';
             break;
         case 'data':
-            tagName = 'data-view';
+            tagName = 'raw-data-view';
             break;
         case 'import':
             tagName = 'import-view';

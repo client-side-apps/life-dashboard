@@ -1,11 +1,13 @@
 import { dbService } from '../db.js';
+import { DataView } from '../components/data-view/data-view.js';
 
-export class EnergyView extends HTMLElement {
+export class EnergyView extends DataView {
     constructor() {
         super();
     }
 
     connectedCallback() {
+        super.connectedCallback();
         this.render();
     }
 
@@ -18,7 +20,7 @@ export class EnergyView extends HTMLElement {
         // Date selection logic
         const datePicker = this.querySelector('#energy-date-picker');
 
-        // Set default dates
+        // Set default dates logic remains, but we push it to the picker which syncs back to us
         const today = new Date().toISOString().split('T')[0];
 
         // Find oldest date
@@ -48,19 +50,26 @@ export class EnergyView extends HTMLElement {
             console.warn('Error fetching oldest date:', e);
         }
 
+        // Initialize picker. DataView listens to this via MutationObserver/bubbling
         datePicker.startDate = oldestDate;
         datePicker.endDate = today;
 
-        datePicker.addEventListener('date-change', () => this.loadCharts());
+        // Ensure we initialize our own state too if the picker doesn't bubble immediately on set
+        // But DataView setupDatePicker tries to sync.
+        // Let's force sync or just call loadCharts which reads from properties
+        this.startDate = oldestDate;
+        this.endDate = today;
 
         await this.loadCharts();
     }
 
-    async loadCharts() {
-        const datePicker = this.querySelector('#energy-date-picker');
+    onDateRangeChanged() {
+        this.loadCharts();
+    }
 
-        const startDate = datePicker ? datePicker.startDate : null;
-        const endDate = datePicker ? datePicker.endDate : null;
+    async loadCharts() {
+        const startDate = this.startDate;
+        const endDate = this.endDate;
 
         // Hypothetical table names: electricity, gas
         await this.createMultiLineChart('solar-chart', 'electricity_solar_hourly',

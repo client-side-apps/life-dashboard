@@ -1,6 +1,7 @@
 import { dbService } from '../db.js';
+import { DataView } from '../components/data-view/data-view.js';
 
-export class FinanceView extends HTMLElement {
+export class FinanceView extends DataView {
     constructor() {
         super();
         this.accounts = [];
@@ -8,6 +9,7 @@ export class FinanceView extends HTMLElement {
     }
 
     connectedCallback() {
+        super.connectedCallback();
         this.render();
     }
 
@@ -17,7 +19,29 @@ export class FinanceView extends HTMLElement {
         const content = template.content.cloneNode(true);
         this.appendChild(content);
 
+        // Initialize picker defaults (optional, e.g. last 30 days or all time?)
+        // Let's defaut to all time or last year? Or let user pick.
+        // For finance, maybe last 30 days is good default.
+        const today = new Date();
+        const past30 = new Date();
+        past30.setDate(today.getDate() - 30);
+
+        const endDate = today.toISOString().split('T')[0];
+        const startDate = past30.toISOString().split('T')[0];
+
+        const picker = this.querySelector('date-range-picker');
+        if (picker) {
+            picker.startDate = startDate;
+            picker.endDate = endDate;
+            this.startDate = startDate;
+            this.endDate = endDate;
+        }
+
         this.loadSummary();
+        this.loadTransactions();
+    }
+
+    onDateRangeChanged() {
         this.loadTransactions();
     }
 
@@ -83,14 +107,30 @@ export class FinanceView extends HTMLElement {
 
         let query = 'SELECT * FROM transactions';
         let params = [];
+        let conditions = [];
 
         // Filter by account if selected
         if (this.currentAccount) {
-            query += ' WHERE account_id = ?';
+            conditions.push('account_id = ?');
             params.push(this.currentAccount);
         }
 
-        query += ' ORDER BY timestamp DESC LIMIT 50';
+        const startDate = this.startDate;
+        const endDate = this.endDate;
+
+        if (startDate && endDate) {
+            conditions.push('timestamp >= ? AND timestamp <= ?');
+            const startTs = new Date(startDate + 'T00:00:00').getTime();
+            const endTs = new Date(endDate + 'T23:59:59.999').getTime();
+            params.push(startTs);
+            params.push(endTs);
+        }
+
+        if (conditions.length > 0) {
+            query += ' WHERE ' + conditions.join(' AND ');
+        }
+
+        query += ' ORDER BY timestamp DESC LIMIT 50'; // Keep limit for UI performance
 
         const transactions = dbService.query(query, params);
 

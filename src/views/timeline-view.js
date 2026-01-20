@@ -1,12 +1,14 @@
 import { dbService } from '../db.js';
+import { DataView } from '../components/data-view/data-view.js';
 
-export class TimelineView extends HTMLElement {
+export class TimelineView extends DataView {
     constructor() {
         super();
         this.currentTable = 'location_history'; // Default, but allow selection
     }
 
     connectedCallback() {
+        super.connectedCallback();
         this.render();
     }
 
@@ -23,9 +25,27 @@ export class TimelineView extends HTMLElement {
             this.loadData();
         });
 
-        this.querySelector('#timeline-date-picker').addEventListener('change', (e) => {
-            this.loadData(e.target.value);
-        });
+        // Initialize picker.
+        // Default to today
+        const today = new Date().toISOString().split('T')[0];
+        const picker = this.querySelector('date-range-picker');
+        if (picker) {
+            picker.startDate = today;
+            picker.endDate = today;
+            this.startDate = today;
+            this.endDate = today;
+        }
+
+        // loadData called implicitly? No, need to trigger.
+        // If we set props, onDateRangeChanged will fire? 
+        // No, we set via prop setter which calls updateChildren, NOT onDateRangeChanged unless we call it.
+        // Wait, I updated DataView to call onDateRangeChanged in attributeChangedCallback, but props also call setAttribute.
+        // So setting this.startDate -> calls setAttribute -> calls attributeChangedCallback -> calls onDateRangeChanged.
+        // So setting dates above WILL trigger loadData via hook.
+    }
+
+    onDateRangeChanged() {
+        this.loadData();
     }
 
     loadTableOptions() {
@@ -42,17 +62,21 @@ export class TimelineView extends HTMLElement {
         ).join('');
 
         if (tables.includes(this.currentTable)) {
-            this.loadData();
+            // Wait for dates to start loadData
         } else if (tables.length > 0) {
             this.currentTable = tables[0];
             select.value = this.currentTable;
-            this.loadData();
         }
     }
 
-    loadData(dateFilter = null) {
+    loadData() {
         const content = this.querySelector('#timeline-content');
+        if (!content) return;
+
         content.innerHTML = 'Loading...';
+
+        const startDate = this.startDate;
+        const endDate = this.endDate;
 
         // Find time column
         const sample = dbService.query(`SELECT * FROM "${this.currentTable}" LIMIT 1`);
@@ -72,10 +96,9 @@ export class TimelineView extends HTMLElement {
         let query = `SELECT * FROM "${this.currentTable}"`;
         let params = [];
 
-        if (dateFilter) {
-            // Assume input is YYYY-MM-DD
-            const startTs = new Date(dateFilter + 'T00:00:00').getTime();
-            const endTs = new Date(dateFilter + 'T23:59:59.999').getTime();
+        if (startDate && endDate) {
+            const startTs = new Date(startDate + 'T00:00:00').getTime();
+            const endTs = new Date(endDate + 'T23:59:59.999').getTime();
             query += ` WHERE "${timeCol}" >= ? AND "${timeCol}" <= ?`;
             params.push(startTs);
             params.push(endTs);

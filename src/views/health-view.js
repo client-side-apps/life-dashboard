@@ -1,11 +1,13 @@
 import { dbService } from '../db.js';
+import { DataView } from '../components/data-view/data-view.js';
 
-export class HealthView extends HTMLElement {
+export class HealthView extends DataView {
     constructor() {
         super();
     }
 
     connectedCallback() {
+        super.connectedCallback();
         this.render();
     }
 
@@ -29,20 +31,8 @@ export class HealthView extends HTMLElement {
         datePicker.startDate = startDate;
         datePicker.endDate = endDate;
 
-        datePicker.addEventListener('date-change', () => {
-            // Reload current subview logic if needed, but for now just reload dashboard logic
-            // Check if we are in dashboard mode
-            // ideally we should reload whatever chart is on screen
-            // But logic is inside loadSubView. 
-            // We can just re-trigger loadSubView with current subview?
-            // Need to know current subview.
-            // Simplified: just assuming dashboard for the charts we are touching.
-            const urlParams = new URLSearchParams(window.location.hash.split('?')[1]); // Hash routing makes this tricky
-            // Let's just re-call loadSubView with currently active tab
-            const activeLink = this.querySelector('.health-nav a.active');
-            const subview = activeLink ? activeLink.dataset.subview : 'dashboard';
-            this.loadSubView(subview);
-        });
+        this.startDate = startDate;
+        this.endDate = endDate;
 
         // Sub-navigation is now handled by the main router calling loadSubView
         // We just ensure the links are correct
@@ -54,6 +44,13 @@ export class HealthView extends HTMLElement {
 
         // Initial load will be triggered by router if subview is present in hash
         // or we default it here if not (router passes null/undefined)
+    }
+
+    onDateRangeChanged() {
+        // Reload current subview logic
+        const activeLink = this.querySelector('.health-nav a.active');
+        const subview = activeLink ? activeLink.dataset.subview : 'dashboard';
+        this.loadSubView(subview);
     }
 
     async loadSubView(subview) {
@@ -74,9 +71,8 @@ export class HealthView extends HTMLElement {
 
         content.innerHTML = ''; // Clear
 
-        const datePicker = this.querySelector('#health-date-picker');
-        const startDate = datePicker ? datePicker.startDate : null;
-        const endDate = datePicker ? datePicker.endDate : null;
+        const startDate = this.startDate;
+        const endDate = this.endDate;
 
         if (subview === 'dashboard') {
             content.innerHTML = `

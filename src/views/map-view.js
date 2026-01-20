@@ -1,7 +1,8 @@
 import { dbService } from '../db.js';
 import L from 'leaflet';
+import { DataView } from '../components/data-view/data-view.js';
 
-export class MapView extends HTMLElement {
+export class MapView extends DataView {
     constructor() {
         super();
         this.map = null;
@@ -11,6 +12,7 @@ export class MapView extends HTMLElement {
     }
 
     connectedCallback() {
+        super.connectedCallback();
         this.render();
     }
 
@@ -29,6 +31,27 @@ export class MapView extends HTMLElement {
 
         this.initMap();
         this.loadTableOptions();
+
+        // Initialize picker.
+        // For map, probably last 30 days is good default?
+        const picker = this.querySelector('date-range-picker');
+        if (picker) {
+            const today = new Date();
+            const past = new Date();
+            past.setDate(today.getDate() - 30);
+
+            const endDate = today.toISOString().split('T')[0];
+            const startDate = past.toISOString().split('T')[0];
+
+            picker.startDate = startDate;
+            picker.endDate = endDate;
+            this.startDate = startDate;
+            this.endDate = endDate;
+        }
+    }
+
+    onDateRangeChanged() {
+        this.loadData();
     }
 
     initMap() {
@@ -81,16 +104,19 @@ export class MapView extends HTMLElement {
 
         // Trigger initial load
         if (tables.includes(this.currentTable)) {
-            this.loadData();
+            // deferred to data load via dates or implicit
+            // If we have dates, onDateRangeChanged will fire loadData. 
+            // If we don't, we might need manual call.
+            // Since we set dates in render, loop will occur.
         } else if (tables.length > 0) {
             this.currentTable = tables[0];
             select.value = this.currentTable;
-            this.loadData();
         }
     }
 
     async loadData() {
         if (!this.map) return;
+        if (!this.currentTable) return;
 
         // Clear existing markers
         if (this.markersLayer) {
@@ -100,6 +126,9 @@ export class MapView extends HTMLElement {
 
         const statsDiv = this.querySelector('#map-stats');
         statsDiv.textContent = 'Loading...';
+
+        const startDate = this.startDate;
+        const endDate = this.endDate;
 
         try {
             // Heuristic to find lat/lng columns
@@ -121,8 +150,23 @@ export class MapView extends HTMLElement {
                 return;
             }
 
-            // Fetch data (limit for performance for now, maybe 1000)
-            const data = dbService.query(`SELECT "${latCol}", "${lngCol}" ${timeCol ? `, "${timeCol}"` : ''} FROM "${this.currentTable}" ORDER BY "${timeCol || latCol}" DESC LIMIT 2000`);
+            let query = `SELECT "${latCol}", "${lngCol}" ${timeCol ? `, "${timeCol}"` : ''} FROM "${this.currentTable}"`;
+            let params = [];
+
+            if (timeCol && startDate && endDate) {
+                query += ` WHERE "${timeCol}" >= ? AND "${timeCol}" <= ?`;
+                const startTs = new Date(startDate + 'T00:00:00').getTime();
+                const endTs = new Date(endDate + 'T23:59:59.999').getTime();
+                params.push(startTs);
+                params.push(endTs);
+                query += ` ORDER BY "${timeCol}" DESC`;
+            } else if (timeCol) {
+                query += ` ORDER BY "${timeCol}" DESC`;
+            }
+
+            query += ` LIMIT 2000`; // Limit points to prevent browser freeze
+
+            const data = dbService.query(query, params);
 
             const bounds = L.latLngBounds();
 
