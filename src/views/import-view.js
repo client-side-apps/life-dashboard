@@ -10,23 +10,26 @@ export class ImportView extends HTMLElement {
     }
 
     render() {
+        // Check if File System Access API is supported
+        const supportsFileSystem = 'showDirectoryPicker' in window;
+
         this.innerHTML = `
             <div class="import-container">
                 <h1>Import Data</h1>
                 <div class="card">
                     <h2>Import Data</h2>
-                    <p>Select CSV files and specify the data type/provider.</p>
+                    <p>Select CSV files or a folder to import data from.</p>
                     
                     <div class="import-filter-container">
                         <label for="type-select">Type:</label>
-                        <select id="type-select">
+                        <select id="type-select" class="select-input">
                             <option value="">(Auto-detect)</option>
                             <option value="energy">Energy</option>
                             <option value="finance">Finance</option>
                         </select>
                         
                         <label for="provider-select">Provider:</label>
-                        <select id="provider-select">
+                        <select id="provider-select" class="select-input">
                             <option value="">(Auto-detect)</option>
                             <option value="pge">PG&E</option>
                             <option value="tesla">Tesla</option>
@@ -34,74 +37,149 @@ export class ImportView extends HTMLElement {
                         </select>
                     </div>
 
-                    <input type="file" id="csv-input" multiple>
+                    <div class="import-actions">
+                        <div class="file-input-wrapper">
+                            <input type="file" id="csv-input" multiple accesskey="f">
+                            <label for="csv-input" class="primary-btn">Choose Files</label>
+                        </div>
+                        ${supportsFileSystem ? `
+                            <span class="separator">or</span>
+                            <button id="folder-btn" class="secondary-btn">Select Folder</button>
+                        ` : ''}
+                    </div>
+
                     <div id="status-area" class="import-status-area"></div>
                 </div>
             </div>
+            
         `;
 
         const input = this.querySelector('#csv-input');
         const status = this.querySelector('#status-area');
+        const folderBtn = this.querySelector('#folder-btn');
+
+        // Bind events
+        input.addEventListener('change', (e) => this.handleFileSelection(e.target.files));
+
+        if (folderBtn) {
+            folderBtn.addEventListener('click', () => this.handleFolderSelection());
+        }
+    }
+
+    async handleFileSelection(fileList) {
+        if (!fileList || fileList.length === 0) return;
+        await this.processFiles(Array.from(fileList));
+    }
+
+    async handleFolderSelection() {
+        try {
+            const dirHandle = await window.showDirectoryPicker();
+            const files = [];
+
+            const status = this.querySelector('#status-area');
+            status.innerHTML = '<div class="import-loading-container">Scanning directory...</div>';
+
+            await this.scanDirectory(dirHandle, files);
+
+            if (files.length === 0) {
+                status.innerHTML = '<div class="import-log-warning import-log-item">No files found in selected folder.</div>';
+                return;
+            }
+
+            await this.processFiles(files);
+
+        } catch (err) {
+            if (err.name !== 'AbortError') {
+                console.error('Folder selection failed:', err);
+                const status = this.querySelector('#status-area');
+                status.innerHTML = `<div class="import-log-error import-log-item">Folder selection failed: ${err.message}</div>`;
+            }
+        }
+    }
+
+    async scanDirectory(dirHandle, fileList) {
+        for await (const entry of dirHandle.values()) {
+            if (entry.kind === 'file') {
+                try {
+                    const file = await entry.getFile();
+                    fileList.push(file);
+                } catch (e) {
+                    console.warn(`Failed to access file ${entry.name}`, e);
+                }
+            } else if (entry.kind === 'directory') {
+                await this.scanDirectory(entry, fileList);
+            }
+        }
+    }
+
+    async processFiles(files) {
+        const status = this.querySelector('#status-area');
         const typeSelect = this.querySelector('#type-select');
         const providerSelect = this.querySelector('#provider-select');
 
-        // Helper to let UI update before blocking work
+        // Helper to let UI update
         const waitFrame = () => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 
-        input.addEventListener('change', async (e) => {
-            const files = e.target.files;
-            if (!files.length) return;
+        status.innerHTML = `
+            <div id="import-loading-indicator" class="import-loading-container">
+                <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" class="spin-animation">
+                    <path d="M12 2A10 10 0 1 0 22 12A10 10 0 0 0 12 2Zm0 18a8 8 0 1 1 8-8A8 8 0 0 1 12 20Z" opacity="0.25" fill="currentColor"/>
+                    <path d="M12 2V4A8 8 0 0 1 20 12H22A10 10 0 0 0 12 2Z" fill="currentColor"/>
+                </svg>
+                <span>Starting import of ${files.length} file(s)...</span>
+            </div>
+        `;
 
-            // Immediate feedback
-            status.innerHTML = `
-                <div id="import-loading-indicator" class="import-loading-container">
-                    <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" class="spin-animation">
-                        <path d="M12 2A10 10 0 1 0 22 12A10 10 0 0 0 12 2Zm0 18a8 8 0 1 1 8-8A8 8 0 0 1 12 20Z" opacity="0.25" fill="currentColor"/>
-                        <path d="M12 2V4A8 8 0 0 1 20 12H22A10 10 0 0 0 12 2Z" fill="currentColor"/>
-                    </svg>
-                    <span>Starting import...</span>
-                </div>
-            `;
+        await waitFrame();
 
-            // Allow paint
+        const options = {
+            type: typeSelect.value,
+            provider: providerSelect.value
+        };
+
+        let totalSuccess = 0;
+        let totalErrors = 0;
+
+        for (const file of files) {
+            // Append log item
+            const logItem = document.createElement('div');
+            logItem.innerHTML = `Processing <strong>${file.name}</strong>...`;
+            logItem.className = 'import-log-pending';
+            status.appendChild(logItem);
+
+            // Scroll to bottom
+            status.scrollTop = status.scrollHeight;
+
             await waitFrame();
 
-            const options = {
-                type: typeSelect.value,
-                provider: providerSelect.value
-            };
+            try {
+                const text = await file.text();
+                const result = await DataImporter.import(file.name, text, options);
 
-            for (const file of files) {
-                // Use appendChild to avoid blowing away the spinner (which is in innerHTML)
-                const logItem = document.createElement('div');
-                logItem.innerHTML = `Processing <strong>${file.name}</strong>...`;
-                status.appendChild(logItem);
+                logItem.innerHTML += `<div class="${result.success > 0 ? 'import-log-success' : 'import-log-warning'} import-log-item">
+                    ${result.message}
+                </div>`;
 
-                await waitFrame(); // Update UI again
+                if (result.success > 0) totalSuccess++;
+                if (result.errors > 0) totalErrors++;
 
-                try {
-                    const text = await file.text();
-                    const result = await DataImporter.import(file.name, text, options);
-
-                    logItem.innerHTML += `<div class="${result.success > 0 ? 'import-log-success' : 'import-log-warning'} import-log-item">
-                        ${result.message}
-                    </div>`;
-                } catch (err) {
-                    console.error(err);
-                    logItem.innerHTML += `<div class="import-log-error import-log-item">Error: ${err.message}</div>`;
-                }
+            } catch (err) {
+                console.error(err);
+                logItem.innerHTML += `<div class="import-log-error import-log-item">Error: ${err.message}</div>`;
+                totalErrors++;
             }
+        }
 
-            // Remove spinner
-            const spinner = status.querySelector('#import-loading-indicator');
-            if (spinner) spinner.remove();
+        // Remove spinner
+        const spinner = status.querySelector('#import-loading-indicator');
+        if (spinner) spinner.remove();
 
-            // All done message
-            const doneMsg = document.createElement('div');
-            doneMsg.className = 'import-done-message';
-            doneMsg.textContent = 'All operations completed.';
-            status.appendChild(doneMsg);
-        });
+        // Final summary
+        const doneMsg = document.createElement('div');
+        doneMsg.className = 'import-done-message';
+        doneMsg.innerHTML = `<strong>Batch Completed.</strong> Files with success: ${totalSuccess}, Files with errors: ${totalErrors}`;
+        status.appendChild(doneMsg);
+        status.scrollTop = status.scrollHeight;
     }
 }
 
