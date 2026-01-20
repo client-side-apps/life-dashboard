@@ -1,4 +1,5 @@
 import { DataImporter } from '../services/data-importer.js';
+import { dbService } from '../db.js';
 
 export class ImportView extends HTMLElement {
     constructor() {
@@ -180,6 +181,27 @@ export class ImportView extends HTMLElement {
         doneMsg.innerHTML = `<strong>Batch Completed.</strong> Files with success: ${totalSuccess}, Files with errors: ${totalErrors}`;
         status.appendChild(doneMsg);
         status.scrollTop = status.scrollHeight;
+
+        if (totalSuccess > 0) {
+            // Auto-save if supported
+            if (dbService.fileHandle) {
+                const savingMsg = document.createElement('div');
+                savingMsg.textContent = 'Saving changes to database file...';
+                status.appendChild(savingMsg);
+                status.scrollTop = status.scrollHeight;
+
+                try {
+                    await dbService.saveToDisk();
+                    savingMsg.textContent = 'Changes saved to database file successfully.';
+                    savingMsg.className = 'import-log-success';
+                } catch (e) {
+                    savingMsg.textContent = 'Failed to auto-save changes: ' + e.message;
+                    savingMsg.className = 'import-log-error';
+                }
+            } else {
+                console.log('No file handle, skipping auto-save.');
+            }
+        }
     }
 }
 

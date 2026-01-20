@@ -31,6 +31,16 @@ export class RawDataView extends DataView {
             downloadBtn.addEventListener('click', () => this.downloadDatabase());
         }
 
+        // Assuming the 'open-db-btn' is added to the raw-data-view-template HTML
+        const openDbBtn = this.querySelector('#open-db-btn');
+        if (openDbBtn) {
+            openDbBtn.addEventListener('click', () => {
+                // Placeholder for open database logic
+                alert('Open Database functionality not yet implemented.');
+                // You would typically trigger a file input here to load a database file
+            });
+        }
+
         const importBtn = this.querySelector('#import-data-btn');
         if (importBtn) {
             importBtn.addEventListener('click', () => {

@@ -4,6 +4,34 @@ class DatabaseService {
     constructor() {
         this.db = null;
         this.tables = [];
+        this.fileHandle = null;
+    }
+
+    setFileHandle(handle) {
+        this.fileHandle = handle;
+    }
+
+    async saveToDisk() {
+        if (!this.db) return false;
+        if (!this.fileHandle) {
+            console.warn('Cannot save to disk: No file handle available.');
+            return false;
+        }
+
+        try {
+            console.log('Exporting database for save...');
+            const data = this.export();
+
+            console.log('Writing to file...');
+            const writable = await this.fileHandle.createWritable();
+            await writable.write(data);
+            await writable.close();
+            console.log('Database saved successfully.');
+            return true;
+        } catch (error) {
+            console.error('Failed to save database to disk:', error);
+            throw error;
+        }
     }
 
     async connect(file) {
@@ -81,6 +109,14 @@ class DatabaseService {
         // sql.js exec returns [{columns, values}]
         // We want to return an array of objects for easier consumption
 
+        // Check for modification to notify listeners (e.g. for dirty state)
+        const upperSql = sql.trim().toUpperCase();
+        if (upperSql.startsWith('INSERT') || upperSql.startsWith('UPDATE') ||
+            upperSql.startsWith('DELETE') || upperSql.startsWith('CREATE') ||
+            upperSql.startsWith('DROP') || upperSql.startsWith('ALTER')) {
+            this.notifyModification();
+        }
+
         try {
             if (params.length > 0) {
                 const stmt = this.db.prepare(sql);
@@ -126,6 +162,16 @@ class DatabaseService {
     export() {
         if (!this.db) throw new Error("Database not connected");
         return this.db.export();
+    }
+
+    set onModification(callback) {
+        this._onModification = callback;
+    }
+
+    notifyModification() {
+        if (this._onModification) {
+            this._onModification();
+        }
     }
 }
 

@@ -36,6 +36,7 @@
             <a href="#/data" class="nav-btn">Data</a>
         </nav>
         <div class="header-right">
+            <div id="db-status" class="status-indicator"></div>
             <button id="theme-toggle" class="icon-btn" aria-label="Toggle Theme">
                 <svg class="icon-sun" viewBox="0 0 24 24" width="24" height="24">
                     <path fill="currentColor"
@@ -172,8 +173,9 @@
                 <option value="" disabled selected>Select Table</option>
             </select>
             <date-range-picker id="data-date-picker"></date-range-picker>
+            <button id="open-db-btn" class="secondary-btn">Open Database</button>
             <button id="import-data-btn" class="secondary-btn">Import Data</button>
-            <button id="download-db-btn" class="secondary-btn">Download DB</button>
+            <button id="download-db-btn" class="secondary-btn">Download Database</button>
             <span id="data-count" class="data-count-label"></span>
         </div>
         <div class="table-wrapper">
