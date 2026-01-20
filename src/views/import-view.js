@@ -17,7 +17,7 @@ export class ImportView extends HTMLElement {
                     <h2>Import Data</h2>
                     <p>Select CSV files and specify the data type/provider.</p>
                     
-                    <div style="margin-bottom: 1rem;">
+                    <div class="import-filter-container">
                         <label for="type-select">Type:</label>
                         <select id="type-select">
                             <option value="">(Auto-detect)</option>
@@ -25,7 +25,7 @@ export class ImportView extends HTMLElement {
                             <option value="finance">Finance</option>
                         </select>
                         
-                        <label for="provider-select" style="margin-left: 1rem;">Provider:</label>
+                        <label for="provider-select">Provider:</label>
                         <select id="provider-select">
                             <option value="">(Auto-detect)</option>
                             <option value="pge">PG&E</option>
@@ -35,7 +35,7 @@ export class ImportView extends HTMLElement {
                     </div>
 
                     <input type="file" id="csv-input" multiple>
-                    <div id="status-area" style="margin-top: 1rem; color: #888;"></div>
+                    <div id="status-area" class="import-status-area"></div>
                 </div>
             </div>
         `;
@@ -54,9 +54,8 @@ export class ImportView extends HTMLElement {
 
             // Immediate feedback
             status.innerHTML = `
-                <div id="import-loading-indicator" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="animation: spin 1s linear infinite;">
-                        <style>@keyframes spin { 100% { transform: rotate(360deg); } }</style>
+                <div id="import-loading-indicator" class="import-loading-container">
+                    <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" class="spin-animation">
                         <path d="M12 2A10 10 0 1 0 22 12A10 10 0 0 0 12 2Zm0 18a8 8 0 1 1 8-8A8 8 0 0 1 12 20Z" opacity="0.25" fill="currentColor"/>
                         <path d="M12 2V4A8 8 0 0 1 20 12H22A10 10 0 0 0 12 2Z" fill="currentColor"/>
                     </svg>
@@ -84,12 +83,12 @@ export class ImportView extends HTMLElement {
                     const text = await file.text();
                     const result = await DataImporter.import(file.name, text, options);
 
-                    logItem.innerHTML += `<div style="color: ${result.success > 0 ? 'green' : 'orange'}; margin-left: 1rem;">
+                    logItem.innerHTML += `<div class="${result.success > 0 ? 'import-log-success' : 'import-log-warning'} import-log-item">
                         ${result.message}
                     </div>`;
                 } catch (err) {
                     console.error(err);
-                    logItem.innerHTML += `<div style="color: red; margin-left: 1rem;">Error: ${err.message}</div>`;
+                    logItem.innerHTML += `<div class="import-log-error import-log-item">Error: ${err.message}</div>`;
                 }
             }
 
@@ -99,8 +98,7 @@ export class ImportView extends HTMLElement {
 
             // All done message
             const doneMsg = document.createElement('div');
-            doneMsg.style.marginTop = '1rem';
-            doneMsg.style.fontWeight = 'bold';
+            doneMsg.className = 'import-done-message';
             doneMsg.textContent = 'All operations completed.';
             status.appendChild(doneMsg);
         });

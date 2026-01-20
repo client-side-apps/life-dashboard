@@ -114,7 +114,7 @@ export class TimelineView extends DataView {
         }
 
         content.innerHTML = `
-            <div class="timeline-list" style="display: flex; flex-direction: column; gap: 1rem;">
+            <div class="timeline-list">
                 ${data.map(row => {
             const time = row[timeCol];
             // Display other columns simply

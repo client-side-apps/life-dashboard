@@ -55,12 +55,12 @@ export class DateRangePicker extends HTMLElement {
         if (this.querySelector('.date-controls-wrapper')) return;
 
         this.innerHTML = `
-            <div class="date-controls-wrapper" style="display: flex; gap: 1rem; align-items: center;">
-                <label style="display: flex; align-items: center; gap: 0.5rem;">
+            <div class="date-controls-wrapper">
+                <label class="date-input-label">
                     Start: 
                     <input type="date" class="start-date date-input">
                 </label>
-                <label style="display: flex; align-items: center; gap: 0.5rem;">
+                <label class="date-input-label">
                     End: 
                     <input type="date" class="end-date date-input">
                 </label>

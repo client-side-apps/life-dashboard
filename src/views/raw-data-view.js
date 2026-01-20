@@ -134,7 +134,7 @@ export class RawDataView extends DataView {
         countSpan.textContent = '';
 
         if (data.length === 0) {
-            tbody.innerHTML = '<tr><td style="text-align:center; padding: 1rem;">No data found</td></tr>';
+            tbody.innerHTML = '<tr><td class="table-empty-message">No data found</td></tr>';
             return;
         }
 

@@ -72,11 +72,11 @@ function setupEventListeners() {
 function applyTheme(theme) {
     document.documentElement.setAttribute('data-theme', theme);
     if (theme === 'dark') {
-        elements.iconSun.style.display = 'none';
-        elements.iconMoon.style.display = 'block';
+        elements.iconSun.classList.add('hidden');
+        elements.iconMoon.classList.remove('hidden');
     } else {
-        elements.iconSun.style.display = 'block';
-        elements.iconMoon.style.display = 'none';
+        elements.iconSun.classList.remove('hidden');
+        elements.iconMoon.classList.add('hidden');
     }
 
     // Notify current view if it supports theme updates
@@ -144,7 +144,7 @@ async function renderView(viewName) {
                     <h2>Welcome to Life Dashboard</h2>
                     <p>Please select a database file to get started.</p>
                     <input type="file" id="start-db-input" accept=".sqlite,.db,.sqlite3" class="file-input">
-                    <div style="margin-top: 1rem;">
+                    <div class="welcome-actions">
                         <button id="load-demo-btn" class="secondary-btn">Load Demo Database</button>
                     </div>
                 </div>
@@ -192,7 +192,7 @@ async function renderView(viewName) {
         state.currentViewInstance = element;
     } else {
         elements.viewContainer.innerHTML = `
-            <div style="padding: 2rem; text-align: center;">
+            <div class="view-placeholder">
                 <h2>${viewName.charAt(0).toUpperCase() + viewName.slice(1)} View</h2>
                 <p>This view is under construction.</p>
             </div>

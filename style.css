@@ -261,9 +261,7 @@ body {
     gap: 2rem;
 }
 
-.chart-container {
-    /* Generic chart container styles usually handled by grid children, but we can add specificity */
-}
+
 
 /* Finance View */
 .finance-dashboard {
@@ -514,6 +512,117 @@ body {
     padding: 1rem;
 }
 
-.accent-color {
-    color: var(--accent-color);
+/* Animations */
+@keyframes spin {
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.spin-animation {
+    animation: spin 1s linear infinite;
+}
+
+/* Import View Styles */
+.import-filter-container {
+    margin-bottom: 1rem;
+}
+
+.import-filter-container label:not(:first-child) {
+    margin-left: 1rem;
+}
+
+.import-status-area {
+    margin-top: 1rem;
+    color: #888;
+}
+
+.import-loading-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.import-log-item {
+    margin-left: 1rem;
+}
+
+.import-log-success {
+    color: green;
+}
+
+.import-log-warning {
+    color: orange;
+}
+
+.import-log-error {
+    color: red;
+}
+
+.import-done-message {
+    margin-top: 1rem;
+    font-weight: bold;
+}
+
+/* Date Range Picker Styles */
+.date-controls-wrapper {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.date-input-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Timeline View Styles */
+/* .timeline-list already handled by existing CSS */
+
+/* Raw Data View Styles */
+.data-controls {
+    margin-bottom: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: center;
+}
+
+.data-count-label {
+    font-size: 0.9rem;
+}
+
+.table-empty-message {
+    text-align: center;
+    padding: 1rem;
+}
+
+/* View Specific Control Spacing */
+.health-controls-section {
+    margin: 1rem 0;
+}
+
+.finance-account-select,
+.data-table-select {
+    min-width: 200px;
+}
+
+.view-placeholder {
+    padding: 2rem;
+    text-align: center;
+}
+
+
+.section-controls {
+    margin-bottom: 1rem;
+}
+
+.welcome-actions {
+    margin-top: 1rem;
+}
+
+.import-card h2 {
+    margin-bottom: 1.5rem;
 }
