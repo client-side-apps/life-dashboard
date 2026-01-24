@@ -83,9 +83,55 @@ export class HealthView extends DataView {
                 </div>
             `;
 
-            this.createChart('weight-chart', 'Weight', 'weight', 'kg', 'rgb(75, 192, 192)', startDate, endDate);
-            this.createChart('sleep-chart', 'Sleep Duration', 'sleep', 'hours', 'rgb(153, 102, 255)', startDate, endDate);
+            this.createChart('weight-chart', 'Weight', 'weight', 'weight_kg', 'rgb(75, 192, 192)', startDate, endDate);
+            this.createChart('sleep-chart', 'Sleep Duration', 'sleep', 'duration_hours', 'rgb(153, 102, 255)', startDate, endDate);
             this.createChart('steps-chart', 'Steps', 'steps', 'count', 'rgb(255, 159, 64)', startDate, endDate);
+
+        } else if (subview === 'body') {
+            content.innerHTML = `
+                <div class="dashboard-grid">
+                    <chart-card title="Weight" chart-id="body-weight-chart"></chart-card>
+                    <chart-card title="Height" chart-id="body-height-chart"></chart-card>
+                    <chart-card title="Body Temperature" chart-id="body-temp-chart"></chart-card>
+                </div>
+            `;
+            this.createChart('body-weight-chart', 'Weight', 'weight', 'weight_kg', 'rgb(75, 192, 192)', startDate, endDate);
+            this.createChart('body-height-chart', 'Height', 'height', 'height_m', 'rgb(54, 162, 235)', startDate, endDate);
+            this.createChart('body-temp-chart', 'Temperature', 'body_temperature', 'temperature_c', 'rgb(255, 99, 132)', startDate, endDate);
+
+        } else if (subview === 'heart') {
+            content.innerHTML = `
+                <div class="dashboard-grid">
+                    <chart-card title="Blood Pressure" chart-id="bp-chart"></chart-card>
+                    <chart-card title="Heart Rate" chart-id="hr-chart"></chart-card>
+                </div>
+            `;
+            // For BP we need Systolic and Diastolic. createChart only supports one series.
+            // We'll manually call logic or extend createChart.
+            // For now, let's render Systolic as main, or implement a multi-series helper.
+            // Let's implement a multi-series helper method.
+            this.createMultiSeriesChart('bp-chart', [
+                { label: 'Systolic', key: 'systolic_mmhg', color: 'rgb(255, 99, 132)' },
+                { label: 'Diastolic', key: 'diastolic_mmhg', color: 'rgb(54, 162, 235)' }
+            ], 'blood_pressure', startDate, endDate);
+
+            this.createChart('hr-chart', 'Heart Rate', 'blood_pressure', 'heart_rate_bpm', 'rgb(255, 99, 132)', startDate, endDate);
+
+        } else if (subview === 'sleep') {
+            content.innerHTML = `
+                <div class="dashboard-grid">
+                    <chart-card title="Sleep Duration" chart-id="sleep-detail-chart"></chart-card>
+                </div>
+            `;
+            this.createChart('sleep-detail-chart', 'Sleep Duration', 'sleep', 'duration_hours', 'rgb(153, 102, 255)', startDate, endDate);
+
+        } else if (subview === 'activity') {
+            content.innerHTML = `
+                <div class="dashboard-grid">
+                    <chart-card title="Steps" chart-id="activity-steps-chart"></chart-card>
+                </div>
+            `;
+            this.createChart('activity-steps-chart', 'Steps', 'steps', 'count', 'rgb(255, 159, 64)', startDate, endDate);
 
         } else {
             content.innerHTML = `<h3>${subview.charAt(0).toUpperCase() + subview.slice(1)} view placeholder</h3>`;
@@ -130,6 +176,41 @@ export class HealthView extends DataView {
             startDate: startDate,
             endDate: endDate,
             interval: 'daily' // Most health data is daily
+        });
+    }
+
+    async createMultiSeriesChart(chartId, seriesConfig, tableName, startDate, endDate) {
+        const chartCard = this.querySelector(`chart-card[chart-id="${chartId}"]`);
+        if (!chartCard) return;
+
+        const valid = await this.checkTable(tableName);
+        if (!valid) {
+            chartCard.innerHTML += `<p>Table "${tableName}" not found.</p>`;
+            return;
+        }
+
+        let query = `SELECT * FROM "${tableName}"`;
+        let params = [];
+
+        if (startDate && endDate) {
+            query += ` WHERE timestamp >= ? AND timestamp <= ?`;
+            const startTs = new Date(startDate + 'T00:00:00').getTime();
+            const endTs = new Date(endDate + 'T23:59:59.999').getTime();
+            params.push(startTs);
+            params.push(endTs);
+        }
+
+        query += ` ORDER BY timestamp ASC`;
+
+        const data = dbService.query(query, params);
+
+        chartCard.setDateRange(startDate, endDate);
+
+        chartCard.setTimeSeriesData(data, {
+            series: seriesConfig,
+            startDate: startDate,
+            endDate: endDate,
+            interval: 'daily'
         });
     }
 

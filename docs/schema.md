@@ -20,16 +20,16 @@ Stores body weight measurements.
 | Column | Type | Description |
 | :--- | :--- | :--- |
 | `id` | INTEGER | Primary Key |
-| `value` | REAL | Weight value (e.g., in kg or lbs) |
+| `weight_kg` | REAL | Weight value (kg) |
 | `timestamp` | INTEGER | Date/Time of measurement |
 
 ### `sleep`
-Stores sleep duration or quality metrics.
+Stores sleep duration.
 
 | Column | Type | Description |
 | :--- | :--- | :--- |
 | `id` | INTEGER | Primary Key |
-| `value` | REAL | Sleep duration (likely in hours) or score |
+| `duration_hours` | REAL | Sleep duration (hours) |
 | `timestamp` | INTEGER | Date of sleep record |
 
 ### `steps`
@@ -38,7 +38,7 @@ Stores daily step counts.
 | Column | Type | Description |
 | :--- | :--- | :--- |
 | `id` | INTEGER | Primary Key |
-| `value` | INTEGER | Number of steps |
+| `count` | INTEGER | Number of steps |
 | `timestamp` | INTEGER | Date of record |
 
 ### `accounts`
@@ -91,3 +91,32 @@ Stores daily gas usage data.
 | `usage_therms` | REAL | Gas usage in therms |
 
 
+
+### `blood_pressure`
+Stores blood pressure and heart rate measurements.
+
+| Column | Type | Description |
+| :--- | :--- | :--- |
+| `id` | INTEGER | Primary Key |
+| `timestamp` | INTEGER | Date/Time of measurement |
+| `systolic_mmhg` | INTEGER | Systolic pressure (mmHg) |
+| `diastolic_mmhg` | INTEGER | Diastolic pressure (mmHg) |
+| `heart_rate_bpm` | INTEGER | Heart rate (bpm) |
+
+### `body_temperature`
+Stores body temperature measurements.
+
+| Column | Type | Description |
+| :--- | :--- | :--- |
+| `id` | INTEGER | Primary Key |
+| `timestamp` | INTEGER | Date/Time of measurement |
+| `temperature_c` | REAL | Temperature (°C) |
+
+### `height`
+Stores height measurements.
+
+| Column | Type | Description |
+| :--- | :--- | :--- |
+| `id` | INTEGER | Primary Key |
+| `timestamp` | INTEGER | Date/Time of measurement |
+| `height_m` | REAL | Height (m) |

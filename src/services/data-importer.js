@@ -3,10 +3,11 @@ import { dbService } from '../db.js';
 import { PgeImporter } from '../importers/energy/pge.js';
 import { TeslaImporter } from '../importers/energy/tesla.js';
 import { SfcuImporter } from '../importers/finance/sfcu.js';
+import { WithingsImporter } from '../importers/health/withings.js';
 
 export class DataImporter {
 
-    static importers = [PgeImporter, TeslaImporter, SfcuImporter];
+    static importers = [PgeImporter, TeslaImporter, SfcuImporter, WithingsImporter];
 
     static async import(filename, content, options = {}) {
         await dbService.ensureInitialized();
@@ -99,7 +100,7 @@ export class DataImporter {
     }
 
     static async findExisting(table, data) {
-        if (['electricity_grid_hourly', 'electricity_solar_hourly', 'gas_daily'].includes(table)) {
+        if (['electricity_grid_hourly', 'electricity_solar_hourly', 'gas_daily', 'steps', 'weight', 'height', 'body_temperature', 'sleep', 'blood_pressure'].includes(table)) {
             // Unique key: timestamp
             const result = dbService.query(`SELECT id FROM "${table}" WHERE timestamp = ?`, [data.timestamp]);
             return result.length > 0 ? result[0].id : null;
@@ -150,6 +151,37 @@ export class DataImporter {
                 'INSERT INTO transactions (timestamp, description, amount, account_id) VALUES (?, ?, ?, ?)',
                 [data.timestamp, data.description, data.amount, data.account_id]
             );
+        } else if (table === 'steps') {
+            dbService.query(
+                'INSERT INTO steps (timestamp, count) VALUES (?, ?)',
+                [data.timestamp, data.count]
+            );
+        } else if (table === 'weight') {
+            dbService.query(
+                'INSERT INTO weight (timestamp, weight_kg) VALUES (?, ?)',
+                [data.timestamp, data.weight_kg]
+            );
+        } else if (table === 'height') {
+            dbService.query(
+                'INSERT INTO height (timestamp, height_m) VALUES (?, ?)',
+                [data.timestamp, data.height_m]
+            );
+        } else if (table === 'body_temperature') {
+            dbService.query(
+                'INSERT INTO body_temperature (timestamp, temperature_c) VALUES (?, ?)',
+                [data.timestamp, data.temperature_c]
+            );
+        } else if (table === 'sleep') {
+            dbService.query(
+                'INSERT INTO sleep (timestamp, duration_hours) VALUES (?, ?)',
+                [data.timestamp, data.duration_hours]
+            );
+        } else if (table === 'blood_pressure') {
+            dbService.query(
+                'INSERT INTO blood_pressure (timestamp, systolic_mmhg, diastolic_mmhg, heart_rate_bpm) VALUES (?, ?, ?, ?)',
+                [data.timestamp, data.systolic_mmhg, data.diastolic_mmhg, data.heart_rate_bpm]
+            );
         }
     }
 }
+
