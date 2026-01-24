@@ -5,7 +5,7 @@ import { TimelineView } from './src/views/timeline-view.js';
 import { HealthView } from './src/views/health-view.js';
 import { FinanceView } from './src/views/finance-view.js';
 import { EnergyView } from './src/views/energy-view.js';
-import { MoviesView } from './src/views/movies-view.js';
+
 import { RawDataView } from './src/views/raw-data-view.js';
 import { ImportView } from './src/views/import-view.js';
 import './src/components/chart-card/chart-card.js';
@@ -377,9 +377,6 @@ async function renderView(viewName) {
             break;
         case 'energy':
             tagName = 'energy-view';
-            break;
-        case 'movies':
-            tagName = 'movies-view';
             break;
         case 'data':
             tagName = 'raw-data-view';

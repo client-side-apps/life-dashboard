@@ -65,15 +65,11 @@ async function run() {
             db.run(`CREATE TABLE IF NOT EXISTS electricity_solar_hourly (id INTEGER PRIMARY KEY, timestamp INTEGER, solar_kwh REAL, consumption_kwh REAL)`);
             db.run(`CREATE TABLE IF NOT EXISTS gas_daily (id INTEGER PRIMARY KEY, timestamp INTEGER, usage_therms REAL)`);
 
-            // Movies
-            db.run(`CREATE TABLE IF NOT EXISTS movies (id INTEGER PRIMARY KEY, title TEXT, year INTEGER, rating INTEGER, timestamp INTEGER, poster_url TEXT)`);
 
-
-            // ==========================================
             // 2. Generate Random Data (for things missing samples)
             // ==========================================
 
-            console.log("Generating random data for: Location, Health, Movies...");
+            console.log("Generating random data for: Location, Health...");
 
             // Location
             const stmtLocation = db.prepare("INSERT INTO location_history (lat, lng, timestamp) VALUES (?, ?, ?)");
@@ -122,20 +118,7 @@ async function run() {
             stmtAccounts.run(4, "Crypto Wallet", 3200.00, "sellable_asset");
             stmtAccounts.finalize();
 
-            // Movies
-            const stmtMovies = db.prepare("INSERT INTO movies (title, year, rating, timestamp, poster_url) VALUES (?, ?, ?, ?, ?)");
-            const moviesList = [
-                ["Inception", 2010, 5, "https://image.tmdb.org/t/p/w200/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg"],
-                ["The Matrix", 1999, 5, "https://image.tmdb.org/t/p/w200/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg"],
-                ["Interstellar", 2014, 4, "https://image.tmdb.org/t/p/w200/gEU2QniL6C8zXtE5XD091nMs1S4.jpg"],
-                ["The Dark Knight", 2008, 5, "https://image.tmdb.org/t/p/w200/qJ2tW6WMUDux911r6m7haRef0WH.jpg"],
-                ["Pulp Fiction", 1994, 4, "https://image.tmdb.org/t/p/w200/d5iIlFn5s0ImszYzBPb8JPIfbXD.jpg"]
-            ];
-            moviesList.forEach(m => {
-                const timeWatched = new Date(Date.now() - Math.floor(Math.random() * 100) * 86400000).getTime();
-                stmtMovies.run(m[0], m[1], m[2], timeWatched, m[3]);
-            });
-            stmtMovies.finalize();
+
 
             resolve();
         });

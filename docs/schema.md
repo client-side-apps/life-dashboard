@@ -90,14 +90,4 @@ Stores daily gas usage data.
 | `timestamp` | INTEGER | Daily timestamp |
 | `usage_therms` | REAL | Gas usage in therms |
 
-### `movies`
-Stores a log of watched movies.
 
-| Column | Type | Description |
-| :--- | :--- | :--- |
-| `id` | INTEGER | Primary Key |
-| `title` | TEXT | Movie title |
-| `year` | INTEGER | Release year |
-| `rating` | INTEGER | User rating |
-| `timestamp` | INTEGER | Date/Time when watched |
-| `poster_url` | TEXT | URL to movie poster image |
