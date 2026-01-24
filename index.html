@@ -14,7 +14,8 @@
     {
         "imports": {
             "leaflet": "https://esm.sh/leaflet@1.9.4",
-            "chart.js": "https://esm.sh/chart.js@4.4.1/auto"
+            "chart.js": "https://esm.sh/chart.js@4.4.1/auto",
+            "jszip": "https://esm.sh/jszip@3.10.1"
         }
     }
     </script>
@@ -184,7 +185,7 @@
 
             <div class="form-group">
                 <label class="form-label">Select File</label>
-                <input type="file" id="import-file" class="file-input full-width">
+                <input type="file" id="import-file" class="file-input full-width" accept=".csv,.json,.zip">
             </div>
 
             <div class="form-group">

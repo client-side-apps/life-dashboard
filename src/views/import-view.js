@@ -1,4 +1,5 @@
 import { DataImporter } from '../services/data-importer.js';
+import JSZip from 'jszip';
 import { dbService } from '../db.js';
 
 export class ImportView extends HTMLElement {
@@ -141,7 +142,50 @@ export class ImportView extends HTMLElement {
         let totalSuccess = 0;
         let totalErrors = 0;
 
+        // Pre-process files to handle ZIP archives
+        const filesToProcess = [];
+
         for (const file of files) {
+            if (file.name.toLowerCase().endsWith('.zip')) {
+                const logItem = document.createElement('div');
+                logItem.className = 'import-log-pending';
+                logItem.innerHTML = `Extracting <strong>${file.name}</strong>...`;
+                status.appendChild(logItem);
+
+                try {
+                    const zip = await JSZip.loadAsync(file);
+                    let extractedCount = 0;
+
+                    // Get all files from zip
+                    const entries = Object.values(zip.files).filter(entry => !entry.dir && !entry.name.startsWith('__MACOSX') && !entry.name.endsWith('.DS_Store'));
+
+                    for (const entry of entries) {
+                        filesToProcess.push({
+                            name: entry.name,
+                            text: () => entry.async("string")
+                        });
+                        extractedCount++;
+                    }
+
+                    logItem.innerHTML += `<div class="import-log-success import-log-item">Extracted ${extractedCount} files.</div>`;
+
+                } catch (err) {
+                    console.error("Zip extraction error", err);
+                    logItem.innerHTML += `<div class="import-log-error import-log-item">Failed to unzip: ${err.message}</div>`;
+                    totalErrors++; // Count the zip failure as an error
+                }
+            } else {
+                filesToProcess.push(file);
+            }
+        }
+
+        // Update count if files expanded
+        if (filesToProcess.length !== files.length) {
+            const spinner = status.querySelector('#import-loading-indicator span');
+            if (spinner) spinner.textContent = `Processing ${filesToProcess.length} file(s) (after extraction)...`;
+        }
+
+        for (const file of filesToProcess) {
             // Append log item
             const logItem = document.createElement('div');
             logItem.innerHTML = `Processing <strong>${file.name}</strong>...`;
