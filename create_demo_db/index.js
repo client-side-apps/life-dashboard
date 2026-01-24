@@ -8,6 +8,7 @@ import { CSVParser } from '../src/utils/csv-parser.js';
 import { PgeImporter } from '../src/importers/energy/pge.js';
 import { TeslaImporter } from '../src/importers/energy/tesla.js';
 import { SfcuImporter } from '../src/importers/finance/sfcu.js';
+import { WithingsImporter } from '../src/importers/health/withings.js';
 
 const require = createRequire(import.meta.url);
 const sqlite3 = require('sqlite3').verbose();
@@ -33,7 +34,7 @@ if (fs.existsSync(DB_PATH)) {
 
 const db = new sqlite3.Database(DB_PATH);
 
-const importers = [PgeImporter, TeslaImporter, SfcuImporter];
+const importers = [PgeImporter, TeslaImporter, SfcuImporter, WithingsImporter];
 
 async function run() {
     await new Promise((resolve) => {
@@ -51,9 +52,12 @@ async function run() {
             )`);
 
             // Health Data
-            db.run(`CREATE TABLE IF NOT EXISTS weight (id INTEGER PRIMARY KEY, value REAL, timestamp INTEGER)`);
-            db.run(`CREATE TABLE IF NOT EXISTS sleep (id INTEGER PRIMARY KEY, value REAL, timestamp INTEGER)`);
-            db.run(`CREATE TABLE IF NOT EXISTS steps (id INTEGER PRIMARY KEY, value INTEGER, timestamp INTEGER)`);
+            db.run(`CREATE TABLE IF NOT EXISTS weight (id INTEGER PRIMARY KEY, weight_kg REAL, timestamp INTEGER)`);
+            db.run(`CREATE TABLE IF NOT EXISTS sleep (id INTEGER PRIMARY KEY, duration_hours REAL, timestamp INTEGER)`);
+            db.run(`CREATE TABLE IF NOT EXISTS steps (id INTEGER PRIMARY KEY, count INTEGER, timestamp INTEGER)`);
+            db.run(`CREATE TABLE IF NOT EXISTS blood_pressure (id INTEGER PRIMARY KEY, timestamp INTEGER, systolic_mmhg INTEGER, diastolic_mmhg INTEGER, heart_rate_bpm INTEGER)`);
+            db.run(`CREATE TABLE IF NOT EXISTS height (id INTEGER PRIMARY KEY, timestamp INTEGER, height_m REAL)`);
+            db.run(`CREATE TABLE IF NOT EXISTS body_temperature (id INTEGER PRIMARY KEY, timestamp INTEGER, temperature_c REAL)`);
 
             // Finance Data
             db.run(`CREATE TABLE IF NOT EXISTS accounts (id INTEGER PRIMARY KEY, name TEXT, balance REAL, type TEXT)`);
@@ -83,31 +87,7 @@ async function run() {
             }
             stmtLocation.finalize();
 
-            // Health
-            const stmtWeight = db.prepare("INSERT INTO weight (value, timestamp) VALUES (?, ?)");
-            let weight = 70.0;
-            for (let i = 0; i < 30; i++) {
-                weight += (Math.random() - 0.5) * 1.0;
-                const time = new Date(Date.now() - i * 86400000).getTime();
-                stmtWeight.run(weight, time);
-            }
-            stmtWeight.finalize();
-
-            const stmtSleep = db.prepare("INSERT INTO sleep (value, timestamp) VALUES (?, ?)");
-            for (let i = 0; i < 30; i++) {
-                const hours = 6.0 + Math.random() * 3.0;
-                const time = new Date(Date.now() - i * 86400000).getTime();
-                stmtSleep.run(hours, time);
-            }
-            stmtSleep.finalize();
-
-            const stmtSteps = db.prepare("INSERT INTO steps (value, timestamp) VALUES (?, ?)");
-            for (let i = 0; i < 30; i++) {
-                const steps = Math.floor(4000 + Math.random() * 10000);
-                const time = new Date(Date.now() - i * 86400000).getTime();
-                stmtSteps.run(steps, time);
-            }
-            stmtSteps.finalize();
+            // Health data is now imported from samples
 
             // Accounts (Create specific ones + random)
             const stmtAccounts = db.prepare("INSERT INTO accounts (id, name, balance, type) VALUES (?, ?, ?, ?)");
@@ -238,6 +218,18 @@ function insertData(table, data) {
             [data.timestamp, data.description, data.amount, data.account_id],
             (err) => { if (err) console.error(err.message); }
         );
+    } else if (table === 'weight') {
+        db.run('INSERT INTO weight (timestamp, weight_kg) VALUES (?, ?)', [data.timestamp, data.weight_kg], (err) => { if (err) console.error(err.message); });
+    } else if (table === 'sleep') {
+        db.run('INSERT INTO sleep (timestamp, duration_hours) VALUES (?, ?)', [data.timestamp, data.duration_hours], (err) => { if (err) console.error(err.message); });
+    } else if (table === 'steps') {
+        db.run('INSERT INTO steps (timestamp, count) VALUES (?, ?)', [data.timestamp, data.count], (err) => { if (err) console.error(err.message); });
+    } else if (table === 'blood_pressure') {
+        db.run('INSERT INTO blood_pressure (timestamp, systolic_mmhg, diastolic_mmhg, heart_rate_bpm) VALUES (?, ?, ?, ?)', [data.timestamp, data.systolic_mmhg, data.diastolic_mmhg, data.heart_rate_bpm], (err) => { if (err) console.error(err.message); });
+    } else if (table === 'height') {
+        db.run('INSERT INTO height (timestamp, height_m) VALUES (?, ?)', [data.timestamp, data.height_m], (err) => { if (err) console.error(err.message); });
+    } else if (table === 'body_temperature') {
+        db.run('INSERT INTO body_temperature (timestamp, temperature_c) VALUES (?, ?)', [data.timestamp, data.temperature_c], (err) => { if (err) console.error(err.message); });
     }
 }
 
