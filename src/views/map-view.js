@@ -30,7 +30,7 @@ export class MapView extends DataView {
         this.appendChild(content);
 
         this.initMap();
-        this.loadTableOptions();
+
 
         // Initialize picker.
         // For map, probably last 30 days is good default?
@@ -84,35 +84,7 @@ export class MapView extends DataView {
         this.tileLayer.addTo(this.map);
     }
 
-    loadTableOptions() {
-        const tables = dbService.getTables();
-        const select = this.querySelector('#map-table-select');
 
-        if (tables.length === 0) {
-            select.innerHTML = '<option>No tables found</option>';
-            return;
-        }
-
-        select.innerHTML = tables.map(t =>
-            `<option value="${t}" ${t === this.currentTable ? 'selected' : ''}>${t}</option>`
-        ).join('');
-
-        select.addEventListener('change', (e) => {
-            this.currentTable = e.target.value;
-            this.loadData();
-        });
-
-        // Trigger initial load
-        if (tables.includes(this.currentTable)) {
-            // deferred to data load via dates or implicit
-            // If we have dates, onDateRangeChanged will fire loadData. 
-            // If we don't, we might need manual call.
-            // Since we set dates in render, loop will occur.
-        } else if (tables.length > 0) {
-            this.currentTable = tables[0];
-            select.value = this.currentTable;
-        }
-    }
 
     async loadData() {
         if (!this.map) return;
