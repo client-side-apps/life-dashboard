@@ -86,7 +86,7 @@ class DatabaseService {
 
         // Define schemas matching create_demo_db
         const schemas = [
-            `CREATE TABLE IF NOT EXISTS location_history (id INTEGER PRIMARY KEY, lat REAL, lng REAL, timestamp INTEGER)`,
+            `CREATE TABLE IF NOT EXISTS location (id INTEGER PRIMARY KEY, lat REAL, lng REAL, timestamp INTEGER)`,
             `CREATE TABLE IF NOT EXISTS weight (id INTEGER PRIMARY KEY, weight_kg REAL, timestamp INTEGER)`,
             `CREATE TABLE IF NOT EXISTS sleep (id INTEGER PRIMARY KEY, duration_hours REAL, timestamp INTEGER, light_seconds INTEGER, deep_seconds INTEGER, rem_seconds INTEGER, awake_seconds INTEGER)`,
             `CREATE TABLE IF NOT EXISTS steps (id INTEGER PRIMARY KEY, count INTEGER, timestamp INTEGER, type TEXT, distance REAL, calories REAL)`,

@@ -1,0 +1,55 @@
+{
+    "semanticSegments": [
+        {
+            "startTime": "2026-01-10T18:00:00.000-08:00",
+            "endTime": "2026-01-10T18:30:00.000-08:00",
+            "timelinePath": [
+                {
+                    "point": "37.7749,-122.4194",
+                    "time": "2026-01-10T18:15:00.000-08:00"
+                }
+            ]
+        },
+        {
+            "startTime": "2026-01-10T19:00:00.000-08:00",
+            "endTime": "2026-01-10T19:30:00.000-08:00",
+            "visit": {
+                "hierarchyLevel": 0,
+                "probability": 100,
+                "topCandidate": {
+                    "placeId": "ChIJ-wJ1...",
+                    "semanticType": "UNKNOWN",
+                    "probability": 100,
+                    "placeLocation": {
+                        "latLng": "37.7749,-122.4194"
+                    }
+                }
+            }
+        },
+        {
+            "startTime": "2026-01-11T07:00:00.000-08:00",
+            "endTime": "2026-01-11T09:00:00.000-08:00",
+            "timelinePath": [
+                {
+                    "point": "37.8080,-122.4760",
+                    "time": "2026-01-11T07:30:00.000-08:00"
+                },
+                {
+                    "point": "37.8199,-122.4783",
+                    "time": "2026-01-11T08:15:00.000-08:00"
+                }
+            ]
+        },
+        {
+            "startTime": "2026-01-12T12:00:00.000-08:00",
+            "endTime": "2026-01-12T13:00:00.000-08:00",
+            "visit": {
+                "topCandidate": {
+                    "placeLocation": {
+                        "latLng": "34.0522,-118.2437"
+                    }
+                }
+            }
+        }
+    ]
+}

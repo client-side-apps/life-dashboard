@@ -2,7 +2,7 @@ import { BaseImporter } from '../base-importer.js';
 
 export class PgeImporter extends BaseImporter {
     static detect(rows) {
-        if (!rows || rows.length === 0) return false;
+        if (!rows || !Array.isArray(rows) || rows.length === 0) return false;
         const keys = Object.keys(rows[0]);
         // Check for 'Electric usage' in keys if header was messed up, or standard keys
         if (keys.includes('TYPE') && keys.includes('START TIME')) return true;

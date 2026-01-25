@@ -4,7 +4,7 @@ import { DataView } from '../components/data-view/data-view.js';
 export class TimelineView extends DataView {
     constructor() {
         super();
-        this.currentTable = 'location_history'; // Default, but allow selection
+        this.currentTable = 'location'; // Default, but allow selection
     }
 
     connectedCallback() {

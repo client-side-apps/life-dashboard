@@ -31,3 +31,13 @@ The application supports importing data from various CSV sources. Below is a lis
     *   Maps `Description` to `description`.
     *   Parses `Debit` (negative) and `Credit` (positive) columns to `amount`.
     *   *Note*: Currently defaults `account_id` to 1.
+
+## Timeline
+
+### Google Timeline (Location History)
+*   **File Type**: JSON (`Records.json` or `timeline.json`)
+*   **Detection**: Checks for `semanticSegments` or `timelineObjects` properties.
+*   **Data Processed**:
+    *   Imports into `location` table.
+    *   Extracts coordinates from `timelinePath` points or visit locations.
+    *   Maps `point` coordinates (lat, lng) and `time` to `timestamp`.

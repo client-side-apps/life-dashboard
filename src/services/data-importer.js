@@ -4,33 +4,35 @@ import { PgeImporter } from '../importers/energy/pge.js';
 import { TeslaImporter } from '../importers/energy/tesla.js';
 import { SfcuImporter } from '../importers/finance/sfcu.js';
 import { WithingsImporter } from '../importers/health/withings.js';
+import { GoogleTimelineImporter } from '../importers/location/google-timeline.js';
 
 export class DataImporter {
 
-    static importers = [PgeImporter, TeslaImporter, SfcuImporter, WithingsImporter];
+    static importers = [PgeImporter, TeslaImporter, SfcuImporter, WithingsImporter, GoogleTimelineImporter];
 
     static async import(filename, content, options = {}) {
         await dbService.ensureInitialized();
 
         let rows;
+        let jsonData;
+        const isJson = filename.toLowerCase().endsWith('.json');
+
         try {
-            // Pre-process for PGE preamble if needed, 
-            // but let's try to keep it cleaner. 
-            // If we split by lines we can check header match manually before parsing?
-            // Or we just try parsing.
-
-            // Special handling for PGE preamble which confuses the generic parser header detection
-            if (content.indexOf('TYPE,DATE,START TIME') > 0) {
-                const pgeHeaderIndex = content.indexOf('TYPE,DATE,START TIME');
-                content = content.substring(pgeHeaderIndex);
+            if (isJson) {
+                jsonData = JSON.parse(content);
+            } else {
+                // Special handling for PGE preamble which confuses the generic parser header detection
+                if (content.indexOf('TYPE,DATE,START TIME') > 0) {
+                    const pgeHeaderIndex = content.indexOf('TYPE,DATE,START TIME');
+                    content = content.substring(pgeHeaderIndex);
+                }
+                rows = CSVParser.parse(content);
             }
-
-            rows = CSVParser.parse(content);
         } catch (e) {
-            return { success: 0, skipped: 0, errors: 0, message: "Failed to parse CSV: " + e.message };
+            return { success: 0, skipped: 0, errors: 0, message: "Failed to parse file: " + e.message };
         }
 
-        if (!rows || rows.length === 0) {
+        if ((!isJson && (!rows || rows.length === 0)) || (isJson && !jsonData)) {
             return { success: 0, skipped: 0, errors: 0, message: "File is empty or could not be parsed." };
         }
 
@@ -41,8 +43,9 @@ export class DataImporter {
             if (options.provider === 'pge') ImporterClass = PgeImporter;
             else if (options.provider === 'tesla') ImporterClass = TeslaImporter;
             else if (options.provider === 'sfcu') ImporterClass = SfcuImporter;
+            else if (options.provider === 'google_timeline') ImporterClass = GoogleTimelineImporter;
         } else {
-            ImporterClass = this.importers.find(i => i.detect(rows));
+            ImporterClass = this.importers.find(i => isJson ? i.detect(jsonData) : i.detect(rows));
         }
 
         if (!ImporterClass) {
@@ -57,7 +60,18 @@ export class DataImporter {
         let skippedCount = 0;
         let errorCount = 0;
 
-        for (const row of rows) {
+        // For JSON importers, mapRow might actually handle the whole object or we iterate provided array
+        // But to keep it consistent, let's assume if it's JSON the importer can return an iterable or we pass the whole thing
+        // Actually, existing design iterates 'rows'. 
+        // Let's adapt: if json, we might need a different strategy or the importer wraps it.
+        // EASIEST: if isJson, we treat jsonData as the "rows" source if it's an array, 
+        // or we wrap it in an array if it's a single object, OR we let the importer handle it differently?
+        // Better: Let's defer to the importer to extraction "items" from the raw data if needed.
+        // But `detect` already ran. 
+        // Let's normalize:
+        const itemsToProcess = isJson ? (ImporterClass.extractItems ? ImporterClass.extractItems(jsonData) : (Array.isArray(jsonData) ? jsonData : [jsonData])) : rows;
+
+        for (const row of itemsToProcess) {
             try {
                 const mapped = ImporterClass.mapRow(row);
                 if (!mapped) continue;
@@ -100,7 +114,7 @@ export class DataImporter {
     }
 
     static async findExisting(table, data) {
-        if (['electricity_grid_hourly', 'electricity_solar_hourly', 'gas_daily', 'steps', 'weight', 'height', 'body_temperature', 'sleep', 'blood_pressure'].includes(table)) {
+        if (['location', 'electricity_grid_hourly', 'electricity_solar_hourly', 'gas_daily', 'steps', 'weight', 'height', 'body_temperature', 'sleep', 'blood_pressure'].includes(table)) {
             // Unique key: timestamp
             const result = dbService.query(`SELECT id FROM "${table}" WHERE timestamp = ?`, [data.timestamp]);
             return result.length > 0 ? result[0].id : null;
@@ -180,6 +194,11 @@ export class DataImporter {
             dbService.query(
                 'INSERT INTO blood_pressure (timestamp, systolic_mmhg, diastolic_mmhg, heart_rate_bpm) VALUES (?, ?, ?, ?)',
                 [data.timestamp, data.systolic_mmhg, data.diastolic_mmhg, data.heart_rate_bpm]
+            );
+        } else if (table === 'location') {
+            dbService.query(
+                'INSERT INTO location (timestamp, lat, lng) VALUES (?, ?, ?)',
+                [data.timestamp, data.lat, data.lng]
             );
         }
     }

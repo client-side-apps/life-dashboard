@@ -2,7 +2,7 @@ import { BaseImporter } from '../base-importer.js';
 
 export class TeslaImporter extends BaseImporter {
     static detect(rows) {
-        if (!rows || rows.length === 0) return false;
+        if (!rows || !Array.isArray(rows) || rows.length === 0) return false;
         const keys = Object.keys(rows[0]);
         return keys.some(k => k.includes('Solar Energy'));
     }

@@ -9,6 +9,7 @@ import { PgeImporter } from '../src/importers/energy/pge.js';
 import { TeslaImporter } from '../src/importers/energy/tesla.js';
 import { SfcuImporter } from '../src/importers/finance/sfcu.js';
 import { WithingsImporter } from '../src/importers/health/withings.js';
+import { GoogleTimelineImporter } from '../src/importers/location/google-timeline.js';
 
 const require = createRequire(import.meta.url);
 const sqlite3 = require('sqlite3').verbose();
@@ -34,7 +35,7 @@ if (fs.existsSync(DB_PATH)) {
 
 const db = new sqlite3.Database(DB_PATH);
 
-const importers = [PgeImporter, TeslaImporter, SfcuImporter, WithingsImporter];
+const importers = [PgeImporter, TeslaImporter, SfcuImporter, WithingsImporter, GoogleTimelineImporter];
 
 async function run() {
     await new Promise((resolve) => {
@@ -44,7 +45,7 @@ async function run() {
             // ==========================================
 
             // Location History
-            db.run(`CREATE TABLE IF NOT EXISTS location_history (
+            db.run(`CREATE TABLE IF NOT EXISTS location (
                 id INTEGER PRIMARY KEY, 
                 lat REAL, 
                 lng REAL, 
@@ -76,16 +77,16 @@ async function run() {
             console.log("Generating random data for: Location, Health...");
 
             // Location
-            const stmtLocation = db.prepare("INSERT INTO location_history (lat, lng, timestamp) VALUES (?, ?, ?)");
-            const baseLat = 37.7749;
-            const baseLng = -122.4194;
-            for (let i = 0; i < 100; i++) {
-                const lat = baseLat + (Math.random() - 0.5) * 0.1;
-                const lng = baseLng + (Math.random() - 0.5) * 0.1;
-                const time = new Date(Date.now() - i * 3600000).getTime();
-                stmtLocation.run(lat, lng, time);
-            }
-            stmtLocation.finalize();
+            // const stmtLocation = db.prepare("INSERT INTO location (lat, lng, timestamp) VALUES (?, ?, ?)");
+            // const baseLat = 37.7749;
+            // const baseLng = -122.4194;
+            // for (let i = 0; i < 100; i++) {
+            //     const lat = baseLat + (Math.random() - 0.5) * 0.1;
+            //     const lng = baseLng + (Math.random() - 0.5) * 0.1;
+            //     const time = new Date(Date.now() - i * 3600000).getTime();
+            //     stmtLocation.run(lat, lng, time);
+            // }
+            // stmtLocation.finalize();
 
             // Health data is now imported from samples
 
@@ -139,20 +140,27 @@ async function processFile(filePath) {
     }
 
     let rows;
+    let jsonData;
+    const isJson = filePath.toLowerCase().endsWith('.json');
+
     try {
-        rows = CSVParser.parse(content);
+        if (isJson) {
+            jsonData = JSON.parse(content);
+        } else {
+            rows = CSVParser.parse(content);
+        }
     } catch (e) {
         console.warn(`Failed to parse ${filePath}: ${e.message}`);
         return;
     }
 
-    if (!rows || rows.length === 0) {
+    if ((!isJson && (!rows || rows.length === 0)) || (isJson && !jsonData)) {
         // console.warn(`No rows in ${filePath}`);
         return;
     }
 
     // Detect Importer
-    const ImporterClass = importers.find(i => i.detect(rows));
+    const ImporterClass = importers.find(i => isJson ? i.detect(jsonData) : i.detect(rows));
     if (!ImporterClass) {
         console.log(`No importer detected for ${path.basename(filePath)}`);
         return;
@@ -165,7 +173,9 @@ async function processFile(filePath) {
         db.run("BEGIN TRANSACTION");
 
         // Prepare statements could be optimized but simple runs are fine for demo script
-        for (const row of rows) {
+        const itemsToProcess = isJson ? (ImporterClass.extractItems ? ImporterClass.extractItems(jsonData) : (Array.isArray(jsonData) ? jsonData : [jsonData])) : rows;
+
+        for (const row of itemsToProcess) {
             try {
                 const mapped = ImporterClass.mapRow(row);
                 if (!mapped) continue;
@@ -230,6 +240,8 @@ function insertData(table, data) {
         db.run('INSERT INTO height (timestamp, height_m) VALUES (?, ?)', [data.timestamp, data.height_m], (err) => { if (err) console.error(err.message); });
     } else if (table === 'body_temperature') {
         db.run('INSERT INTO body_temperature (timestamp, temperature_c) VALUES (?, ?)', [data.timestamp, data.temperature_c], (err) => { if (err) console.error(err.message); });
+    } else if (table === 'location') {
+        db.run('INSERT INTO location (timestamp, lat, lng) VALUES (?, ?, ?)', [data.timestamp, data.lat, data.lng], (err) => { if (err) console.error(err.message); });
     }
 }
 

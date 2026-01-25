@@ -4,6 +4,7 @@ import { DataView } from '../../components/data-view/data-view.js';
 export class HealthActivityView extends DataView {
     constructor() {
         super();
+        this.selectedType = 'All';
     }
 
     connectedCallback() {
@@ -24,7 +25,10 @@ export class HealthActivityView extends DataView {
                 <chart-card title="Steps" chart-id="activity-steps-chart"></chart-card>
             </div>
              <div class="list-container">
-                <h3>Recent Activities</h3>
+                <div class="list-header">
+                    <h3>Recent Activities</h3>
+                    <div id="activity-filter-container"></div>
+                </div>
                 <ul id="activity-list" class="data-list"></ul>
             </div>
         `;
@@ -35,18 +39,48 @@ export class HealthActivityView extends DataView {
 
     async renderActivityList(startDate, endDate) {
         const listContainer = this.querySelector('#activity-list');
+        const filterContainer = this.querySelector('#activity-filter-container');
         if (!listContainer) return;
 
+        // 1. Get available activity types for the filter
+        const typesData = dbService.query('SELECT DISTINCT type FROM steps WHERE type IS NOT NULL ORDER BY type ASC');
+        const types = typesData.map(r => r.type);
+
+        // 2. Render Filter if it doesn't exist or needs update
+        if (filterContainer && filterContainer.innerHTML === '') {
+            const select = document.createElement('select');
+            select.innerHTML = `<option value="All">All Types</option>` +
+                types.map(t => `<option value="${t}" ${this.selectedType === t ? 'selected' : ''}>${t}</option>`).join('');
+
+            select.addEventListener('change', (e) => {
+                this.selectedType = e.target.value;
+                this.renderActivityList(this.startDate, this.endDate); // Re-render list only
+            });
+            filterContainer.appendChild(select);
+        }
+
+        // 3. Build Query
         let query = `SELECT * FROM steps`;
         let params = [];
+        let whereClauses = [];
 
         if (startDate && endDate) {
-            query += ` WHERE timestamp >= ? AND timestamp <= ?`;
+            whereClauses.push(`timestamp >= ? AND timestamp <= ?`);
             const startTs = new Date(startDate + 'T00:00:00').getTime();
             const endTs = new Date(endDate + 'T23:59:59.999').getTime();
             params.push(startTs);
             params.push(endTs);
         }
+
+        if (this.selectedType && this.selectedType !== 'All') {
+            whereClauses.push(`type = ?`);
+            params.push(this.selectedType);
+        }
+
+        if (whereClauses.length > 0) {
+            query += ` WHERE ` + whereClauses.join(' AND ');
+        }
+
         query += ` ORDER BY timestamp DESC`;
 
         const data = dbService.query(query, params);

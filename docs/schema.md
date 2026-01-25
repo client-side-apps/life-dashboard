@@ -4,7 +4,7 @@ This document outlines the expected database schema for the Life Dashboard appli
 
 ## Tables
 
-### `location_history`
+### `location`
 Stores daily history of location coordinates.
 
 | Column | Type | Description |

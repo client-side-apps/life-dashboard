@@ -6,7 +6,7 @@ export class MapView extends DataView {
     constructor() {
         super();
         this.map = null;
-        this.currentTable = 'location_history';
+        this.currentTable = 'location';
         this.markersLayer = null;
         this.tileLayer = null;
     }
