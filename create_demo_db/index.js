@@ -47,15 +47,15 @@ async function run() {
             // Location History
             db.run(`CREATE TABLE IF NOT EXISTS location (
                 id INTEGER PRIMARY KEY, 
+                timestamp INTEGER,
                 lat REAL, 
-                lng REAL, 
-                timestamp INTEGER
+                lng REAL
             )`);
 
             // Health Data
-            db.run(`CREATE TABLE IF NOT EXISTS weight (id INTEGER PRIMARY KEY, weight_kg REAL, timestamp INTEGER)`);
-            db.run(`CREATE TABLE IF NOT EXISTS sleep (id INTEGER PRIMARY KEY, duration_hours REAL, timestamp INTEGER, light_seconds INTEGER, deep_seconds INTEGER, rem_seconds INTEGER, awake_seconds INTEGER)`);
-            db.run(`CREATE TABLE IF NOT EXISTS steps (id INTEGER PRIMARY KEY, count INTEGER, timestamp INTEGER, type TEXT, distance REAL, calories REAL)`);
+            db.run(`CREATE TABLE IF NOT EXISTS weight (id INTEGER PRIMARY KEY, timestamp INTEGER, weight_kg REAL)`);
+            db.run(`CREATE TABLE IF NOT EXISTS sleep (id INTEGER PRIMARY KEY, timestamp INTEGER, duration_hours REAL, light_seconds INTEGER, deep_seconds INTEGER, rem_seconds INTEGER, awake_seconds INTEGER)`);
+            db.run(`CREATE TABLE IF NOT EXISTS steps (id INTEGER PRIMARY KEY, timestamp INTEGER, count INTEGER, type TEXT, distance REAL, calories REAL)`);
             db.run(`CREATE TABLE IF NOT EXISTS blood_pressure (id INTEGER PRIMARY KEY, timestamp INTEGER, systolic_mmhg INTEGER, diastolic_mmhg INTEGER, heart_rate_bpm INTEGER)`);
             db.run(`CREATE TABLE IF NOT EXISTS height (id INTEGER PRIMARY KEY, timestamp INTEGER, height_m REAL)`);
             db.run(`CREATE TABLE IF NOT EXISTS body_temperature (id INTEGER PRIMARY KEY, timestamp INTEGER, temperature_c REAL)`);

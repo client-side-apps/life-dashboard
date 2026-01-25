@@ -10,9 +10,9 @@ Stores daily history of location coordinates.
 | Column | Type | Description |
 | :--- | :--- | :--- |
 | `id` | INTEGER | Primary Key |
+| `timestamp` | INTEGER | Timestamp (Unix ms) |
 | `lat` | REAL | Latitude |
 | `lng` | REAL | Longitude |
-| `timestamp` | INTEGER | Timestamp (Unix ms) |
 
 ### `weight`
 Stores body weight measurements.
@@ -20,8 +20,8 @@ Stores body weight measurements.
 | Column | Type | Description |
 | :--- | :--- | :--- |
 | `id` | INTEGER | Primary Key |
-| `weight_kg` | REAL | Weight value (kg) |
 | `timestamp` | INTEGER | Date/Time of measurement |
+| `weight_kg` | REAL | Weight value (kg) |
 
 ### `sleep`
 Stores sleep duration.
@@ -29,8 +29,8 @@ Stores sleep duration.
 | Column | Type | Description |
 | :--- | :--- | :--- |
 | `id` | INTEGER | Primary Key |
-| `duration_hours` | REAL | Sleep duration (hours) |
 | `timestamp` | INTEGER | Date of sleep record |
+| `duration_hours` | REAL | Sleep duration (hours) |
 
 ### `steps`
 Stores daily step counts.
@@ -38,8 +38,8 @@ Stores daily step counts.
 | Column | Type | Description |
 | :--- | :--- | :--- |
 | `id` | INTEGER | Primary Key |
-| `count` | INTEGER | Number of steps |
 | `timestamp` | INTEGER | Date of record |
+| `count` | INTEGER | Number of steps |
 
 ### `accounts`
 Stores financial account information.
