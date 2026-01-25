@@ -1,6 +1,6 @@
 import { DataImporter } from '../services/data-importer.js';
 import JSZip from 'jszip';
-import { dbService } from '../db.js';
+import * as dataRepository from '../services/data-repository.js';
 
 export class ImportView extends HTMLElement {
     constructor() {
@@ -228,14 +228,14 @@ export class ImportView extends HTMLElement {
 
         if (totalSuccess > 0) {
             // Auto-save if supported
-            if (dbService.fileHandle) {
+            if (dataRepository.hasFileHandle()) {
                 const savingMsg = document.createElement('div');
                 savingMsg.textContent = 'Saving changes to database file...';
                 status.appendChild(savingMsg);
                 status.scrollTop = status.scrollHeight;
 
                 try {
-                    await dbService.saveToDisk();
+                    await dataRepository.saveDatabase();
                     savingMsg.textContent = 'Changes saved to database file successfully.';
                     savingMsg.className = 'import-log-success';
                 } catch (e) {

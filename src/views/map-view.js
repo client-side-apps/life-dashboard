@@ -1,4 +1,4 @@
-import { dbService } from '../db.js';
+import * as dataRepository from '../services/data-repository.js';
 import L from 'leaflet';
 import { DataView } from '../components/data-view/data-view.js';
 
@@ -105,7 +105,10 @@ export class MapView extends DataView {
         try {
             // Heuristic to find lat/lng columns
             // We'll fetch one row to inspect columns or use PRAGMA
-            const sample = dbService.query(`SELECT * FROM "${this.currentTable}" LIMIT 1`);
+            // Heuristic to find lat/lng columns
+            // We'll fetch one row to inspect columns or use PRAGMA
+            // const sample = dbService.query(`SELECT * FROM "${this.currentTable}" LIMIT 1`);
+            const sample = dataRepository.executeQuery(`SELECT * FROM "${this.currentTable}" LIMIT 1`);
 
             if (sample.length === 0) {
                 statsDiv.textContent = 'Table is empty';
@@ -122,23 +125,9 @@ export class MapView extends DataView {
                 return;
             }
 
-            let query = `SELECT "${latCol}", "${lngCol}" ${timeCol ? `, "${timeCol}"` : ''} FROM "${this.currentTable}"`;
-            let params = [];
-
-            if (timeCol && startDate && endDate) {
-                query += ` WHERE "${timeCol}" >= ? AND "${timeCol}" <= ?`;
-                const startTs = new Date(startDate + 'T00:00:00').getTime();
-                const endTs = new Date(endDate + 'T23:59:59.999').getTime();
-                params.push(startTs);
-                params.push(endTs);
-                query += ` ORDER BY "${timeCol}" DESC`;
-            } else if (timeCol) {
-                query += ` ORDER BY "${timeCol}" DESC`;
-            }
-
-            query += ` LIMIT 2000`; // Limit points to prevent browser freeze
-
-            const data = dbService.query(query, params);
+            // We use getSpatialData which returns * (all cols)
+            // This differs slightly from original which selected specific cols, but logic works same.
+            const data = dataRepository.getSpatialData(this.currentTable, startDate, endDate, 2000);
 
             const bounds = L.latLngBounds();
 

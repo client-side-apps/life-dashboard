@@ -1,4 +1,4 @@
-import { dbService } from '../db.js';
+import * as dataRepository from '../services/data-repository.js';
 import { DataView } from '../components/data-view/data-view.js';
 
 export class FinanceView extends DataView {
@@ -46,10 +46,10 @@ export class FinanceView extends DataView {
     }
 
     async loadSummary() {
-        const tables = dbService.getTables();
+        const tables = dataRepository.getTables();
 
         if (tables.includes('accounts')) {
-            const accounts = dbService.query('SELECT * FROM accounts');
+            const accounts = dataRepository.getAccounts();
 
             let total = 0;
             let retirement = 0;
@@ -99,40 +99,18 @@ export class FinanceView extends DataView {
         const tbody = this.querySelector('#transaction-body');
         tbody.innerHTML = '<tr><td colspan="3" class="text-center p-1">Loading...</td></tr>';
 
-        const tables = dbService.getTables();
+        const tables = dataRepository.getTables();
         if (!tables.includes('transactions')) {
             tbody.innerHTML = '<tr><td colspan="3" class="text-center p-1">No transactions table found</td></tr>';
             return;
         }
 
-        let query = 'SELECT * FROM transactions';
-        let params = [];
-        let conditions = [];
-
-        // Filter by account if selected
-        if (this.currentAccount) {
-            conditions.push('account_id = ?');
-            params.push(this.currentAccount);
-        }
-
-        const startDate = this.startDate;
-        const endDate = this.endDate;
-
-        if (startDate && endDate) {
-            conditions.push('timestamp >= ? AND timestamp <= ?');
-            const startTs = new Date(startDate + 'T00:00:00').getTime();
-            const endTs = new Date(endDate + 'T23:59:59.999').getTime();
-            params.push(startTs);
-            params.push(endTs);
-        }
-
-        if (conditions.length > 0) {
-            query += ' WHERE ' + conditions.join(' AND ');
-        }
-
-        query += ' ORDER BY timestamp DESC LIMIT 50'; // Keep limit for UI performance
-
-        const transactions = dbService.query(query, params);
+        const transactions = dataRepository.getTransactions({
+            accountId: this.currentAccount,
+            startDate: this.startDate,
+            endDate: this.endDate,
+            limit: 50
+        });
 
         if (transactions.length === 0) {
             tbody.innerHTML = '<tr><td colspan="3" class="text-center p-1">No transactions found</td></tr>';

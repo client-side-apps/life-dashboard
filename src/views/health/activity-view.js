@@ -1,4 +1,4 @@
-import { dbService } from '../../db.js';
+import * as dataRepository from '../../services/data-repository.js';
 import { DataView } from '../../components/data-view/data-view.js';
 
 export class HealthActivityView extends DataView {
@@ -43,8 +43,7 @@ export class HealthActivityView extends DataView {
         if (!listContainer) return;
 
         // 1. Get available activity types for the filter
-        const typesData = dbService.query('SELECT DISTINCT type FROM steps WHERE type IS NOT NULL ORDER BY type ASC');
-        const types = typesData.map(r => r.type);
+        const types = dataRepository.getDistinctValues('steps', 'type');
 
         // 2. Render Filter if it doesn't exist or needs update
         if (filterContainer && filterContainer.innerHTML === '') {
@@ -59,31 +58,12 @@ export class HealthActivityView extends DataView {
             filterContainer.appendChild(select);
         }
 
-        // 3. Build Query
-        let query = `SELECT * FROM steps`;
-        let params = [];
-        let whereClauses = [];
-
-        if (startDate && endDate) {
-            whereClauses.push(`timestamp >= ? AND timestamp <= ?`);
-            const startTs = new Date(startDate + 'T00:00:00').getTime();
-            const endTs = new Date(endDate + 'T23:59:59.999').getTime();
-            params.push(startTs);
-            params.push(endTs);
-        }
-
-        if (this.selectedType && this.selectedType !== 'All') {
-            whereClauses.push(`type = ?`);
-            params.push(this.selectedType);
-        }
-
-        if (whereClauses.length > 0) {
-            query += ` WHERE ` + whereClauses.join(' AND ');
-        }
-
-        query += ` ORDER BY timestamp DESC`;
-
-        const data = dbService.query(query, params);
+        // 3. Fetch Data
+        const data = dataRepository.getSteps({
+            startDate,
+            endDate,
+            type: this.selectedType
+        });
 
         if (data.length === 0) {
             listContainer.innerHTML = '<li>No activities found.</li>';
@@ -122,20 +102,7 @@ export class HealthActivityView extends DataView {
             return;
         }
 
-        let query = `SELECT * FROM "${tableName}"`;
-        let params = [];
-
-        if (startDate && endDate) {
-            query += ` WHERE timestamp >= ? AND timestamp <= ?`;
-            const startTs = new Date(startDate + 'T00:00:00').getTime();
-            const endTs = new Date(endDate + 'T23:59:59.999').getTime();
-            params.push(startTs);
-            params.push(endTs);
-        }
-
-        query += ` ORDER BY timestamp ASC`;
-
-        const data = dbService.query(query, params);
+        const data = dataRepository.getTimeSeriesData(tableName, startDate, endDate, 'ASC');
 
         chartCard.setDateRange(startDate, endDate);
 
@@ -152,7 +119,7 @@ export class HealthActivityView extends DataView {
     }
 
     async checkTable(tableName) {
-        const tables = dbService.getTables();
+        const tables = dataRepository.getTables();
         return tables.includes(tableName);
     }
 }

@@ -1,4 +1,4 @@
-import { dbService } from '../db.js';
+import * as dataRepository from '../services/data-repository.js';
 import { DataView } from '../components/data-view/data-view.js';
 import '../components/timeline-day.js';
 
@@ -67,10 +67,7 @@ export class TimelineView extends DataView {
 
         // 1. Fetch Location
         try {
-            const locData = dbService.query(
-                `SELECT * FROM location WHERE timestamp >= ? AND timestamp <= ?`,
-                [startTs, endTs]
-            );
+            const locData = dataRepository.getDateRangeData('location', startDate, endDate);
             locData.forEach(row => {
                 events.push({
                     timestamp: row.timestamp,
@@ -83,10 +80,7 @@ export class TimelineView extends DataView {
 
         // 2. Fetch Activities (Steps)
         try {
-            const stepData = dbService.query(
-                `SELECT * FROM steps WHERE timestamp >= ? AND timestamp <= ?`,
-                [startTs, endTs]
-            );
+            const stepData = dataRepository.getDateRangeData('steps', startDate, endDate);
             stepData.forEach(row => {
                 const type = row.type || 'Activity';
                 // Only show if interesting (e.g., > 100 steps or specific type)
@@ -103,10 +97,7 @@ export class TimelineView extends DataView {
 
         // 3. Fetch Weight
         try {
-            const weightData = dbService.query(
-                `SELECT * FROM weight WHERE timestamp >= ? AND timestamp <= ?`,
-                [startTs, endTs]
-            );
+            const weightData = dataRepository.getDateRangeData('weight', startDate, endDate);
             weightData.forEach(row => {
                 events.push({
                     timestamp: row.timestamp,
@@ -119,10 +110,7 @@ export class TimelineView extends DataView {
 
         // 4. Fetch Sleep
         try {
-            const sleepData = dbService.query(
-                `SELECT * FROM sleep WHERE timestamp >= ? AND timestamp <= ?`,
-                [startTs, endTs]
-            );
+            const sleepData = dataRepository.getDateRangeData('sleep', startDate, endDate);
             sleepData.forEach(row => {
                 events.push({
                     timestamp: row.timestamp,

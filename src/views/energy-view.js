@@ -1,4 +1,4 @@
-import { dbService } from '../db.js';
+import * as dataRepository from '../services/data-repository.js';
 import { DataView } from '../components/data-view/data-view.js';
 
 export class EnergyView extends DataView {
@@ -26,26 +26,7 @@ export class EnergyView extends DataView {
         // Find oldest date
         let oldestDate = today;
         try {
-            const tables = dbService.getTables();
-            let minDates = [];
-            if (tables.includes('electricity_solar_hourly')) {
-                const res = dbService.query('SELECT MIN(timestamp) as min_time FROM electricity_solar_hourly');
-                if (res.length > 0 && res[0].min_time) minDates.push(res[0].min_time);
-            }
-            if (tables.includes('electricity_grid_hourly')) {
-                const res = dbService.query('SELECT MIN(timestamp) as min_time FROM electricity_grid_hourly');
-                if (res.length > 0 && res[0].min_time) minDates.push(res[0].min_time);
-            }
-            if (tables.includes('gas_daily')) {
-                const res = dbService.query('SELECT MIN(timestamp) as min_time FROM gas_daily');
-                if (res.length > 0 && res[0].min_time) minDates.push(res[0].min_time);
-            }
-
-            if (minDates.length > 0) {
-                // minDates are integers (timestamps)
-                minDates.sort((a, b) => a - b);
-                oldestDate = new Date(minDates[0]).toISOString().split('T')[0];
-            }
+            oldestDate = dataRepository.getEnergyOldestDate();
         } catch (e) {
             console.warn('Error fetching oldest date:', e);
         }
@@ -87,26 +68,13 @@ export class EnergyView extends DataView {
         if (!chartCard) return;
 
         // Check table
-        const tables = dbService.getTables();
+        const tables = dataRepository.getTables();
         if (!tables.includes(tableName)) {
             chartCard.innerHTML += `<p>Table "${tableName}" not found.</p>`;
             return;
         }
 
-        let query = `SELECT * FROM "${tableName}"`;
-        let params = [];
-
-        if (startDate && endDate) {
-            query += ` WHERE timestamp >= ? AND timestamp <= ?`;
-            // Convert String dates to Integer timestamps (Local Day boundaries)
-            const startTs = new Date(startDate + 'T00:00:00').getTime();
-            const endTs = new Date(endDate + 'T23:59:59.999').getTime();
-            params.push(startTs);
-            params.push(endTs);
-        }
-        query += ` ORDER BY timestamp ASC`;
-
-        const data = dbService.query(query, params);
+        const data = dataRepository.getTimeSeriesData(tableName, startDate, endDate, 'ASC');
 
         chartCard.setDateRange(startDate, endDate);
 
@@ -129,25 +97,13 @@ export class EnergyView extends DataView {
         const chartCard = this.querySelector(`chart-card[chart-id="${chartId}"]`);
         if (!chartCard) return;
 
-        const tables = dbService.getTables();
+        const tables = dataRepository.getTables();
         if (!tables.includes(tableName)) {
             chartCard.innerHTML += `<p>Table "${tableName}" not found.</p>`;
             return;
         }
 
-        let query = `SELECT * FROM "${tableName}"`;
-        let params = [];
-
-        if (startDate && endDate) {
-            query += ` WHERE timestamp >= ? AND timestamp <= ?`;
-            const startTs = new Date(startDate + 'T00:00:00').getTime();
-            const endTs = new Date(endDate + 'T23:59:59.999').getTime();
-            params.push(startTs);
-            params.push(endTs);
-        }
-        query += ` ORDER BY timestamp ASC`;
-
-        const data = dbService.query(query, params);
+        const data = dataRepository.getTimeSeriesData(tableName, startDate, endDate, 'ASC');
 
         chartCard.setDateRange(startDate, endDate);
 

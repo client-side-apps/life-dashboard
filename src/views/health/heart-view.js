@@ -1,4 +1,4 @@
-import { dbService } from '../../db.js';
+import * as dataRepository from '../../services/data-repository.js';
 import { DataView } from '../../components/data-view/data-view.js';
 
 export class HealthHeartView extends DataView {
@@ -44,20 +44,7 @@ export class HealthHeartView extends DataView {
             return;
         }
 
-        let query = `SELECT * FROM "${tableName}"`;
-        let params = [];
-
-        if (startDate && endDate) {
-            query += ` WHERE timestamp >= ? AND timestamp <= ?`;
-            const startTs = new Date(startDate + 'T00:00:00').getTime();
-            const endTs = new Date(endDate + 'T23:59:59.999').getTime();
-            params.push(startTs);
-            params.push(endTs);
-        }
-
-        query += ` ORDER BY timestamp ASC`;
-
-        const data = dbService.query(query, params);
+        const data = dataRepository.getTimeSeriesData(tableName, startDate, endDate, 'ASC');
 
         chartCard.setDateRange(startDate, endDate);
 
@@ -83,20 +70,7 @@ export class HealthHeartView extends DataView {
             return;
         }
 
-        let query = `SELECT * FROM "${tableName}"`;
-        let params = [];
-
-        if (startDate && endDate) {
-            query += ` WHERE timestamp >= ? AND timestamp <= ?`;
-            const startTs = new Date(startDate + 'T00:00:00').getTime();
-            const endTs = new Date(endDate + 'T23:59:59.999').getTime();
-            params.push(startTs);
-            params.push(endTs);
-        }
-
-        query += ` ORDER BY timestamp ASC`;
-
-        const data = dbService.query(query, params);
+        const data = dataRepository.getTimeSeriesData(tableName, startDate, endDate, 'ASC');
 
         chartCard.setDateRange(startDate, endDate);
 
@@ -109,7 +83,7 @@ export class HealthHeartView extends DataView {
     }
 
     async checkTable(tableName) {
-        const tables = dbService.getTables();
+        const tables = dataRepository.getTables();
         return tables.includes(tableName);
     }
 }

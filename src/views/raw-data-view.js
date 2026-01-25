@@ -1,4 +1,4 @@
-import { dbService } from '../db.js';
+import * as dataRepository from '../services/data-repository.js';
 import { DataView } from '../components/data-view/data-view.js';
 
 export class RawDataView extends DataView {
@@ -48,7 +48,7 @@ export class RawDataView extends DataView {
             });
         }
 
-        const tables = dbService.getTables();
+        const tables = dataRepository.getTables();
         const select = this.querySelector('#data-table-select');
 
         if (tables.length === 0) {
@@ -72,7 +72,7 @@ export class RawDataView extends DataView {
 
     async downloadDatabase() {
         try {
-            const data = dbService.export();
+            const data = dataRepository.exportDatabase();
             const blob = new Blob([data], { type: 'application/octet-stream' });
             const url = URL.createObjectURL(blob);
 
@@ -102,7 +102,7 @@ export class RawDataView extends DataView {
 
         // Detect date column by checking first row or schema
         // Simplest way: check column names from a limit 1 query
-        const schemaCheck = dbService.query(`SELECT * FROM "${this.currentTable}" LIMIT 1`);
+        const schemaCheck = dataRepository.executeQuery(`SELECT * FROM "${this.currentTable}" LIMIT 1`);
         if (schemaCheck.length > 0) {
             const cols = Object.keys(schemaCheck[0]);
             // Priority list of date column names
@@ -124,13 +124,13 @@ export class RawDataView extends DataView {
 
         query += ` LIMIT 100`;
 
-        const data = dbService.query(query, params);
+        const data = dataRepository.executeQuery(query, params);
 
         if (data.length > 0) {
             console.log(`Loaded table ${this.currentTable}. Columns:`, Object.keys(data[0]));
         } else {
             // If data is empty, we can't easily see columns unless we use PRAGMA
-            const info = dbService.query(`PRAGMA table_info("${this.currentTable}")`);
+            const info = dataRepository.executeQuery(`PRAGMA table_info("${this.currentTable}")`);
             console.log(`Loaded table ${this.currentTable} (empty). Schema:`, info);
         }
 
