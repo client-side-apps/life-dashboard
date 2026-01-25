@@ -33,7 +33,10 @@ export class WithingsImporter extends BaseImporter {
                         table: 'steps',
                         data: {
                             timestamp: new Date(row.from).getTime(),
-                            count: parseInt(steps, 10)
+                            count: parseInt(steps, 10),
+                            type: row['Activity type'] || 'Unknown',
+                            distance: parseFloat(data.distance || 0),
+                            calories: parseFloat(data.calories || 0)
                         }
                     };
                 }
@@ -84,6 +87,7 @@ export class WithingsImporter extends BaseImporter {
             const light = parseInt(row['light (s)'] || 0, 10);
             const deep = parseInt(row['deep (s)'] || 0, 10);
             const rem = parseInt(row['rem (s)'] || 0, 10);
+            const awake = parseInt(row['awake (s)'] || 0, 10);
             const totalSeconds = light + deep + rem;
 
             if (totalSeconds > 0) {
@@ -91,7 +95,11 @@ export class WithingsImporter extends BaseImporter {
                     table: 'sleep',
                     data: {
                         timestamp: new Date(row.to).getTime(), // Using 'to' as the date of waking up/recording for the day
-                        duration_hours: parseFloat((totalSeconds / 3600).toFixed(2)) // Hours
+                        duration_hours: parseFloat((totalSeconds / 3600).toFixed(2)), // Hours
+                        light_seconds: light,
+                        deep_seconds: deep,
+                        rem_seconds: rem,
+                        awake_seconds: awake
                     }
                 };
             }

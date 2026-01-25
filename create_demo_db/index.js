@@ -53,8 +53,8 @@ async function run() {
 
             // Health Data
             db.run(`CREATE TABLE IF NOT EXISTS weight (id INTEGER PRIMARY KEY, weight_kg REAL, timestamp INTEGER)`);
-            db.run(`CREATE TABLE IF NOT EXISTS sleep (id INTEGER PRIMARY KEY, duration_hours REAL, timestamp INTEGER)`);
-            db.run(`CREATE TABLE IF NOT EXISTS steps (id INTEGER PRIMARY KEY, count INTEGER, timestamp INTEGER)`);
+            db.run(`CREATE TABLE IF NOT EXISTS sleep (id INTEGER PRIMARY KEY, duration_hours REAL, timestamp INTEGER, light_seconds INTEGER, deep_seconds INTEGER, rem_seconds INTEGER, awake_seconds INTEGER)`);
+            db.run(`CREATE TABLE IF NOT EXISTS steps (id INTEGER PRIMARY KEY, count INTEGER, timestamp INTEGER, type TEXT, distance REAL, calories REAL)`);
             db.run(`CREATE TABLE IF NOT EXISTS blood_pressure (id INTEGER PRIMARY KEY, timestamp INTEGER, systolic_mmhg INTEGER, diastolic_mmhg INTEGER, heart_rate_bpm INTEGER)`);
             db.run(`CREATE TABLE IF NOT EXISTS height (id INTEGER PRIMARY KEY, timestamp INTEGER, height_m REAL)`);
             db.run(`CREATE TABLE IF NOT EXISTS body_temperature (id INTEGER PRIMARY KEY, timestamp INTEGER, temperature_c REAL)`);
@@ -221,9 +221,9 @@ function insertData(table, data) {
     } else if (table === 'weight') {
         db.run('INSERT INTO weight (timestamp, weight_kg) VALUES (?, ?)', [data.timestamp, data.weight_kg], (err) => { if (err) console.error(err.message); });
     } else if (table === 'sleep') {
-        db.run('INSERT INTO sleep (timestamp, duration_hours) VALUES (?, ?)', [data.timestamp, data.duration_hours], (err) => { if (err) console.error(err.message); });
+        db.run('INSERT INTO sleep (timestamp, duration_hours, light_seconds, deep_seconds, rem_seconds, awake_seconds) VALUES (?, ?, ?, ?, ?, ?)', [data.timestamp, data.duration_hours, data.light_seconds, data.deep_seconds, data.rem_seconds, data.awake_seconds], (err) => { if (err) console.error(err.message); });
     } else if (table === 'steps') {
-        db.run('INSERT INTO steps (timestamp, count) VALUES (?, ?)', [data.timestamp, data.count], (err) => { if (err) console.error(err.message); });
+        db.run('INSERT INTO steps (timestamp, count, type, distance, calories) VALUES (?, ?, ?, ?, ?)', [data.timestamp, data.count, data.type, data.distance, data.calories], (err) => { if (err) console.error(err.message); });
     } else if (table === 'blood_pressure') {
         db.run('INSERT INTO blood_pressure (timestamp, systolic_mmhg, diastolic_mmhg, heart_rate_bpm) VALUES (?, ?, ?, ?)', [data.timestamp, data.systolic_mmhg, data.diastolic_mmhg, data.heart_rate_bpm], (err) => { if (err) console.error(err.message); });
     } else if (table === 'height') {

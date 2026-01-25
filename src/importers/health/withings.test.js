@@ -43,11 +43,16 @@ test('WithingsImporter', async (t) => {
 
         await t.test('maps sleep row correctly', () => {
             // 2026-01-10T23:30:00-08:00,2026-01-11T07:30:00-08:00,...
+            // light: 18000, deep: 7200, rem: 5400, awake: 1200
             const row = rows[0];
             const result = WithingsImporter.mapRow(row);
 
             assert.strictEqual(result.table, 'sleep');
             assert.strictEqual(result.data.duration_hours, 8.5);
+            assert.strictEqual(result.data.light_seconds, 18000);
+            assert.strictEqual(result.data.deep_seconds, 7200);
+            assert.strictEqual(result.data.rem_seconds, 5400);
+            assert.strictEqual(result.data.awake_seconds, 1200);
 
             const expectedTime = new Date("2026-01-11T07:30:00-08:00").getTime();
             assert.strictEqual(result.data.timestamp, expectedTime);
@@ -62,12 +67,15 @@ test('WithingsImporter', async (t) => {
         });
 
         await t.test('maps activities row correctly', () => {
-            // 2026-01-10T18:00:00-08:00,...
+            // 2026-01-10T18:00:00-08:00,...Walking,"{""calories"":120,""effduration"":1800...""steps"":2500,""distance"":1800...
             const row = rows[0];
             const result = WithingsImporter.mapRow(row);
 
             assert.strictEqual(result.table, 'steps');
             assert.strictEqual(result.data.count, 2500);
+            assert.strictEqual(result.data.type, 'Walking');
+            assert.strictEqual(result.data.distance, 1800);
+            assert.strictEqual(result.data.calories, 120);
 
             const expectedTime = new Date("2026-01-10T18:00:00-08:00").getTime();
             assert.strictEqual(result.data.timestamp, expectedTime);

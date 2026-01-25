@@ -122,20 +122,132 @@ export class HealthView extends DataView {
                 <div class="dashboard-grid">
                     <chart-card title="Sleep Duration" chart-id="sleep-detail-chart"></chart-card>
                 </div>
+                <div class="list-container">
+                    <h3>Sleep History</h3>
+                    <ul id="sleep-list" class="data-list"></ul>
+                </div>
             `;
             this.createChart('sleep-detail-chart', 'Sleep Duration', 'sleep', 'duration_hours', 'rgb(153, 102, 255)', startDate, endDate);
+            this.renderSleepList(startDate, endDate);
 
         } else if (subview === 'activity') {
             content.innerHTML = `
                 <div class="dashboard-grid">
                     <chart-card title="Steps" chart-id="activity-steps-chart"></chart-card>
                 </div>
+                 <div class="list-container">
+                    <h3>Recent Activities</h3>
+                    <ul id="activity-list" class="data-list"></ul>
+                </div>
             `;
             this.createChart('activity-steps-chart', 'Steps', 'steps', 'count', 'rgb(255, 159, 64)', startDate, endDate);
+            this.renderActivityList(startDate, endDate);
 
         } else {
             content.innerHTML = `<h3>${subview.charAt(0).toUpperCase() + subview.slice(1)} view placeholder</h3>`;
         }
+    }
+
+    async renderActivityList(startDate, endDate) {
+        const listContainer = this.querySelector('#activity-list');
+        if (!listContainer) return;
+
+        let query = `SELECT * FROM steps`;
+        let params = [];
+
+        if (startDate && endDate) {
+            query += ` WHERE timestamp >= ? AND timestamp <= ?`;
+            const startTs = new Date(startDate + 'T00:00:00').getTime();
+            const endTs = new Date(endDate + 'T23:59:59.999').getTime();
+            params.push(startTs);
+            params.push(endTs);
+        }
+        query += ` ORDER BY timestamp DESC`;
+
+        const data = dbService.query(query, params);
+
+        if (data.length === 0) {
+            listContainer.innerHTML = '<li>No activities found.</li>';
+            return;
+        }
+
+        listContainer.innerHTML = data.map(item => {
+            const date = new Date(item.timestamp).toLocaleString();
+            const distance = item.distance ? `${(item.distance / 1000).toFixed(2)} km` : '';
+            const calories = item.calories ? `${Math.round(item.calories)} kcal` : '';
+            const type = item.type || 'Walking';
+
+            return `
+                <li class="activity-item">
+                    <div class="activity-header">
+                        <span class="activity-type">${type}</span>
+                        <span class="activity-date">${date}</span>
+                    </div>
+                    <div class="activity-details">
+                        <span>${item.count} steps</span>
+                        ${distance ? `<span>${distance}</span>` : ''}
+                        ${calories ? `<span>${calories}</span>` : ''}
+                    </div>
+                </li>
+            `;
+        }).join('');
+    }
+
+    async renderSleepList(startDate, endDate) {
+        const listContainer = this.querySelector('#sleep-list');
+        if (!listContainer) return;
+
+        let query = `SELECT * FROM sleep`;
+        let params = [];
+
+        if (startDate && endDate) {
+            query += ` WHERE timestamp >= ? AND timestamp <= ?`;
+            const startTs = new Date(startDate + 'T00:00:00').getTime();
+            const endTs = new Date(endDate + 'T23:59:59.999').getTime();
+            params.push(startTs);
+            params.push(endTs);
+        }
+        query += ` ORDER BY timestamp DESC`;
+
+        const data = dbService.query(query, params);
+
+        if (data.length === 0) {
+            listContainer.innerHTML = '<li>No sleep records found.</li>';
+            return;
+        }
+
+        listContainer.innerHTML = data.map(item => {
+            const date = new Date(item.timestamp).toLocaleDateString();
+            const duration = item.duration_hours.toFixed(1) + 'h';
+
+            // Format duration of phases if available
+            const formatTime = (seconds) => {
+                if (!seconds) return '0h 0m';
+                const h = Math.floor(seconds / 3600);
+                const m = Math.floor((seconds % 3600) / 60);
+                return `${h}h ${m}m`;
+            };
+
+            const deep = item.deep_seconds ? formatTime(item.deep_seconds) : 'N/A';
+            const light = item.light_seconds ? formatTime(item.light_seconds) : 'N/A';
+            const rem = item.rem_seconds ? formatTime(item.rem_seconds) : 'N/A';
+            const awake = item.awake_seconds ? formatTime(item.awake_seconds) : 'N/A';
+
+            return `
+                <li class="sleep-item">
+                    <div class="sleep-header">
+                        <span class="sleep-date">${date}</span>
+                        <span class="sleep-duration">${duration} Total</span>
+                    </div>
+                    <div class="sleep-details">
+                        <span title="Deep Sleep">Deep: ${deep}</span>
+                        <span title="Light Sleep">Light: ${light}</span>
+                        <span title="REM Sleep">REM: ${rem}</span>
+                        <span title="Awake">Awake: ${awake}</span>
+                    </div>
+                </li>
+            `;
+        }).join('');
     }
 
     async createChart(chartId, label, tableName, valueCol, color, startDate, endDate) {

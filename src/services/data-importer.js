@@ -153,8 +153,8 @@ export class DataImporter {
             );
         } else if (table === 'steps') {
             dbService.query(
-                'INSERT INTO steps (timestamp, count) VALUES (?, ?)',
-                [data.timestamp, data.count]
+                'INSERT INTO steps (timestamp, count, type, distance, calories) VALUES (?, ?, ?, ?, ?)',
+                [data.timestamp, data.count, data.type, data.distance, data.calories]
             );
         } else if (table === 'weight') {
             dbService.query(
@@ -173,8 +173,8 @@ export class DataImporter {
             );
         } else if (table === 'sleep') {
             dbService.query(
-                'INSERT INTO sleep (timestamp, duration_hours) VALUES (?, ?)',
-                [data.timestamp, data.duration_hours]
+                'INSERT INTO sleep (timestamp, duration_hours, light_seconds, deep_seconds, rem_seconds, awake_seconds) VALUES (?, ?, ?, ?, ?, ?)',
+                [data.timestamp, data.duration_hours, data.light_seconds, data.deep_seconds, data.rem_seconds, data.awake_seconds]
             );
         } else if (table === 'blood_pressure') {
             dbService.query(
