@@ -71,6 +71,8 @@ export class DataImporter {
         // Let's normalize:
         const itemsToProcess = isJson ? (ImporterClass.extractItems ? ImporterClass.extractItems(jsonData) : (Array.isArray(jsonData) ? jsonData : [jsonData])) : rows;
 
+        dbService.query('BEGIN TRANSACTION');
+
         for (const row of itemsToProcess) {
             try {
                 const mapped = ImporterClass.mapRow(row);
@@ -104,6 +106,8 @@ export class DataImporter {
                 errorCount++;
             }
         }
+
+        dbService.query('COMMIT');
 
         return {
             success: successCount,
