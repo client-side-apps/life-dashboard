@@ -57,7 +57,7 @@ export class MapView extends DataView {
     initMap() {
         // Default to a world view or a specific user location if we had one.
         // We'll try to fit bounds after loading data.
-        this.map = L.map('leaflet-map').setView([0, 0], 2);
+        this.map = L.map('leaflet-map', { preferCanvas: true }).setView([0, 0], 2);
 
         this.updateTheme(document.documentElement.getAttribute('data-theme') || 'light');
     }
