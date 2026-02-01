@@ -51,7 +51,6 @@ class DatabaseService {
 
             // Load table list
             this.ensureSchema();
-            this.tables = this.getTables();
             console.log('Database loaded with tables:', this.tables);
 
             return true;
@@ -73,7 +72,6 @@ class DatabaseService {
             });
             this.db = new SQL.Database();
             this.ensureSchema();
-            this.tables = this.getTables();
             console.log('New database initialized.');
         } catch (error) {
             console.error('Failed to initialize empty database:', error);
@@ -102,7 +100,7 @@ class DatabaseService {
         ];
 
         schemas.forEach(sql => this.db.run(sql));
-        this.tables = this.getTables();
+        this.refreshTables();
     }
 
     query(sql, params = []) {
@@ -114,47 +112,64 @@ class DatabaseService {
 
         // Check for modification to notify listeners (e.g. for dirty state)
         const upperSql = sql.trim().toUpperCase();
+        const isSchemaChange = upperSql.startsWith('CREATE') || upperSql.startsWith('DROP') || upperSql.startsWith('ALTER');
+
         if (upperSql.startsWith('INSERT') || upperSql.startsWith('UPDATE') ||
-            upperSql.startsWith('DELETE') || upperSql.startsWith('CREATE') ||
-            upperSql.startsWith('DROP') || upperSql.startsWith('ALTER')) {
+            upperSql.startsWith('DELETE') || isSchemaChange) {
             this.notifyModification();
         }
 
         try {
+            let results;
             if (params.length > 0) {
                 const stmt = this.db.prepare(sql);
                 stmt.bind(params);
-                const results = [];
+                results = [];
                 while (stmt.step()) {
                     results.push(stmt.getAsObject());
                 }
                 stmt.free();
-                return results;
             } else {
                 const result = this.db.exec(sql);
-                if (!result || result.length === 0) return [];
+                if (!result || result.length === 0) {
+                    results = [];
+                } else {
+                    const columns = result[0].columns;
+                    const values = result[0].values;
 
-                const columns = result[0].columns;
-                const values = result[0].values;
-
-                return values.map(row => {
-                    const obj = {};
-                    columns.forEach((col, index) => {
-                        obj[col] = row[index];
+                    results = values.map(row => {
+                        const obj = {};
+                        columns.forEach((col, index) => {
+                            obj[col] = row[index];
+                        });
+                        return obj;
                     });
-                    return obj;
-                });
+                }
             }
+
+            if (isSchemaChange) {
+                this.refreshTables();
+            }
+
+            return results;
         } catch (error) {
             console.error('Query error:', error);
             return [];
         }
     }
 
-    getTables() {
-        if (!this.db) return [];
+    refreshTables() {
+        if (!this.db) {
+            this.tables = [];
+            return [];
+        }
         const result = this.query("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'");
-        return result.map(row => row.name);
+        this.tables = result.map(row => row.name);
+        return this.tables;
+    }
+
+    getTables() {
+        return this.tables;
     }
 
     // Helper to get all data from a table
