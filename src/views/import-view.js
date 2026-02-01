@@ -185,6 +185,7 @@ export class ImportView extends HTMLElement {
             if (spinner) spinner.textContent = `Processing ${filesToProcess.length} file(s) (after extraction)...`;
         }
 
+        let lastYieldTime = Date.now();
         for (const file of filesToProcess) {
             // Append log item
             const logItem = document.createElement('div');
@@ -192,10 +193,13 @@ export class ImportView extends HTMLElement {
             logItem.className = 'import-log-pending';
             status.appendChild(logItem);
 
-            // Scroll to bottom
-            status.scrollTop = status.scrollHeight;
-
-            await waitFrame();
+            // Yield to UI if enough time has passed (50ms)
+            const now = Date.now();
+            if (now - lastYieldTime > 50) {
+                status.scrollTop = status.scrollHeight;
+                await waitFrame();
+                lastYieldTime = Date.now();
+            }
 
             try {
                 const text = await file.text();
