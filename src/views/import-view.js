@@ -167,11 +167,11 @@ export class ImportView extends HTMLElement {
                         extractedCount++;
                     }
 
-                    logItem.innerHTML += `<div class="import-log-success import-log-item">Extracted ${extractedCount} files.</div>`;
+                    logItem.insertAdjacentHTML('beforeend', `<div class="import-log-success import-log-item">Extracted ${extractedCount} files.</div>`);
 
                 } catch (err) {
                     console.error("Zip extraction error", err);
-                    logItem.innerHTML += `<div class="import-log-error import-log-item">Failed to unzip: ${err.message}</div>`;
+                    logItem.insertAdjacentHTML('beforeend', `<div class="import-log-error import-log-item">Failed to unzip: ${err.message}</div>`);
                     totalErrors++; // Count the zip failure as an error
                 }
             } else {
@@ -201,16 +201,16 @@ export class ImportView extends HTMLElement {
                 const text = await file.text();
                 const result = await DataImporter.import(file.name, text, options);
 
-                logItem.innerHTML += `<div class="${result.success > 0 ? 'import-log-success' : 'import-log-warning'} import-log-item">
+                logItem.insertAdjacentHTML('beforeend', `<div class="${result.success > 0 ? 'import-log-success' : 'import-log-warning'} import-log-item">
                     ${result.message}
-                </div>`;
+                </div>`);
 
                 if (result.success > 0) totalSuccess++;
                 if (result.errors > 0) totalErrors++;
 
             } catch (err) {
                 console.error(err);
-                logItem.innerHTML += `<div class="import-log-error import-log-item">Error: ${err.message}</div>`;
+                logItem.insertAdjacentHTML('beforeend', `<div class="import-log-error import-log-item">Error: ${err.message}</div>`);
                 totalErrors++;
             }
         }
