@@ -483,6 +483,13 @@ chart-card {
     background: var(--bg-color);
 }
 
+chart-card .chart-container {
+    position: relative;
+    height: 300px;
+    /* Fixed height to prevent growth loop */
+    width: 100%;
+}
+
 /* Helper Utils */
 .hidden {
     display: none !important;

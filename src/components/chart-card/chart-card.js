@@ -242,15 +242,95 @@ export class ChartCard extends HTMLElement {
             spanGaps: false
         }));
 
+        // Define vertical line plugin
+        const verticalLinePlugin = {
+            id: 'verticalLine',
+            afterDraw: (chart) => {
+                if (chart.tooltip && chart.tooltip._active && chart.tooltip._active.length) {
+                    const activePoint = chart.tooltip._active[0];
+                    const ctx = chart.ctx;
+                    const x = activePoint.element.x;
+                    const topY = chart.scales.y.top;
+                    const bottomY = chart.scales.y.bottom;
+
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.moveTo(x, topY);
+                    ctx.lineTo(x, bottomY);
+                    ctx.lineWidth = 1;
+                    ctx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--text-secondary') || '#ccc';
+                    ctx.stroke();
+                    ctx.restore();
+                }
+            }
+        };
+
         this.setConfiguration({
             type: 'line',
             data: { labels, datasets },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                plugins: {
+                    tooltip: {
+                        enabled: true,
+                        mode: 'index',
+                        intersect: false,
+                        position: 'nearest',
+                        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                        titleColor: '#000',
+                        bodyColor: '#333',
+                        borderColor: '#ccc',
+                        borderWidth: 1,
+                        displayColors: true,
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += context.parsed.y;
+                                }
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        display: true,
+                        labels: {
+                            color: getComputedStyle(document.body).getPropertyValue('--text-primary') || '#333'
+                        }
+                    }
+                },
                 scales: {
-                    y: { beginAtZero: true } // Usually good
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: getComputedStyle(document.body).getPropertyValue('--border-color') || '#eee'
+                        },
+                        ticks: {
+                            color: getComputedStyle(document.body).getPropertyValue('--text-secondary') || '#666'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            color: getComputedStyle(document.body).getPropertyValue('--text-secondary') || '#666',
+                            maxRotation: 0,
+                            autoSkip: true,
+                            maxTicksLimit: 10
+                        }
+                    }
                 }
-            }
+            },
+            plugins: [verticalLinePlugin]
         });
 
         // Also update internal state if needed
