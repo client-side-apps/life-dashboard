@@ -390,9 +390,10 @@ map-view {
 .import-card,
 .day-card {
     background: var(--card-bg);
-    padding: 1rem;
-    border: 1px solid var(--border-color);
-    margin-bottom: 0.5rem;
+    padding: 0;
+    border: none;
+    margin-bottom: 0;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .card h3 {
@@ -462,17 +463,46 @@ map-view {
 .day-header {
     background: var(--nav-bg);
     border-bottom: 1px solid var(--border-color);
-    padding: 0.5rem;
-    font-weight: bold;
+    padding: 0.75rem;
+    font-weight: 900;
     text-transform: uppercase;
+    font-size: 1.3rem;
+}
+
+.day-stats-list {
+    display: flex;
+    flex-direction: column;
 }
 
 .stat-item {
-    border: 1px solid var(--border-color);
-    background: var(--bg-color);
-    padding: 0.5rem;
+    padding: 0.25rem 0;
+    display: flex;
     align-items: center;
     gap: 0.5rem;
+}
+
+.stat-value {
+    font-weight: 900;
+}
+
+.stat-sub {
+    opacity: 0.7;
+    font-size: 0.9em;
+}
+
+.day-nutrition-list {
+    margin-top: 0.25rem;
+    padding-left: 1.75rem;
+    opacity: 0.8;
+    font-size: 0.85em;
+}
+
+.nutrition-item {
+    margin-bottom: 0.1rem;
+}
+
+.nutrition-details {
+    opacity: 0.8;
 }
 
 /* Map */
@@ -554,13 +584,23 @@ chart-card .chart-container {
     z-index: 1;
 }
 
+.day-body {
+    display: flex;
+    flex-direction: row-reverse;
+}
+
 .day-map-container {
-    width: 100%;
+    width: 250px;
+    min-width: 250px;
     height: 200px;
-    border-bottom: 1px solid var(--border-color);
     background: var(--nav-bg);
     position: relative;
     z-index: 1;
+}
+
+.day-content {
+    flex: 1;
+    padding: 0.5rem;
 }
 
 /* Loading Overlay */

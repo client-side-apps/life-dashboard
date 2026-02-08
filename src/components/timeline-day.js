@@ -100,35 +100,34 @@ export class TimelineDay extends HTMLElement {
                 <div class="day-header">
                     <span class="day-date">${new Date(date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
                 </div>
-                
+
+                <div class="day-body">
                 ${locationEvents.length > 0 ? `<div class="day-map-container" id="map-${date}"></div>` : ''}
 
                 <div class="day-content">
                      ${stats.length > 0 ? `
-                        <div class="day-stats-grid">
+                        <div class="day-stats-list">
                             ${stats.map(s => `
                                 <div class="stat-item">
-                                    <div class="stat-icon">${s.icon}</div>
-                                    <div class="stat-info">
-                                        <div class="stat-value">${s.value}</div>
-                                        <div class="stat-label">${s.label}</div>
-                                        ${s.sub ? `<div class="stat-sub">${s.sub}</div>` : ''}
-                                    </div>
+                                    <span class="stat-icon">${s.icon}</span>
+                                    <span class="stat-label">${s.label}:</span>
+                                    <span class="stat-value">${s.value}</span>
+                                    ${s.sub ? `<span class="stat-sub">(${s.sub})</span>` : ''}
                                 </div>
                             `).join('')}
                         </div>
                      ` : '<div class="day-empty">No activity data recorded</div>'}
 
                      ${nutritionEvents.length > 0 ? `
-                        <div class="day-nutrition-list" style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 10px;">
-                            ${nutritionEvents.map(e => `
-                                <div class="nutrition-item" style="margin-bottom: 8px;">
-                                    <strong>${e.title}</strong>
-                                    <div style="font-size: 0.9em; opacity: 0.8; white-space: pre-line;">${e.details}</div>
-                                </div>
-                            `).join('')}
+                        <div class="day-nutrition-list">
+                            ${nutritionEvents.map(e => {
+                                const mealName = e.title.replace(/\s*\(\d+ kcal\)/, '');
+                                return `<div class="nutrition-item"><strong>${mealName}:</strong> <span class="nutrition-details">${e.details.replace(/\n/g, ', ')}</span></div>`;
+                            }).join('')}
                         </div>
                      ` : ''}
+
+                </div>
                 </div>
             </div>
         `;
