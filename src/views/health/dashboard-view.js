@@ -88,15 +88,31 @@ export class HealthDashboardView extends DataView {
             type: 'bar',
             responsive: true,
             maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
             scales: {
                 x: {
-                    stacked: true
+                    stacked: true,
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        display: false
+                    }
                 },
                 y: {
                     stacked: true,
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        display: false
+                    },
                     title: {
-                        display: true,
-                        text: 'Calories'
+                        display: false
                     }
                 }
             }

@@ -237,18 +237,66 @@ export class ChartCard extends HTMLElement {
             currentTs += step;
         }
 
-        const datasets = series.map(s => ({
-            label: s.label,
-            data: normalizedData[s.key],
-            borderColor: s.color,
-            borderWidth: 2,
-            pointRadius: 0, /* No smooth points */
-            pointHoverRadius: 4,
-            tension: 0, /* Straight lines */
-            stepped: 'middle', /* Pixel step effect */
-            fill: false,
-            spanGaps: false
-        }));
+        // Calculate Rolling Weekly Average
+        const weekMs = 7 * 24 * 3600 * 1000;
+        const windowSize = Math.round(weekMs / step);
+        const movingAverages = {};
+
+        series.forEach(s => {
+            const rawData = normalizedData[s.key];
+            const avgData = [];
+            for (let i = 0; i < rawData.length; i++) {
+                let sum = 0;
+                let count = 0;
+                // Average over available data in the window [i - windowSize + 1, i]
+                for (let j = 0; j < windowSize; j++) {
+                    const idx = i - j;
+                    if (idx >= 0 && rawData[idx] !== null && rawData[idx] !== undefined) {
+                        sum += Number(rawData[idx]);
+                        count++;
+                    }
+                }
+                
+                if (count > 0) {
+                    avgData.push(sum / count);
+                } else {
+                    avgData.push(null);
+                }
+            }
+            movingAverages[s.key] = avgData;
+        });
+
+        const datasets = [];
+        series.forEach(s => {
+            // Original Daily Data (Faded)
+            datasets.push({
+                label: s.label,
+                data: normalizedData[s.key],
+                borderColor: this._hexToRgba(s.color, 0.2),
+                borderWidth: 1,
+                pointRadius: 0, 
+                pointHoverRadius: 4,
+                tension: 0, 
+                stepped: 'middle', 
+                fill: false,
+                spanGaps: false,
+                order: 1
+            });
+
+            // Rolling Average (Prominent)
+            datasets.push({
+                label: s.label + ' (7d Avg)',
+                data: movingAverages[s.key],
+                borderColor: s.color,
+                borderWidth: 2,
+                pointRadius: 0,
+                pointHoverRadius: 4,
+                tension: 0.4,
+                fill: false,
+                spanGaps: true,
+                order: 2
+            });
+        });
 
         // Initialize cached colors
         this._updateThemeColors();
@@ -338,14 +386,19 @@ export class ChartCard extends HTMLElement {
                                     label += ': ';
                                 }
                                 if (context.parsed.y !== null) {
-                                    label += context.parsed.y;
+                                    let val = context.parsed.y;
+                                    // Round 7d average to 1 decimal place
+                                    if (context.dataset.label && context.dataset.label.includes('(7d Avg)')) {
+                                        val = Math.round(val * 10) / 10;
+                                    }
+                                    label += val;
                                 }
                                 return label;
                             }
                         }
                     },
                     legend: {
-                        display: true,
+                        display: false,
                         labels: {
                             color: this._themeColors.textPrimary
                         }
@@ -358,6 +411,7 @@ export class ChartCard extends HTMLElement {
                             color: this._themeColors.borderColor
                         },
                         ticks: {
+                            display: false,
                             color: this._themeColors.textSecondary
                         }
                     },
@@ -366,6 +420,7 @@ export class ChartCard extends HTMLElement {
                             display: false
                         },
                         ticks: {
+                            display: false,
                             color: this._themeColors.textSecondary,
                             maxRotation: 0,
                             autoSkip: true,
@@ -380,6 +435,19 @@ export class ChartCard extends HTMLElement {
         // Also update internal state if needed
         this.startDate = startDate;
         this.endDate = endDate;
+    }
+
+    _hexToRgba(hex, alpha) {
+        let c;
+        if (/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)) {
+            c = hex.substring(1).split('');
+            if (c.length == 3) {
+                c = [c[0], c[0], c[1], c[1], c[2], c[2]];
+            }
+            c = '0x' + c.join('');
+            return 'rgba(' + [(c >> 16) & 255, (c >> 8) & 255, c & 255].join(',') + ',' + alpha + ')';
+        }
+        return hex;
     }
 
     _updateThemeColors() {
