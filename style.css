@@ -21,6 +21,7 @@
     --chart-cyan: #00ffff;
     --chart-magenta: #ff00ff;
     --chart-yellow: #ffff00;
+    --chart-orange: #ff9800;
 
     --header-height: 48px;
     --spacing-unit: 8px;
@@ -95,6 +96,7 @@ select {
     --chart-cyan: #00ffff;
     --chart-magenta: #ff00ff;
     --chart-yellow: #ffff00;
+    --chart-orange: #ff9800;
 }
 
 * {

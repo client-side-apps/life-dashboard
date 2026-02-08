@@ -10,7 +10,8 @@ export class CSVParser {
         const delimiter = options.delimiter || ',';
 
         // Normalize line endings
-        const normalizedText = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+        let normalizedText = text.replace(/^\uFEFF/, ''); // Strip BOM
+        normalizedText = normalizedText.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
         const lines = this.splitIntoLines(normalizedText);
 
         if (lines.length === 0) return [];

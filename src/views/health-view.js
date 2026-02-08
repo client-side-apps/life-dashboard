@@ -7,6 +7,7 @@ import './health/heart-view.js';
 import './health/activity-view.js';
 import './health/body-view.js';
 import './health/sleep-view.js';
+import './health/nutrition-view.js';
 
 export class HealthView extends DataView {
     constructor() {
@@ -109,6 +110,9 @@ export class HealthView extends DataView {
                     break;
                 case 'activity':
                     viewElement = document.createElement('health-activity-view');
+                    break;
+                case 'nutrition':
+                    viewElement = document.createElement('health-nutrition-view');
                     break;
                 default:
                     content.innerHTML = `<h3>${subview.charAt(0).toUpperCase() + subview.slice(1)} view placeholder</h3>`;

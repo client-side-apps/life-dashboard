@@ -12,6 +12,7 @@ export const ChartColors = {
     Cyan: '--chart-cyan',
     Magenta: '--chart-magenta',
     Yellow: '--chart-yellow',
+    Orange: '--chart-orange',
     PrimaryText: '--primary-text'
 };
 

@@ -124,6 +124,47 @@ export class TimelineView extends DataView {
                 });
             } catch (e) { console.warn('Sleep fetch failed', e); }
 
+            // 5. Fetch Nutrition Servings (Meals)
+            try {
+                const nutritionData = dataRepository.getDateRangeData('nutrition_servings', startDate, endDate);
+
+                // Group by day and meal group
+                const mealsByDayAndGroup = {};
+                // key: "YYYY-MM-DD_MealGroup", value: { timestamp, meal_group, foods: [] }
+
+                nutritionData.forEach(row => {
+                    const dateStr = new Date(row.timestamp).toISOString().split('T')[0];
+                    const key = `${dateStr}_${row.meal_group}`;
+
+                    if (!mealsByDayAndGroup[key]) {
+                        mealsByDayAndGroup[key] = {
+                            timestamp: row.timestamp, // Use timestamp of first item
+                            type: 'nutrition',
+                            title: `${row.meal_group}`, // Breakfast, Lunch, etc.
+                            details: [], // Will store food names + calories
+                            calories: 0
+                        };
+                    }
+
+                    const item = mealsByDayAndGroup[key];
+                    // Format: "Food Name (Amount)"
+                    const foodDetail = `${row.food_name} (${row.amount})`;
+                    item.details.push(foodDetail);
+                    item.calories += row.energy_kcal;
+                });
+
+                // Convert to events
+                Object.values(mealsByDayAndGroup).forEach(meal => {
+                    events.push({
+                        timestamp: meal.timestamp,
+                        type: 'nutrition',
+                        title: `${meal.title} (${Math.round(meal.calories)} kcal)`,
+                        details: meal.details.join('\n') // TimelineDay should handle newlines or we format as list
+                    });
+                });
+
+            } catch (e) { console.warn('Nutrition fetch failed', e); }
+
             // Sort all events by time DESC
             events.sort((a, b) => b.timestamp - a.timestamp);
 

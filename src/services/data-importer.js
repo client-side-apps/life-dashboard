@@ -4,12 +4,13 @@ import { PgeImporter } from '../importers/energy/pge.js';
 import { TeslaImporter } from '../importers/energy/tesla.js';
 import { SfcuImporter } from '../importers/finance/sfcu.js';
 import { WithingsImporter } from '../importers/health/withings.js';
+import { CronometerImporter } from '../importers/health/cronometer.js';
 import { GoogleTimelineImporter } from '../importers/location/google-timeline.js';
 import { FlumeImporter } from '../importers/water/flume.js';
 
 export class DataImporter {
 
-    static importers = [PgeImporter, TeslaImporter, SfcuImporter, WithingsImporter, GoogleTimelineImporter, FlumeImporter];
+    static importers = [PgeImporter, TeslaImporter, SfcuImporter, WithingsImporter, CronometerImporter, GoogleTimelineImporter, FlumeImporter];
 
     static async import(filename, content, options = {}) {
         await dbService.ensureInitialized();
@@ -174,14 +175,14 @@ export class DataImporter {
     }
 
     static async findExistingBatch(table, minTime, maxTime) {
-        if (['location', 'electricity_grid_hourly', 'electricity_solar_hourly', 'gas_daily', 'steps', 'weight', 'height', 'body_temperature', 'sleep', 'blood_pressure', 'water_daily'].includes(table)) {
+        if (['location', 'electricity_grid_hourly', 'electricity_solar_hourly', 'gas_daily', 'steps', 'weight', 'height', 'body_temperature', 'sleep', 'blood_pressure', 'water_daily', 'nutrition_daily', 'nutrition_servings'].includes(table)) {
             return dbService.query(`SELECT id, timestamp FROM "${table}" WHERE timestamp >= ? AND timestamp <= ?`, [minTime, maxTime]);
         }
         return [];
     }
 
     static async findExisting(table, data) {
-        if (['location', 'electricity_grid_hourly', 'electricity_solar_hourly', 'gas_daily', 'steps', 'weight', 'height', 'body_temperature', 'sleep', 'blood_pressure', 'water_daily'].includes(table)) {
+        if (['location', 'electricity_grid_hourly', 'electricity_solar_hourly', 'gas_daily', 'steps', 'weight', 'height', 'body_temperature', 'sleep', 'blood_pressure', 'water_daily', 'nutrition_daily', 'nutrition_servings'].includes(table)) {
             // Unique key: timestamp
             const result = dbService.query(`SELECT id FROM "${table}" WHERE timestamp = ?`, [data.timestamp]);
             return result.length > 0 ? result[0].id : null;
@@ -271,6 +272,26 @@ export class DataImporter {
             dbService.query(
                 'INSERT INTO water_daily (timestamp, usage_liters) VALUES (?, ?)',
                 [data.timestamp, data.usage_liters]
+            );
+        } else if (table === 'nutrition_daily') {
+            const keys = Object.keys(data).filter(k => k !== 'timestamp');
+            const columns = ['timestamp', ...keys];
+            const placeholders = columns.map(() => '?').join(', ');
+            const values = [data.timestamp, ...keys.map(k => data[k])];
+
+            dbService.query(
+                `INSERT INTO nutrition_daily (${columns.join(', ')}) VALUES (${placeholders})`,
+                values
+            );
+        } else if (table === 'nutrition_servings') {
+            const keys = Object.keys(data).filter(k => k !== 'timestamp');
+            const columns = ['timestamp', ...keys];
+            const placeholders = columns.map(() => '?').join(', ');
+            const values = [data.timestamp, ...keys.map(k => data[k])];
+
+            dbService.query(
+                `INSERT INTO nutrition_servings (${columns.join(', ')}) VALUES (${placeholders})`,
+                values
             );
         }
     }

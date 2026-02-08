@@ -9,6 +9,7 @@ import { PgeImporter } from '../src/importers/energy/pge.js';
 import { TeslaImporter } from '../src/importers/energy/tesla.js';
 import { SfcuImporter } from '../src/importers/finance/sfcu.js';
 import { WithingsImporter } from '../src/importers/health/withings.js';
+import { CronometerImporter } from '../src/importers/health/cronometer.js';
 import { GoogleTimelineImporter } from '../src/importers/location/google-timeline.js';
 
 const require = createRequire(import.meta.url);
@@ -35,7 +36,7 @@ if (fs.existsSync(DB_PATH)) {
 
 const db = new sqlite3.Database(DB_PATH);
 
-const importers = [PgeImporter, TeslaImporter, SfcuImporter, WithingsImporter, GoogleTimelineImporter];
+const importers = [PgeImporter, TeslaImporter, SfcuImporter, WithingsImporter, CronometerImporter, GoogleTimelineImporter];
 
 async function run() {
     await new Promise((resolve) => {
@@ -59,6 +60,124 @@ async function run() {
             db.run(`CREATE TABLE IF NOT EXISTS blood_pressure (id INTEGER PRIMARY KEY, timestamp INTEGER, systolic_mmhg INTEGER, diastolic_mmhg INTEGER, heart_rate_bpm INTEGER)`);
             db.run(`CREATE TABLE IF NOT EXISTS height (id INTEGER PRIMARY KEY, timestamp INTEGER, height_m REAL)`);
             db.run(`CREATE TABLE IF NOT EXISTS body_temperature (id INTEGER PRIMARY KEY, timestamp INTEGER, temperature_c REAL)`);
+            db.run(`CREATE TABLE IF NOT EXISTS water_daily (id INTEGER PRIMARY KEY, timestamp INTEGER, usage_liters REAL)`);
+            db.run(`CREATE TABLE IF NOT EXISTS nutrition_daily (
+                id INTEGER PRIMARY KEY,
+                timestamp INTEGER,
+                energy_kcal REAL,
+                alcohol_g REAL,
+                caffeine_mg REAL,
+                water_g REAL,
+                b1_mg REAL,
+                b2_mg REAL,
+                b3_mg REAL,
+                b5_mg REAL,
+                b6_mg REAL,
+                b12_ug REAL,
+                folate_ug REAL,
+                vitamin_a_ug REAL,
+                vitamin_c_mg REAL,
+                vitamin_d_iu REAL,
+                vitamin_e_mg REAL,
+                vitamin_k_ug REAL,
+                calcium_mg REAL,
+                copper_mg REAL,
+                iron_mg REAL,
+                magnesium_mg REAL,
+                manganese_mg REAL,
+                phosphorus_mg REAL,
+                potassium_mg REAL,
+                selenium_ug REAL,
+                sodium_mg REAL,
+                zinc_mg REAL,
+                carbs_g REAL,
+                fiber_g REAL,
+                starch_g REAL,
+                sugars_g REAL,
+                added_sugars_g REAL,
+                net_carbs_g REAL,
+                fat_g REAL,
+                cholesterol_mg REAL,
+                monounsaturated_g REAL,
+                polyunsaturated_g REAL,
+                saturated_g REAL,
+                trans_fats_g REAL,
+                omega_3_g REAL,
+                omega_6_g REAL,
+                cystine_g REAL,
+                histidine_g REAL,
+                isoleucine_g REAL,
+                leucine_g REAL,
+                lysine_g REAL,
+                methionine_g REAL,
+                phenylalanine_g REAL,
+                protein_g REAL,
+                threonine_g REAL,
+                tryptophan_g REAL,
+                tyrosine_g REAL,
+                valine_g REAL,
+                completed INTEGER
+            )`);
+            db.run(`CREATE TABLE IF NOT EXISTS nutrition_servings (
+                id INTEGER PRIMARY KEY,
+                timestamp INTEGER,
+                meal_group TEXT,
+                food_name TEXT,
+                amount TEXT,
+                category TEXT,
+                energy_kcal REAL,
+                alcohol_g REAL,
+                caffeine_mg REAL,
+                water_g REAL,
+                b1_mg REAL,
+                b2_mg REAL,
+                b3_mg REAL,
+                b5_mg REAL,
+                b6_mg REAL,
+                b12_ug REAL,
+                folate_ug REAL,
+                vitamin_a_ug REAL,
+                vitamin_c_mg REAL,
+                vitamin_d_iu REAL,
+                vitamin_e_mg REAL,
+                vitamin_k_ug REAL,
+                calcium_mg REAL,
+                copper_mg REAL,
+                iron_mg REAL,
+                magnesium_mg REAL,
+                manganese_mg REAL,
+                phosphorus_mg REAL,
+                potassium_mg REAL,
+                selenium_ug REAL,
+                sodium_mg REAL,
+                zinc_mg REAL,
+                carbs_g REAL,
+                fiber_g REAL,
+                starch_g REAL,
+                sugars_g REAL,
+                added_sugars_g REAL,
+                net_carbs_g REAL,
+                fat_g REAL,
+                cholesterol_mg REAL,
+                monounsaturated_g REAL,
+                polyunsaturated_g REAL,
+                saturated_g REAL,
+                trans_fats_g REAL,
+                omega_3_g REAL,
+                omega_6_g REAL,
+                cystine_g REAL,
+                histidine_g REAL,
+                isoleucine_g REAL,
+                leucine_g REAL,
+                lysine_g REAL,
+                methionine_g REAL,
+                phenylalanine_g REAL,
+                protein_g REAL,
+                threonine_g REAL,
+                tryptophan_g REAL,
+                tyrosine_g REAL,
+                valine_g REAL
+            )`);
 
             // Finance Data
             db.run(`CREATE TABLE IF NOT EXISTS accounts (id INTEGER PRIMARY KEY, name TEXT, balance REAL, type TEXT)`);
@@ -242,6 +361,27 @@ function insertData(table, data) {
         db.run('INSERT INTO body_temperature (timestamp, temperature_c) VALUES (?, ?)', [data.timestamp, data.temperature_c], (err) => { if (err) console.error(err.message); });
     } else if (table === 'location') {
         db.run('INSERT INTO location (timestamp, lat, lng) VALUES (?, ?, ?)', [data.timestamp, data.lat, data.lng], (err) => { if (err) console.error(err.message); });
+    } else if (table === 'water_daily') {
+        db.run('INSERT INTO water_daily (timestamp, usage_liters) VALUES (?, ?)', [data.timestamp, data.usage_liters], (err) => { if (err) console.error(err.message); });
+    } else if (table === 'nutrition_daily') {
+        // Construct query dynamically because of many columns
+        const keys = Object.keys(data).filter(k => k !== 'timestamp' && k !== 'id');
+        const cols = ['timestamp', ...keys].join(', ');
+        const placeholders = ['?', ...keys.map(() => '?')].join(', ');
+        const values = [data.timestamp, ...keys.map(k => data[k])];
+
+        db.run(`INSERT INTO nutrition_daily (${cols}) VALUES (${placeholders})`, values, (err) => {
+            if (err) console.error('Error inserting nutrition_daily', err.message);
+        });
+    } else if (table === 'nutrition_servings') {
+        const keys = Object.keys(data).filter(k => k !== 'timestamp' && k !== 'id');
+        const cols = ['timestamp', ...keys].join(', ');
+        const placeholders = ['?', ...keys.map(() => '?')].join(', ');
+        const values = [data.timestamp, ...keys.map(k => data[k])];
+
+        db.run(`INSERT INTO nutrition_servings (${cols}) VALUES (${placeholders})`, values, (err) => {
+            if (err) console.error('Error inserting nutrition_servings', err.message);
+        });
     }
 }
 

@@ -22,6 +22,7 @@ export class TimelineDay extends HTMLElement {
         const activityEvents = events.filter(e => e.type === 'activity');
         const weightEvents = events.filter(e => e.type === 'weight');
         const sleepEvents = events.filter(e => e.type === 'sleep');
+        const nutritionEvents = events.filter(e => e.type === 'nutrition');
 
         // Calculate Stats
         let stats = [];
@@ -64,6 +65,23 @@ export class TimelineDay extends HTMLElement {
             });
         }
 
+        // Nutrition (Total Calories)
+        if (nutritionEvents.length > 0) {
+            let totalCals = 0;
+            nutritionEvents.forEach(e => {
+                // Title format: "Breakfast (450 kcal)"
+                const calMatch = e.title.match(/\((\d+) kcal\)/);
+                if (calMatch) {
+                    totalCals += parseInt(calMatch[1]);
+                }
+            });
+            stats.push({
+                icon: '🥗',
+                label: 'Nutrition',
+                value: `${Math.round(totalCals)} kcal`
+            });
+        }
+
         // Weight (Take the last measurement of the day)
         if (weightEvents.length > 0) {
             const lastWeight = weightEvents[0].details; // Sorted DESC, so first is latest? No, events sorted DESC.
@@ -100,6 +118,17 @@ export class TimelineDay extends HTMLElement {
                             `).join('')}
                         </div>
                      ` : '<div class="day-empty">No activity data recorded</div>'}
+
+                     ${nutritionEvents.length > 0 ? `
+                        <div class="day-nutrition-list" style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 10px;">
+                            ${nutritionEvents.map(e => `
+                                <div class="nutrition-item" style="margin-bottom: 8px;">
+                                    <strong>${e.title}</strong>
+                                    <div style="font-size: 0.9em; opacity: 0.8; white-space: pre-line;">${e.details}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                     ` : ''}
                 </div>
             </div>
         `;

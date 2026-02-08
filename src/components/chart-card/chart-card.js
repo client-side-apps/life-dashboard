@@ -57,6 +57,12 @@ export class ChartCard extends HTMLElement {
      * @param {Object} config - The Chart.js configuration object.
      */
     setConfiguration(config) {
+        // Ensure we are rendered
+        if (!this.hasAttribute('rendered')) {
+            this.render();
+            this.setAttribute('rendered', 'true');
+        }
+
         // Destroy existing chart if it exists
         if (this.chartInstance) {
             this.chartInstance.destroy();
@@ -69,6 +75,18 @@ export class ChartCard extends HTMLElement {
         }
 
         this.chartInstance = new Chart(canvas, config);
+    }
+
+    /**
+     * Sets chart data and options directly.
+     * @param {Object} data - Chart.js data object { labels, datasets }
+     * @param {Object} options - Chart.js options object
+     */
+    setChartData(data, options) {
+        this.setConfiguration({
+            ...options,
+            data: data
+        });
     }
 
     /**
