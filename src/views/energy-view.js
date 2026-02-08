@@ -63,8 +63,7 @@ export class EnergyView extends DataView {
 
         chartCard.setDateRange(startDate, endDate);
 
-        // Deduce interval from table name
-        const interval = tableName.includes('hourly') ? 'hourly' : 'daily';
+        const interval = this._detectInterval(data, tableName);
 
         chartCard.setTimeSeriesData(data, {
             series: datasetsConfig.map(cfg => ({
@@ -92,8 +91,7 @@ export class EnergyView extends DataView {
 
         chartCard.setDateRange(startDate, endDate);
 
-        // Deduce interval from table name
-        const interval = tableName.includes('hourly') ? 'hourly' : 'daily';
+        const interval = this._detectInterval(data, tableName);
 
         chartCard.setTimeSeriesData(data, {
             series: [{
@@ -105,6 +103,21 @@ export class EnergyView extends DataView {
             startDate: startDate,
             endDate: endDate
         });
+    }
+    _detectInterval(data, tableName) {
+        // Auto-detect interval from actual data spacing rather than table name
+        if (data.length >= 2) {
+            const gaps = [];
+            for (let i = 1; i < Math.min(data.length, 10); i++) {
+                gaps.push(data[i].timestamp - data[i - 1].timestamp);
+            }
+            const medianGap = gaps.sort((a, b) => a - b)[Math.floor(gaps.length / 2)];
+            // If median gap is >= 12 hours, treat as daily
+            if (medianGap >= 12 * 3600 * 1000) return 'daily';
+            return 'hourly';
+        }
+        // Fallback to table name heuristic
+        return tableName.includes('hourly') ? 'hourly' : 'daily';
     }
 }
 
