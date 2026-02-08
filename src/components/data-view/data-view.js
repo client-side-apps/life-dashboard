@@ -4,6 +4,7 @@ export class DataView extends HTMLElement {
         this._startDate = null;
         this._endDate = null;
         this.observer = null;
+        this.handleChartHover = this.handleChartHover.bind(this);
     }
 
     static get observedAttributes() {
@@ -67,6 +68,9 @@ export class DataView extends HTMLElement {
 
         // Listen for bubbling events just in case (though we attach directly too)
         this.addEventListener('date-change', this.handleDateChange.bind(this));
+
+        // Listen for chart hover events
+        this.addEventListener('chart-hover', this.handleChartHover);
     }
 
     disconnectedCallback() {
@@ -120,6 +124,21 @@ export class DataView extends HTMLElement {
     onDateRangeChanged() {
         // To be overridden by subclasses
     }
+    handleChartHover(e) {
+        const timestamp = e.detail.timestamp;
+        const sourceChart = e.target;
+        // console.log('DataView: handleChartHover', timestamp, sourceChart.getAttribute('title'));
+
+        const charts = this.querySelectorAll('chart-card');
+        charts.forEach(chart => {
+            if (chart !== sourceChart) {
+                if (typeof chart.setHighlightTimestamp === 'function') {
+                    chart.setHighlightTimestamp(timestamp);
+                }
+            }
+        });
+    }
+
     async showLoading() {
         const loadingOverlay = this.querySelector('.loading-overlay');
         if (loadingOverlay) {

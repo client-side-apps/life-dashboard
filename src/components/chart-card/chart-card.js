@@ -6,6 +6,7 @@ export class ChartCard extends HTMLElement {
         this.chartInstance = null;
         this._startDate = null;
         this._endDate = null;
+        this.timestamps = []; // Store timestamps for sync
     }
 
     get startDate() { return this._startDate; }
@@ -74,7 +75,11 @@ export class ChartCard extends HTMLElement {
             return;
         }
 
+
+
         this.chartInstance = new Chart(canvas, config);
+        // Verify onHover in instance
+        // console.log('ChartCard instance onHover:', !!this.chartInstance.options.onHover);
     }
 
     /**
@@ -100,6 +105,9 @@ export class ChartCard extends HTMLElement {
      */
     setTimeSeriesData(data, config) {
         const { series, interval = 'daily', startDate, endDate } = config;
+
+        // Reset timestamps
+        this.timestamps = [];
 
         // Sort data by timestamp just in case
         data.sort((a, b) => a.timestamp - b.timestamp);
@@ -128,6 +136,7 @@ export class ChartCard extends HTMLElement {
 
         // Generate full time range
         const labels = [];
+        this.timestamps = []; // Clear and rebuild
         const normalizedData = {};
         series.forEach(s => normalizedData[s.key] = []);
 
@@ -182,6 +191,7 @@ export class ChartCard extends HTMLElement {
             } else {
                 labels.push(dateObj.toLocaleString());
             }
+            this.timestamps.push(currentTs);
 
             // Find if we have data for this slot.
             // We accept data if it's >= currentTs and < currentTs + step
@@ -265,6 +275,39 @@ export class ChartCard extends HTMLElement {
             }
         };
 
+        // Define sync plugin
+        const syncPlugin = {
+            id: 'syncPlugin',
+            afterEvent: (chart, args) => {
+                const { event } = args;
+                // Only handle mousemove/mouseout
+                if (event.type !== 'mousemove' && event.type !== 'mouseout') return;
+
+                // If mouseout or not in chart area
+                if (event.type === 'mouseout' || !args.inChartArea) {
+                    this.dispatchEvent(new CustomEvent('chart-hover', {
+                        detail: { timestamp: null, originalEvent: event },
+                        bubbles: true,
+                        composed: true
+                    }));
+                    return;
+                }
+
+                if (event.type === 'mousemove') {
+                    const elements = chart.getElementsAtEventForMode(event, 'index', { intersect: false }, true);
+                    if (elements && elements.length > 0) {
+                        const index = elements[0].index;
+                        const timestamp = this.timestamps[index];
+                        this.dispatchEvent(new CustomEvent('chart-hover', {
+                            detail: { timestamp, originalEvent: event },
+                            bubbles: true,
+                            composed: true
+                        }));
+                    }
+                }
+            }
+        };
+
         this.setConfiguration({
             type: 'line',
             data: { labels, datasets },
@@ -330,12 +373,57 @@ export class ChartCard extends HTMLElement {
                     }
                 }
             },
-            plugins: [verticalLinePlugin]
+            plugins: [verticalLinePlugin, syncPlugin]
         });
 
         // Also update internal state if needed
         this.startDate = startDate;
         this.endDate = endDate;
+    }
+
+    /**
+     * Highlights a specific timestamp on the chart.
+     * @param {number|null} timestamp - The timestamp to highlight.
+     */
+    setHighlightTimestamp(timestamp) {
+        if (!this.chartInstance) return;
+        // console.log('ChartCard: setHighlightTimestamp', timestamp, this.getAttribute('title'));
+
+        if (timestamp === null) {
+            this.chartInstance.tooltip.setActiveElements([], { x: 0, y: 0 });
+            this.chartInstance.update('none'); // Update without animation
+            return;
+        }
+
+        // Find closest index
+        // Since timestamps are sorted, we could binary search, but checking all is fine for small N.
+        let closestIndex = -1;
+        let minDiff = Infinity;
+
+        // Optimized: assume sorted
+        // actually just linear scan is fine for < 1000 points
+        for (let i = 0; i < this.timestamps.length; i++) {
+            const diff = Math.abs(this.timestamps[i] - timestamp);
+            if (diff < minDiff) {
+                minDiff = diff;
+                closestIndex = i;
+            }
+        }
+
+        // Must be reasonably close? e.g. within half a step?
+        // Let's say if it's within the view range it's fine.
+        // Actually for sync, we want the closest point even if slightly off (e.g. hourly vs daily)
+        // accepted for now.
+
+        if (closestIndex !== -1) {
+            const activeElements = this.chartInstance.data.datasets.map((ds, i) => ({
+                datasetIndex: i,
+                index: closestIndex,
+            }));
+
+            this.chartInstance.tooltip.setActiveElements(activeElements, { x: 0, y: 0 });
+            this.chartInstance.update('none');
+        }
     }
 }
 
