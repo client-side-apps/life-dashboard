@@ -250,6 +250,9 @@ export class ChartCard extends HTMLElement {
             spanGaps: false
         }));
 
+        // Initialize cached colors
+        this._updateThemeColors();
+
         // Define vertical line plugin
         const verticalLinePlugin = {
             id: 'verticalLine',
@@ -266,7 +269,7 @@ export class ChartCard extends HTMLElement {
                     ctx.moveTo(x, topY);
                     ctx.lineTo(x, bottomY);
                     ctx.lineWidth = 1;
-                    ctx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--text-secondary') || '#ccc';
+                    ctx.strokeStyle = this._themeColors.textSecondary;
                     ctx.stroke();
                     ctx.restore();
                 }
@@ -344,7 +347,7 @@ export class ChartCard extends HTMLElement {
                     legend: {
                         display: true,
                         labels: {
-                            color: getComputedStyle(document.body).getPropertyValue('--text-primary') || '#333'
+                            color: this._themeColors.textPrimary
                         }
                     }
                 },
@@ -352,10 +355,10 @@ export class ChartCard extends HTMLElement {
                     y: {
                         beginAtZero: true,
                         grid: {
-                            color: getComputedStyle(document.body).getPropertyValue('--border-color') || '#eee'
+                            color: this._themeColors.borderColor
                         },
                         ticks: {
-                            color: getComputedStyle(document.body).getPropertyValue('--text-secondary') || '#666'
+                            color: this._themeColors.textSecondary
                         }
                     },
                     x: {
@@ -363,7 +366,7 @@ export class ChartCard extends HTMLElement {
                             display: false
                         },
                         ticks: {
-                            color: getComputedStyle(document.body).getPropertyValue('--text-secondary') || '#666',
+                            color: this._themeColors.textSecondary,
                             maxRotation: 0,
                             autoSkip: true,
                             maxTicksLimit: 10
@@ -377,6 +380,37 @@ export class ChartCard extends HTMLElement {
         // Also update internal state if needed
         this.startDate = startDate;
         this.endDate = endDate;
+    }
+
+    _updateThemeColors() {
+        const style = getComputedStyle(document.body);
+        this._themeColors = {
+            textPrimary: style.getPropertyValue('--text-primary').trim() || '#333',
+            textSecondary: style.getPropertyValue('--text-secondary').trim() || '#666',
+            borderColor: style.getPropertyValue('--border-color').trim() || '#eee'
+        };
+    }
+
+    /**
+     * Updates the chart theme.
+     * Can be called by parent components when theme changes.
+     */
+    updateTheme() {
+        if (!this.chartInstance) return;
+
+        this._updateThemeColors();
+
+        const options = this.chartInstance.options;
+
+        // Update scales
+        if (options.scales.x && options.scales.x.ticks) options.scales.x.ticks.color = this._themeColors.textSecondary;
+        if (options.scales.y && options.scales.y.grid) options.scales.y.grid.color = this._themeColors.borderColor;
+        if (options.scales.y && options.scales.y.ticks) options.scales.y.ticks.color = this._themeColors.textSecondary;
+
+        // Update legend
+        if (options.plugins.legend && options.plugins.legend.labels) options.plugins.legend.labels.color = this._themeColors.textPrimary;
+
+        this.chartInstance.update();
     }
 
     /**

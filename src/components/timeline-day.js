@@ -134,13 +134,33 @@ export class TimelineDay extends HTMLElement {
         `;
 
         if (locationEvents.length > 0) {
-            requestAnimationFrame(() => this.initMap(locationEvents, `map-${date}`));
+            // Lazy load map using IntersectionObserver
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        // Using requestAnimationFrame to ensure we are in a paint frame,
+                        // but IntersectionObserver mainly fires when visible.
+                        // We also cache the style before init.
+                        this.initMap(locationEvents, `map-${date}`);
+                        observer.unobserve(entry.target);
+                        observer.disconnect();
+                    }
+                });
+            }, { rootMargin: '50px' }); // Preload slightly before view
+
+            const mapContainer = this.querySelector(`#map-${date}`);
+            if (mapContainer) {
+                observer.observe(mapContainer);
+            }
         }
     }
 
     initMap(locations, elementId) {
         const element = this.querySelector(`#${elementId}`);
         if (!element) return;
+
+        // Check again if already initialized (just in case)
+        if (this.map) return;
 
         const map = L.map(element, {
             zoomControl: false,
@@ -163,7 +183,8 @@ export class TimelineDay extends HTMLElement {
             L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 20 }).addTo(map);
         }
 
-        const polyline = L.polyline(latLngs, { color: getComputedStyle(document.body).getPropertyValue('--text-color').trim(), weight: 2 }).addTo(map);
+        const textColor = getComputedStyle(document.body).getPropertyValue('--text-color').trim();
+        const polyline = L.polyline(latLngs, { color: textColor, weight: 2 }).addTo(map);
 
         // Start (Green -> High Contrast geometric)
         L.circleMarker(latLngs[0], { radius: 4, color: getChartColor(ChartColors.Green), fillOpacity: 1, stroke: true, weight: 1, fillColor: getChartColor(ChartColors.PrimaryText) }).addTo(map);
