@@ -215,9 +215,13 @@ export class ChartCard extends HTMLElement {
             label: s.label,
             data: normalizedData[s.key],
             borderColor: s.color,
-            tension: 0.1,
+            borderWidth: 2,
+            pointRadius: 0, /* No smooth points */
+            pointHoverRadius: 4,
+            tension: 0, /* Straight lines */
+            stepped: 'middle', /* Pixel step effect */
             fill: false,
-            spanGaps: false // This ensures nulls create gaps
+            spanGaps: false
         }));
 
         this.setConfiguration({

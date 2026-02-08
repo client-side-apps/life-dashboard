@@ -1,5 +1,6 @@
 import * as dataRepository from '../../services/data-repository.js';
 import { DataView } from '../../components/data-view/data-view.js';
+import { getChartColor, ChartColors } from '../../utils/style.js';
 
 export class HealthSleepView extends DataView {
     constructor() {
@@ -29,7 +30,7 @@ export class HealthSleepView extends DataView {
             </div>
         `;
 
-        this.createChart('sleep-detail-chart', 'Sleep Duration', 'sleep', 'duration_hours', 'rgb(153, 102, 255)', startDate, endDate);
+        this.createChart('sleep-detail-chart', 'Sleep Duration', 'sleep', 'duration_hours', getChartColor(ChartColors.Magenta), startDate, endDate);
         this.renderSleepList(startDate, endDate);
     }
 

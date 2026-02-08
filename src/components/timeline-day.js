@@ -1,4 +1,5 @@
 import L from 'leaflet';
+import { getChartColor, ChartColors } from '../utils/style.js';
 
 export class TimelineDay extends HTMLElement {
     constructor() {
@@ -133,10 +134,12 @@ export class TimelineDay extends HTMLElement {
             L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 20 }).addTo(map);
         }
 
-        const polyline = L.polyline(latLngs, { color: 'var(--primary-color)', weight: 3 }).addTo(map);
+        const polyline = L.polyline(latLngs, { color: getComputedStyle(document.body).getPropertyValue('--text-color').trim(), weight: 2 }).addTo(map);
 
-        L.circleMarker(latLngs[0], { radius: 4, color: '#2ecc71', fillOpacity: 1 }).addTo(map);
-        L.circleMarker(latLngs[latLngs.length - 1], { radius: 4, color: '#e74c3c', fillOpacity: 1 }).addTo(map);
+        // Start (Green -> High Contrast geometric)
+        L.circleMarker(latLngs[0], { radius: 4, color: getChartColor(ChartColors.Green), fillOpacity: 1, stroke: true, weight: 1, fillColor: getChartColor(ChartColors.PrimaryText) }).addTo(map);
+        // End (Red -> High Contrast geometric)
+        L.circleMarker(latLngs[latLngs.length - 1], { radius: 4, color: getChartColor(ChartColors.Red), fillOpacity: 1, stroke: true, weight: 1, fillColor: getChartColor(ChartColors.PrimaryText) }).addTo(map);
 
         map.fitBounds(polyline.getBounds(), { padding: [20, 20] });
 

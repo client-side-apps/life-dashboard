@@ -1,5 +1,6 @@
 import * as dataRepository from '../../services/data-repository.js';
 import { DataView } from '../../components/data-view/data-view.js';
+import { getChartColor, ChartColors } from '../../utils/style.js';
 
 export class HealthActivityView extends DataView {
     constructor() {
@@ -33,7 +34,7 @@ export class HealthActivityView extends DataView {
             </div>
         `;
 
-        this.createChart('activity-steps-chart', 'Steps', 'steps', 'count', 'rgb(255, 159, 64)', startDate, endDate);
+        this.createChart('activity-steps-chart', 'Steps', 'steps', 'count', getChartColor(ChartColors.Green), startDate, endDate);
         this.renderActivityList(startDate, endDate);
     }
 

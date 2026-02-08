@@ -1,52 +1,151 @@
 :root {
-    /* Light Mode Variables */
+    /* Pixel / Brutalist Theme Variables */
     --bg-color: #ffffff;
-    --text-color: #1a1a1a;
-    --nav-bg: #f5f5f5;
-    --border-color: #e0e0e0;
-    --primary-color: #007aff;
-    --secondary-color: #5856d6;
-    --accent-color: #ff2d55;
+    --text-color: #000000;
+    --nav-bg: #e0e0e0;
+    --border-color: #000000;
+    --primary-color: #ffff00;
+    /* Bright Yellow */
+    --primary-text: #000000;
+    --secondary-color: #0000ff;
+    /* Blue */
+    --accent-color: #ff00ff;
+    /* Magenta */
     --card-bg: #ffffff;
-    --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    --header-height: 60px;
+    --card-shadow: none;
 
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    /* Chart specific palette for variety */
+    --chart-red: #ff0000;
+    --chart-green: #00ff00;
+    --chart-blue: #0000ff;
+    --chart-cyan: #00ffff;
+    --chart-magenta: #ff00ff;
+    --chart-yellow: #ffff00;
+
+    --header-height: 48px;
+    --spacing-unit: 8px;
+    --control-height: 36px;
+    /* Standardize height */
+
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 14px;
+    line-height: 1.2;
+}
+
+/* ... (skip dark mode) */
+
+/* Buttons */
+.primary-btn,
+.secondary-btn,
+.icon-btn {
+    height: var(--control-height);
+    padding: 0 1rem;
+    /* Horizontal padding only, height set by line-height/height */
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.8rem;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-transform: uppercase;
+    background: var(--bg-color);
+    color: var(--text-color);
+    box-shadow: 2px 2px 0px var(--border-color);
+    transition: transform 0.1s, box-shadow 0.1s;
+    vertical-align: middle;
+}
+
+/* Form Elements */
+.select-input,
+.date-input,
+.file-input,
+input[type="text"],
+input[type="number"],
+input[type="date"],
+select {
+    height: var(--control-height);
+    padding: 0 8px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-color);
+    color: var(--text-color);
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.9rem;
+    outline: none;
+    vertical-align: middle;
+    box-shadow: none;
+    /* Reset potential shadows on inputs to align with buttons if needed, or add shadow? sticking to flat for inputs usually safer for alignment */
 }
 
 [data-theme="dark"] {
-    /* Dark Mode Variables */
-    --bg-color: #121212;
-    --text-color: #ffffff;
-    --nav-bg: #1e1e1e;
-    --border-color: #333333;
-    --primary-color: #0a84ff;
-    --secondary-color: #5e5ce6;
-    --accent-color: #ff375f;
-    --card-bg: #1e1e1e;
-    --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --bg-color: #000000;
+    --text-color: #e0e0e0;
+    --nav-bg: #222222;
+    --border-color: #e0e0e0;
+    --primary-color: #ffff00;
+    --primary-text: #000000;
+    --secondary-color: #00ffff;
+    /* Cyan */
+    --accent-color: #ff00ff;
+    --card-bg: #000000;
+
+    --chart-red: #ff0000;
+    --chart-green: #00ff00;
+    --chart-blue: #0000ff;
+    --chart-cyan: #00ffff;
+    --chart-magenta: #ff00ff;
+    --chart-yellow: #ffff00;
 }
 
 * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
+    border-radius: 0 !important;
+    /* STRICT PIXEL RULE */
+    font-family: 'Courier New', Courier, monospace !important;
+    text-transform: uppercase;
+    /* Optional: enhances brutalist look, maybe too much? Let's try regular case first if user didn't specify caps, but screenshot looks mixed. Stick to normal case for readability but monospace handles the vibe. */
+    text-transform: none;
 }
 
 body {
     background-color: var(--bg-color);
     color: var(--text-color);
-    transition: background-color 0.3s, color 0.3s;
     height: 100vh;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
+    /* App-like feel */
 }
+
+/* Scrollbars */
+::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--nav-bg);
+    border-left: 1px solid var(--border-color);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--text-color);
+    border: 1px solid var(--nav-bg);
+}
+
+::-webkit-scrollbar-corner {
+    background: var(--nav-bg);
+}
+
 
 /* Header & Nav */
 .app-header {
     height: var(--header-height);
-    background-color: var(--nav-bg);
-    border-bottom: 1px solid var(--border-color);
+    background-color: var(--bg-color);
+    border-bottom: 2px solid var(--border-color);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -57,41 +156,51 @@ body {
 }
 
 .header-left h1 {
-    font-size: 1.2rem;
-    font-weight: 600;
+    font-size: 1rem;
+    font-weight: 900;
+    letter-spacing: -1px;
+    text-transform: uppercase;
+    background: var(--text-color);
+    color: var(--bg-color);
+    padding: 2px 6px;
 }
 
 .main-nav {
     display: flex;
-    gap: 0.5rem;
-    overflow-x: auto;
+    gap: -1px;
+    /* Remove gaps for border collapse look */
+    height: 100%;
+    align-items: stretch;
 }
 
 .nav-btn {
     background: none;
     border: none;
-    padding: 0.5rem 1rem;
+    border-left: 1px solid var(--border-color);
+    padding: 0 1.5rem;
     color: var(--text-color);
     cursor: pointer;
-    border-radius: 6px;
+    font-weight: bold;
     font-size: 0.9rem;
-    transition: background-color 0.2s;
-    opacity: 0.7;
     text-decoration: none;
-    display: inline-block;
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
+
+.nav-btn:last-child {
+    border-right: 1px solid var(--border-color);
 }
 
 .nav-btn:hover {
-    background-color: rgba(128, 128, 128, 0.1);
-    opacity: 1;
-    text-decoration: none;
+    background-color: var(--nav-bg);
 }
 
 .nav-btn.active {
     background-color: var(--primary-color);
-    color: white;
-    opacity: 1;
-    text-decoration: none;
+    color: var(--primary-text);
+    box-shadow: inset 0 0 0 2px var(--border-color);
+    /* Inner border focus */
 }
 
 .header-right {
@@ -102,62 +211,70 @@ body {
 
 /* Buttons */
 .primary-btn,
-.secondary-btn {
+.secondary-btn,
+.icon-btn {
     padding: 0.5rem 1rem;
-    border-radius: 6px;
-    border: none;
+    border: 1px solid var(--border-color);
     cursor: pointer;
-    font-weight: 500;
-    font-size: 0.9rem;
+    font-weight: bold;
+    font-size: 0.8rem;
     text-decoration: none;
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-transform: uppercase;
+    background: var(--bg-color);
+    color: var(--text-color);
+    box-shadow: 2px 2px 0px var(--border-color);
+    /* Retro shadow */
+    transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.primary-btn:active,
+.secondary-btn:active,
+.icon-btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: none;
 }
 
 .primary-btn {
     background-color: var(--primary-color);
-    color: white;
+    color: var(--primary-text);
 }
 
-.secondary-btn {
-    background-color: transparent;
-    border: 1px solid var(--border-color);
-    color: var(--text-color);
-    text-decoration: none;
-    display: inline-block;
-}
-
-.secondary-btn.active {
-    background-color: var(--primary-color);
-    color: white;
-    border-color: var(--primary-color);
+.secondary-btn:hover {
+    background-color: var(--nav-bg);
 }
 
 .icon-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: var(--text-color);
     padding: 4px;
-    border-radius: 50%;
-}
-
-.icon-btn:hover {
-    background-color: rgba(128, 128, 128, 0.1);
+    border-radius: 0;
+    min-width: 32px;
+    min-height: 32px;
 }
 
 /* Form Elements */
 .select-input,
 .date-input,
-.file-input {
-    padding: 8px;
-    border-radius: 4px;
+.file-input,
+input[type="text"],
+input[type="number"],
+input[type="date"],
+select {
+    padding: 6px;
     border: 1px solid var(--border-color);
     background: var(--bg-color);
     color: var(--text-color);
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.9rem;
+    outline: none;
 }
 
-.select-input:disabled {
-    opacity: 0.6;
+.select-input:focus,
+.date-input:focus,
+input:focus {
+    background-color: var(--primary-color);
+    color: var(--primary-text);
 }
 
 /* Main Content */
@@ -165,12 +282,30 @@ body {
     flex: 1;
     overflow: hidden;
     position: relative;
+    padding: 1rem;
+    /* Add some breathing room around the grid */
+    background-image:
+        linear-gradient(var(--border-color) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border-color) 1px, transparent 1px);
+    background-size: 20px 20px;
+    background-position: -1px -1px;
+    background-color: var(--bg-color);
+}
+
+/* Make the grid lines very subtle or use a distinct background color for content */
+#app-content::before {
+    content: "";
+    /* Optional overlay to fade grid if needed, or remove grid if too busy */
+    /* For now, sticking to clean background for content containers */
 }
 
 .view-container {
     height: 100%;
     overflow-y: auto;
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
     padding: 1rem;
+    box-shadow: 4px 4px 0px var(--border-color);
 }
 
 .placeholder-message {
@@ -181,86 +316,41 @@ body {
     height: 100%;
     text-align: center;
     gap: 1rem;
-    color: var(--text-color);
-    opacity: 0.8;
+    border: 1px dashed var(--border-color);
 }
 
-/* Map View */
-.map-overlay {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    z-index: 1000;
-    background: var(--card-bg);
-    padding: 10px;
-    border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-}
-
-.map-stats {
-    margin-top: 5px;
-    font-size: 0.8rem;
-    color: var(--text-color);
-}
-
-.full-map {
+/* Generic Tables */
+.data-table,
+.generic-table {
     width: 100%;
-    height: 100%;
-    z-index: 1;
+    border-collapse: collapse;
+    border: 1px solid var(--border-color);
+    font-size: 0.85rem;
 }
 
-/* Timeline View */
-.timeline-controls {
-    padding: 1rem;
-    border-bottom: 1px solid var(--border-color);
-    display: flex;
-    gap: 1rem;
-    align-items: center;
-}
-
-.timeline-content {
-    padding: 1rem;
-    overflow-y: auto;
-    height: calc(100% - 60px);
-}
-
-.timeline-list {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-.timeline-item {
-    border-left: 2px solid var(--primary-color);
-    padding-left: 1rem;
-}
-
-.timeline-time {
-    font-size: 0.8rem;
-    color: var(--secondary-color);
-}
-
-.timeline-details {
+.data-table th,
+.generic-table th {
     background: var(--nav-bg);
-    padding: 0.5rem;
-    border-radius: 4px;
-    margin-top: 0.2rem;
+    border-bottom: 2px solid var(--border-color);
+    border-right: 1px solid var(--border-color);
+    padding: 8px;
+    text-align: left;
+    text-transform: uppercase;
+    font-weight: 900;
 }
 
-/* Health View */
-.health-nav {
-    margin-bottom: 2rem;
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
+.data-table td,
+.generic-table td {
+    border-bottom: 1px solid var(--border-color);
+    border-right: 1px solid var(--border-color);
+    padding: 6px 8px;
 }
 
-.dashboard-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
+.data-table tr:hover td,
+.generic-table tr:hover td {
+    background-color: var(--primary-color);
+    color: var(--primary-text);
 }
-
 
 
 /* Finance View */
@@ -271,549 +361,180 @@ body {
     margin-bottom: 2rem;
 }
 
-.card {
+.card,
+.movie-card,
+.import-card,
+.day-card {
     background: var(--card-bg);
-    padding: 1.5rem;
-    border-radius: 8px;
-    box-shadow: var(--card-shadow);
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    box-shadow: 4px 4px 0px var(--border-color);
+    /* Consistent retro shadow */
+    margin-bottom: 0.5rem;
+}
+
+.card h3 {
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.5rem;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    font-size: 0.9rem;
 }
 
 .amount {
     font-size: 1.5rem;
-    font-weight: bold;
+    font-weight: 900;
+    font-family: 'Courier New', Courier, monospace;
 }
 
-.amount.primary {
-    color: var(--primary-color);
-}
-
-.amount.secondary {
-    color: var(--secondary-color);
-}
-
-.amount.accent {
-    color: var(--accent-color);
-}
-
-.finance-controls {
-    margin-bottom: 1rem;
-}
-
-.transaction-list {
-    background: var(--card-bg);
-    border-radius: 8px;
-    box-shadow: var(--card-shadow);
-    overflow: hidden;
-}
-
-.data-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.data-table thead {
-    background: var(--nav-bg);
-    text-align: left;
-}
-
-.data-table th,
-.data-table td {
-    padding: 1rem;
-}
-
-.data-table td {
-    border-bottom: 1px solid var(--border-color);
-}
-
-.align-right {
-    text-align: right;
-}
-
-/* Energy & Movies uses similar grids */
-.charts-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
-    padding-bottom: 2rem;
-}
-
-.movies-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 1.5rem;
-    padding-bottom: 2rem;
-}
-
-.movie-card {
-    background: var(--card-bg);
-    border-radius: 8px;
-    box-shadow: var(--card-shadow);
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-}
-
-.movie-poster {
-    width: 100%;
-    height: 300px;
-    object-fit: cover;
-}
-
-.movie-poster-placeholder {
-    height: 250px;
-    background: var(--nav-bg);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-color);
-    opacity: 0.5;
-}
-
-.movie-info {
-    padding: 1rem;
-}
-
-.movie-title {
-    font-size: 1.1rem;
-    margin-bottom: 0.5rem;
-    line-height: 1.3;
-}
-
-.movie-meta {
-    font-size: 0.9rem;
-    color: var(--text-color);
-    opacity: 0.8;
-    display: flex;
-    justify-content: space-between;
-}
-
-/* Data View */
-.data-controls {
-    margin-bottom: 1rem;
-}
-
-.table-wrapper {
-    overflow: auto;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    max-height: calc(100vh - 200px);
-}
-
-.generic-table {
-    width: 100%;
-    border-collapse: collapse;
-    min-width: 600px;
-}
-
-.generic-table th {
-    padding: 0.8rem;
-    text-align: left;
-    border-bottom: 2px solid var(--border-color);
-    background: var(--nav-bg);
-    position: sticky;
-    top: 0;
-}
-
-.generic-table td {
-    padding: 0.8rem;
-    border-bottom: 1px solid var(--border-color);
-}
-
-/* Import View */
-.import-card {
-    max-width: 500px;
-    margin: 2rem auto;
-    padding: 2rem;
-    background: var(--card-bg);
-    border-radius: 8px;
-    box-shadow: var(--card-shadow);
-}
-
-.form-group {
-    margin-bottom: 1.5rem;
-}
-
-.form-label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
-}
-
-.full-width {
-    width: 100%;
-}
-
-/* Modal */
+/* Modals */
 .modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 2000;
-}
-
-.hidden {
-    display: none !important;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(2px);
+    /* Slight blur for modern touch effectively used in retro */
 }
 
 .modal-content {
-    background: var(--card-bg);
-    padding: 2rem;
-    border-radius: 12px;
-    box-shadow: var(--card-shadow);
-    max-width: 500px;
-    width: 90%;
-    position: relative;
+    background: var(--bg-color);
+    padding: 1rem;
+    border: 2px solid var(--border-color);
+    box-shadow: 8px 8px 0px var(--border-color);
+    border-radius: 0;
 }
 
 .close-modal {
-    position: absolute;
-    top: 10px;
-    right: 15px;
-    font-size: 1.5rem;
-    cursor: pointer;
-}
-
-/* Responsiveness */
-@media (max-width: 768px) {
-    .app-header {
-        flex-direction: column;
-        height: auto;
-        padding: 0.5rem;
-        gap: 0.5rem;
-    }
-
-    .header-left {
-        display: none;
-    }
-
-    .main-nav {
-        width: 100%;
-        justify-content: center;
-        padding-bottom: 0;
-    }
-
-    .header-right {
-        display: none;
-    }
-}
-
-/* Utilities */
-.text-center {
-    text-align: center;
-}
-
-.p-1 {
-    padding: 1rem;
-}
-
-/* Animations */
-@keyframes spin {
-    100% {
-        transform: rotate(360deg);
-    }
-}
-
-.spin-animation {
-    animation: spin 1s linear infinite;
-}
-
-/* Import View Styles */
-.import-filter-container {
-    margin-bottom: 1rem;
-}
-
-.import-filter-container label:not(:first-child) {
-    margin-left: 1rem;
-}
-
-.import-status-area {
-    margin-top: 1rem;
-    color: #888;
-}
-
-.import-loading-container {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 0.5rem;
-}
-
-.import-log-item {
-    margin-left: 1rem;
-}
-
-.import-log-success {
-    color: green;
-}
-
-.import-log-warning {
-    color: orange;
-}
-
-.import-log-error {
-    color: red;
-}
-
-.import-done-message {
-    margin-top: 1rem;
+    top: 0;
+    right: 0;
+    padding: 0.5rem 1rem;
+    background: var(--primary-color);
+    color: var(--primary-text);
+    border-left: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+    font-family: monospace;
     font-weight: bold;
 }
 
-/* Date Range Picker Styles */
-.date-controls-wrapper {
-    display: flex;
-    gap: 1rem;
-    align-items: center;
+.close-modal:hover {
+    background: var(--text-color);
+    color: var(--bg-color);
 }
 
-.date-input-label {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+/* Timeline */
+.timeline-item {
+    border-left: 2px solid var(--border-color);
+    padding-left: 1rem;
+    position: relative;
+    margin-left: 0.5rem;
 }
 
-/* Timeline View Styles */
-/* .timeline-list already handled by existing CSS */
-
-/* Raw Data View Styles */
-.data-controls {
-    margin-bottom: 1rem;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    align-items: center;
-}
-
-.data-count-label {
-    font-size: 0.9rem;
-}
-
-.table-empty-message {
-    text-align: center;
-    padding: 1rem;
-}
-
-/* View Specific Control Spacing */
-.health-controls-section {
-    margin: 1rem 0;
-}
-
-.finance-account-select,
-.data-table-select {
-    min-width: 200px;
-}
-
-.view-placeholder {
-    padding: 2rem;
-    text-align: center;
-}
-
-
-.section-controls {
-    margin-bottom: 1rem;
-}
-
-.welcome-actions {
-    margin-top: 1rem;
-}
-
-.import-card h2 {
-    margin-bottom: 1.5rem;
-}
-
-/* Import View Actions */
-.import-actions {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin: 1.5rem 0;
-}
-
-.file-input-wrapper input[type="file"] {
-    display: none;
-}
-
-.separator {
-    color: var(--text-color);
-    opacity: 0.7;
-    font-size: 0.9rem;
-}
-
-/* Ensure buttons display correctly */
-.primary-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
-
-/* Detailed Health Lists */
-.list-container {
-    margin-top: 2rem;
-}
-
-.list-container h3 {
-    margin-bottom: 1rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.data-list {
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-}
-
-.activity-item,
-.sleep-item {
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 1rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-.activity-header,
-.sleep-header {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 0.5rem;
-    font-weight: 600;
-}
-
-.activity-date,
-.sleep-date {
-    color: var(--text-color);
-    opacity: 0.7;
-    font-weight: normal;
-    font-size: 0.9rem;
-}
-
-.activity-details,
-.sleep-details {
-    display: flex;
-    gap: 1.5rem;
-    font-size: 0.9rem;
-    color: var(--text-color);
-    flex-wrap: wrap;
-}
-
-.sleep-details span {
-    background: var(--nav-bg);
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 0.85rem;
-}
-
-.sleep-details span[title="Deep Sleep"] {
-    border-left: 3px solid #4b0082;
-}
-
-.sleep-details span[title="Light Sleep"] {
-    border-left: 3px solid #87ceeb;
-}
-
-.sleep-details span[title="REM Sleep"] {
-    border-left: 3px solid #dda0dd;
-}
-
-.sleep-details span[title="Awake"] {
-    border-left: 3px solid #ffa500;
-}
-
-/* Timeline Day Component - Card Layout */
-.timeline-day {
-    margin-bottom: 2rem;
-}
-
-.day-card {
-    background: var(--card-bg);
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    /* More prominent shadow */
-    overflow: hidden;
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -6px;
+    top: 0;
+    width: 10px;
+    height: 10px;
+    background: var(--primary-color);
     border: 1px solid var(--border-color);
 }
 
 .day-header {
     background: var(--nav-bg);
-    padding: 1rem;
     border-bottom: 1px solid var(--border-color);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    padding: 0.5rem;
+    font-weight: bold;
+    text-transform: uppercase;
 }
 
-.day-date {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--text-color);
+.stat-item {
+    border: 1px solid var(--border-color);
+    background: var(--bg-color);
+    padding: 0.5rem;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 2px 2px 0 var(--border-color);
+}
+
+/* Map */
+.map-overlay {
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    box-shadow: 4px 4px 0px var(--border-color);
+    border-radius: 0;
+}
+
+/* Chart Card specific */
+chart-card {
+    display: block;
+    border: 1px solid var(--border-color);
+    padding: 1rem;
+    background: var(--bg-color);
+    box-shadow: 4px 4px 0px var(--border-color);
+}
+
+/* Helper Utils */
+.hidden {
+    display: none !important;
+}
+
+.text-center {
+    text-align: center;
+}
+
+/* Status Indicator */
+#db-status {
+    font-size: 0.8rem;
+    padding: 4px 8px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-color);
+    margin-right: 1rem;
+}
+
+/* Navigation Active State Line */
+.main-nav {
+    border-left: 1px solid var(--border-color);
+}
+
+/* Leaflet Overrides */
+.leaflet-bar,
+.leaflet-control-zoom-in,
+.leaflet-control-zoom-out,
+.leaflet-touch .leaflet-bar,
+.leaflet-touch .leaflet-control-zoom-in,
+.leaflet-touch .leaflet-control-zoom-out {
+    border-radius: 0 !important;
+    border: 1px solid var(--border-color) !important;
+    box-shadow: 4px 4px 0px var(--border-color) !important;
+    color: var(--text-color) !important;
+    background: var(--bg-color) !important;
+}
+
+.leaflet-container {
+    font-family: 'Courier New', Courier, monospace !important;
+}
+
+/* Grids for Charts */
+.charts-grid,
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    /* Slightly larger min-width for pixel look? Or keep 300 */
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+/* Map Dimensions DO NOT REMOVE */
+.full-map {
+    width: 100%;
+    height: 100%;
+    z-index: 1;
 }
 
 .day-map-container {
     width: 100%;
     height: 200px;
-    /* Mini map height */
     border-bottom: 1px solid var(--border-color);
-    background: #e0e0e0;
-    /* Placeholder gray */
+    background: var(--nav-bg);
     position: relative;
     z-index: 1;
-    /* Ensure map is below potential overlays */
-}
-
-.day-content {
-    padding: 1rem;
-}
-
-/* Timeline Day Summary Grid */
-.day-stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-    gap: 1rem;
-    padding: 0.5rem 0;
-}
-
-.stat-item {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    background: var(--nav-bg);
-    padding: 0.75rem;
-    border-radius: 8px;
-}
-
-.stat-icon {
-    font-size: 1.5rem;
-}
-
-.stat-info {
-    display: flex;
-    flex-direction: column;
-}
-
-.stat-value {
-    font-weight: 700;
-    font-size: 1.1rem;
-    color: var(--text-color);
-}
-
-.stat-label {
-    font-size: 0.8rem;
-    color: var(--text-color);
-    opacity: 0.7;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.stat-sub {
-    font-size: 0.75rem;
-    color: var(--secondary-color);
-    margin-top: 2px;
 }

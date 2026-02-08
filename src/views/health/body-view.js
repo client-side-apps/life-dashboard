@@ -1,5 +1,6 @@
 import * as dataRepository from '../../services/data-repository.js';
 import { DataView } from '../../components/data-view/data-view.js';
+import { getChartColor, ChartColors } from '../../utils/style.js';
 
 export class HealthBodyView extends DataView {
     constructor() {
@@ -27,9 +28,9 @@ export class HealthBodyView extends DataView {
             </div>
         `;
 
-        this.createChart('body-weight-chart', 'Weight', 'weight', 'weight_kg', 'rgb(75, 192, 192)', startDate, endDate);
-        this.createChart('body-height-chart', 'Height', 'height', 'height_m', 'rgb(54, 162, 235)', startDate, endDate);
-        this.createChart('body-temp-chart', 'Temperature', 'body_temperature', 'temperature_c', 'rgb(255, 99, 132)', startDate, endDate);
+        this.createChart('body-weight-chart', 'Weight', 'weight', 'weight_kg', getChartColor(ChartColors.Cyan), startDate, endDate);
+        this.createChart('body-height-chart', 'Height', 'height', 'height_m', getChartColor(ChartColors.Blue), startDate, endDate);
+        this.createChart('body-temp-chart', 'Temperature', 'body_temperature', 'temperature_c', getChartColor(ChartColors.Red), startDate, endDate);
     }
 
     async createChart(chartId, label, tableName, valueCol, color, startDate, endDate) {

@@ -1,5 +1,6 @@
 import * as dataRepository from '../../services/data-repository.js';
 import { DataView } from '../../components/data-view/data-view.js';
+import { getChartColor, ChartColors } from '../../utils/style.js';
 
 export class HealthHeartView extends DataView {
     constructor() {
@@ -27,11 +28,11 @@ export class HealthHeartView extends DataView {
         `;
 
         this.createMultiSeriesChart('bp-chart', [
-            { label: 'Systolic', key: 'systolic_mmhg', color: 'rgb(255, 99, 132)' },
-            { label: 'Diastolic', key: 'diastolic_mmhg', color: 'rgb(54, 162, 235)' }
+            { label: 'Systolic', key: 'systolic_mmhg', color: getChartColor(ChartColors.Red) },
+            { label: 'Diastolic', key: 'diastolic_mmhg', color: getChartColor(ChartColors.Blue) }
         ], 'blood_pressure', startDate, endDate);
 
-        this.createChart('hr-chart', 'Heart Rate', 'blood_pressure', 'heart_rate_bpm', 'rgb(255, 99, 132)', startDate, endDate);
+        this.createChart('hr-chart', 'Heart Rate', 'blood_pressure', 'heart_rate_bpm', getChartColor(ChartColors.Red), startDate, endDate);
     }
 
     async createChart(chartId, label, tableName, valueCol, color, startDate, endDate) {

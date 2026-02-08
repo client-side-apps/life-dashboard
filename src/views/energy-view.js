@@ -1,5 +1,6 @@
 import * as dataRepository from '../services/data-repository.js';
 import { DataView } from '../components/data-view/data-view.js';
+import { getChartColor, ChartColors } from '../utils/style.js';
 
 export class EnergyView extends DataView {
     constructor() {
@@ -54,15 +55,15 @@ export class EnergyView extends DataView {
 
         // Hypothetical table names: electricity, gas
         await this.createMultiLineChart('solar-chart', 'electricity_solar_hourly',
-            [{ label: 'Solar Production', col: 'solar_kwh', color: '#f1c40f' },
-            { label: 'Consumption', col: 'consumption_kwh', color: '#2ecc71' }],
+            [{ label: 'Solar Production', col: 'solar_kwh', color: getChartColor(ChartColors.Yellow) },
+            { label: 'Consumption', col: 'consumption_kwh', color: getChartColor(ChartColors.Magenta) }],
             startDate, endDate);
 
-        await this.createSingleLineChart('elec-import-chart', 'Electricity Import', 'electricity_grid_hourly', 'import_kwh', '#3498db', startDate, endDate);
+        await this.createSingleLineChart('elec-import-chart', 'Electricity Import', 'electricity_grid_hourly', 'import_kwh', getChartColor(ChartColors.Cyan), startDate, endDate);
 
-        await this.createSingleLineChart('gas-chart', 'Gas Import', 'gas_daily', 'usage_therms', '#e74c3c', startDate, endDate);
+        await this.createSingleLineChart('gas-chart', 'Gas Import', 'gas_daily', 'usage_therms', getChartColor(ChartColors.Red), startDate, endDate);
 
-        await this.createSingleLineChart('water-chart', 'Water Usage', 'water_daily', 'usage_liters', '#2980b9', startDate, endDate);
+        await this.createSingleLineChart('water-chart', 'Water Usage', 'water_daily', 'usage_liters', getChartColor(ChartColors.Blue), startDate, endDate);
     }
 
     async createMultiLineChart(chartId, tableName, datasetsConfig, startDate, endDate) {

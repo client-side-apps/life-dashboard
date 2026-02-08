@@ -1,5 +1,6 @@
 import * as dataRepository from '../../services/data-repository.js';
 import { DataView } from '../../components/data-view/data-view.js';
+import { getChartColor, ChartColors } from '../../utils/style.js';
 
 export class HealthDashboardView extends DataView {
     constructor() {
@@ -31,9 +32,9 @@ export class HealthDashboardView extends DataView {
         // but since we just set innerHTML, they are fresh.
         // We can just call createChart.
 
-        this.createChart('weight-chart', 'Weight', 'weight', 'weight_kg', 'rgb(75, 192, 192)', startDate, endDate);
-        this.createChart('sleep-chart', 'Sleep Duration', 'sleep', 'duration_hours', 'rgb(153, 102, 255)', startDate, endDate);
-        this.createChart('steps-chart', 'Steps', 'steps', 'count', 'rgb(255, 159, 64)', startDate, endDate);
+        this.createChart('weight-chart', 'Weight', 'weight', 'weight_kg', getChartColor(ChartColors.Cyan), startDate, endDate);
+        this.createChart('sleep-chart', 'Sleep Duration', 'sleep', 'duration_hours', getChartColor(ChartColors.Magenta), startDate, endDate);
+        this.createChart('steps-chart', 'Steps', 'steps', 'count', getChartColor(ChartColors.Green), startDate, endDate);
     }
 
     async createChart(chartId, label, tableName, valueCol, color, startDate, endDate) {
