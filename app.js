@@ -22,7 +22,7 @@ const state = {
     isDirty: false,
     isDirty: false,
     lastSavedTime: null,
-    startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Default 30 days
+    startDate: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Default 1 year
     endDate: new Date().toISOString().split('T')[0]
 };
 
@@ -61,8 +61,6 @@ async function init() {
         state.isDirty = true;
         updateStatus();
     };
-
-    console.log('Life Dashboard Initialized');
 }
 
 function updateStatus() {
