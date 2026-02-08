@@ -110,6 +110,11 @@ select {
     text-transform: none;
 }
 
+::selection {
+    background: var(--primary-color);
+    color: var(--primary-text);
+}
+
 body {
     background-color: var(--bg-color);
     color: var(--text-color);
