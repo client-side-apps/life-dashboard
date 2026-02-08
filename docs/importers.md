@@ -41,3 +41,13 @@ The application supports importing data from various CSV sources. Below is a lis
     *   Imports into `location` table.
     *   Extracts coordinates from `timelinePath` points or visit locations.
     *   Maps `point` coordinates (lat, lng) and `time` to `timestamp`.
+
+## Water
+
+### Flume
+*   **File Type**: CSV (from Flume dashboard export)
+*   **Detection**: Checks for columns `datetime` and `liters`.
+*   **Data Processed**:
+    *   Imports into `water_daily` table.
+    *   Maps `datetime` to `timestamp` (Unix ms).
+    *   Maps `liters` to `usage_liters`.

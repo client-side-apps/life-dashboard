@@ -96,7 +96,8 @@ class DatabaseService {
             `CREATE TABLE IF NOT EXISTS movies (id INTEGER PRIMARY KEY, timestamp INTEGER, title TEXT, year INTEGER, rating INTEGER, poster_url TEXT)`,
             `CREATE TABLE IF NOT EXISTS blood_pressure (id INTEGER PRIMARY KEY, timestamp INTEGER, systolic_mmhg INTEGER, diastolic_mmhg INTEGER, heart_rate_bpm INTEGER)`,
             `CREATE TABLE IF NOT EXISTS body_temperature (id INTEGER PRIMARY KEY, timestamp INTEGER, temperature_c REAL)`,
-            `CREATE TABLE IF NOT EXISTS height (id INTEGER PRIMARY KEY, timestamp INTEGER, height_m REAL)`
+            `CREATE TABLE IF NOT EXISTS height (id INTEGER PRIMARY KEY, timestamp INTEGER, height_m REAL)`,
+            `CREATE TABLE IF NOT EXISTS water_daily (id INTEGER PRIMARY KEY, timestamp INTEGER, usage_liters REAL)`
         ];
 
         schemas.forEach(sql => this.db.run(sql));

@@ -5,10 +5,11 @@ import { TeslaImporter } from '../importers/energy/tesla.js';
 import { SfcuImporter } from '../importers/finance/sfcu.js';
 import { WithingsImporter } from '../importers/health/withings.js';
 import { GoogleTimelineImporter } from '../importers/location/google-timeline.js';
+import { FlumeImporter } from '../importers/water/flume.js';
 
 export class DataImporter {
 
-    static importers = [PgeImporter, TeslaImporter, SfcuImporter, WithingsImporter, GoogleTimelineImporter];
+    static importers = [PgeImporter, TeslaImporter, SfcuImporter, WithingsImporter, GoogleTimelineImporter, FlumeImporter];
 
     static async import(filename, content, options = {}) {
         await dbService.ensureInitialized();
@@ -118,7 +119,7 @@ export class DataImporter {
     }
 
     static async findExisting(table, data) {
-        if (['location', 'electricity_grid_hourly', 'electricity_solar_hourly', 'gas_daily', 'steps', 'weight', 'height', 'body_temperature', 'sleep', 'blood_pressure'].includes(table)) {
+        if (['location', 'electricity_grid_hourly', 'electricity_solar_hourly', 'gas_daily', 'steps', 'weight', 'height', 'body_temperature', 'sleep', 'blood_pressure', 'water_daily'].includes(table)) {
             // Unique key: timestamp
             const result = dbService.query(`SELECT id FROM "${table}" WHERE timestamp = ?`, [data.timestamp]);
             return result.length > 0 ? result[0].id : null;
@@ -203,6 +204,11 @@ export class DataImporter {
             dbService.query(
                 'INSERT INTO location (timestamp, lat, lng) VALUES (?, ?, ?)',
                 [data.timestamp, data.lat, data.lng]
+            );
+        } else if (table === 'water_daily') {
+            dbService.query(
+                'INSERT INTO water_daily (timestamp, usage_liters) VALUES (?, ?)',
+                [data.timestamp, data.usage_liters]
             );
         }
     }

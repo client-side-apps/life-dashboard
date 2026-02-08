@@ -79,6 +79,7 @@ export function getEnergyOldestDate() {
     checkTable('electricity_solar_hourly');
     checkTable('electricity_grid_hourly');
     checkTable('gas_daily');
+    checkTable('water_daily');
 
     if (minDates.length === 0) return new Date().toISOString().split('T')[0];
 

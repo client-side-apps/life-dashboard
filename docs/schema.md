@@ -120,3 +120,12 @@ Stores height measurements.
 | `id` | INTEGER | Primary Key |
 | `timestamp` | INTEGER | Date/Time of measurement |
 | `height_m` | REAL | Height (m) |
+
+### `water_daily`
+Stores daily water usage data.
+
+| Column | Type | Description |
+| :--- | :--- | :--- |
+| `id` | INTEGER | Primary Key |
+| `timestamp` | INTEGER | Daily timestamp |
+| `usage_liters` | REAL | Water usage (liters) |

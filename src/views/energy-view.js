@@ -61,6 +61,8 @@ export class EnergyView extends DataView {
         await this.createSingleLineChart('elec-import-chart', 'Electricity Import', 'electricity_grid_hourly', 'import_kwh', '#3498db', startDate, endDate);
 
         await this.createSingleLineChart('gas-chart', 'Gas Import', 'gas_daily', 'usage_therms', '#e74c3c', startDate, endDate);
+
+        await this.createSingleLineChart('water-chart', 'Water Usage', 'water_daily', 'usage_liters', '#2980b9', startDate, endDate);
     }
 
     async createMultiLineChart(chartId, tableName, datasetsConfig, startDate, endDate) {
