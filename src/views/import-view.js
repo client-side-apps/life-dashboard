@@ -20,7 +20,7 @@ export class ImportView extends HTMLElement {
                 <h1>Import Data</h1>
                 <div class="card">
                     <h2>Import Data</h2>
-                    <p>Select CSV files or a folder to import data from.</p>
+                    <p>Select CSV or JSON files or a folder to import data from.</p>
                     
                     <div class="import-filter-container">
                         <label for="type-select">Type:</label>
@@ -42,8 +42,7 @@ export class ImportView extends HTMLElement {
 
                     <div class="import-actions">
                         <div class="file-input-wrapper">
-                            <input type="file" id="csv-input" multiple accesskey="f">
-                            <label for="csv-input" class="primary-btn">Choose Files</label>
+                            <input type="file" id="csv-input" multiple accesskey="f" class="file-input">
                         </div>
                         ${supportsFileSystem ? `
                             <span class="separator">or</span>

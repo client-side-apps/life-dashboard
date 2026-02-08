@@ -34,12 +34,12 @@ export class RawDataView extends DataView {
                 gap: 2rem;
             }
             .data-section {
-                border: 1px solid var(--border-color);
-                padding: 1rem;
+                border: none;
+                padding: 1rem 0;
                 background: var(--bg-color);
             }
             .data-section h3 {
-                border-bottom: 1px solid var(--border-color);
+                border-bottom: none;
                 padding-bottom: 0.5rem;
                 margin-bottom: 1rem;
                 text-transform: uppercase;
@@ -64,6 +64,21 @@ export class RawDataView extends DataView {
             }
             import-view {
                 padding: 0 !important;
+            }
+            import-view .file-input {
+                display: inline-block !important;
+                opacity: 1 !important;
+                width: auto !important;
+                border: none !important;
+            }
+            import-view .import-actions {
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+                flex-wrap: wrap;
+            }
+            import-view .file-input-wrapper {
+                display: inline-block;
             }
         `;
         this.appendChild(style);
@@ -101,13 +116,40 @@ export class RawDataView extends DataView {
         const select = this.querySelector('#data-table-select');
         const demoBtn = this.querySelector('#load-demo-btn');
 
-        if (tables.length === 0) {
-            select.innerHTML = '<option value="" disabled selected>No tables found</option>';
-            if (demoBtn) demoBtn.classList.remove('hidden');
-            return;
+        if (downloadBtn) {
+            if (tables.length === 0) {
+                downloadBtn.disabled = true;
+                downloadBtn.style.opacity = '0.5';
+                downloadBtn.style.cursor = 'not-allowed';
+            } else {
+                downloadBtn.disabled = false;
+                downloadBtn.style.opacity = '1';
+                downloadBtn.style.cursor = 'pointer';
+            }
         }
 
-        if (demoBtn) demoBtn.classList.add('hidden');
+        if (tables.length === 0) {
+            select.innerHTML = '<option value="" disabled selected>No tables found</option>';
+            select.disabled = true;
+            select.style.opacity = '0.5';
+            select.style.cursor = 'not-allowed';
+            if (demoBtn) {
+                demoBtn.disabled = false;
+                demoBtn.style.opacity = '1';
+                demoBtn.style.cursor = 'pointer';
+            }
+            return;
+        }
+        
+        select.disabled = false;
+        select.style.opacity = '1';
+        select.style.cursor = 'pointer';
+
+        if (demoBtn) {
+            demoBtn.disabled = true;
+            demoBtn.style.opacity = '0.5';
+            demoBtn.style.cursor = 'not-allowed';
+        }
 
         select.innerHTML = '<option value="" disabled selected>Select Table</option>' +
             tables.map(t => `<option value="${t}">${t}</option>`).join('');
