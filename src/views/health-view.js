@@ -69,53 +69,59 @@ export class HealthView extends DataView {
     }
 
     async loadSubView(subview) {
-        // Default to dashboard if no subview
-        if (!subview) subview = 'dashboard';
+        await this.showLoading();
 
-        // Update active class
-        this.querySelectorAll('.health-nav a').forEach(a => {
-            if (a.dataset.subview === subview) {
-                a.classList.add('active');
-            } else {
-                a.classList.remove('active');
+        try {
+            // Default to dashboard if no subview
+            if (!subview) subview = 'dashboard';
+
+            // Update active class
+            this.querySelectorAll('.health-nav a').forEach(a => {
+                if (a.dataset.subview === subview) {
+                    a.classList.add('active');
+                } else {
+                    a.classList.remove('active');
+                }
+            });
+
+            const content = this.querySelector('#health-content');
+            if (!content) return;
+
+            content.innerHTML = ''; // Clear
+
+            const startDate = this.startDate;
+            const endDate = this.endDate;
+
+            let viewElement;
+
+            switch (subview) {
+                case 'dashboard':
+                    viewElement = document.createElement('health-dashboard-view');
+                    break;
+                case 'body':
+                    viewElement = document.createElement('health-body-view');
+                    break;
+                case 'heart':
+                    viewElement = document.createElement('health-heart-view');
+                    break;
+                case 'sleep':
+                    viewElement = document.createElement('health-sleep-view');
+                    break;
+                case 'activity':
+                    viewElement = document.createElement('health-activity-view');
+                    break;
+                default:
+                    content.innerHTML = `<h3>${subview.charAt(0).toUpperCase() + subview.slice(1)} view placeholder</h3>`;
+                    return;
             }
-        });
 
-        const content = this.querySelector('#health-content');
-        if (!content) return;
-
-        content.innerHTML = ''; // Clear
-
-        const startDate = this.startDate;
-        const endDate = this.endDate;
-
-        let viewElement;
-
-        switch (subview) {
-            case 'dashboard':
-                viewElement = document.createElement('health-dashboard-view');
-                break;
-            case 'body':
-                viewElement = document.createElement('health-body-view');
-                break;
-            case 'heart':
-                viewElement = document.createElement('health-heart-view');
-                break;
-            case 'sleep':
-                viewElement = document.createElement('health-sleep-view');
-                break;
-            case 'activity':
-                viewElement = document.createElement('health-activity-view');
-                break;
-            default:
-                content.innerHTML = `<h3>${subview.charAt(0).toUpperCase() + subview.slice(1)} view placeholder</h3>`;
-                return;
-        }
-
-        if (viewElement) {
-            viewElement.startDate = startDate;
-            viewElement.endDate = endDate;
-            content.appendChild(viewElement);
+            if (viewElement) {
+                viewElement.startDate = startDate;
+                viewElement.endDate = endDate;
+                content.appendChild(viewElement);
+            }
+        } finally {
+            this.hideLoading();
         }
     }
 }

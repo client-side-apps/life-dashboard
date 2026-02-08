@@ -66,6 +66,7 @@
 
     <!-- View Templates -->
     <template id="map-view-template">
+        <div class="loading-overlay hidden">Loading...</div>
         <div class="map-overlay">
 
             <div class="date-controls">
@@ -77,6 +78,7 @@
     </template>
 
     <template id="timeline-view-template">
+        <div class="loading-overlay hidden">Loading...</div>
         <div class="timeline-controls">
 
             <date-range-picker id="timeline-date-picker"></date-range-picker>
@@ -88,6 +90,7 @@
     </template>
 
     <template id="health-view-template">
+        <div class="loading-overlay hidden">Loading...</div>
         <div class="health-nav">
             <a href="#" class="secondary-btn active" data-subview="dashboard">Dashboard</a>
             <a href="#" class="secondary-btn" data-subview="heart">Heart</a>
@@ -106,6 +109,7 @@
     </template>
 
     <template id="finance-view-template">
+        <div class="loading-overlay hidden">Loading...</div>
         <div class="finance-dashboard">
             <div class="card">
                 <h3>Total Available</h3>
@@ -144,6 +148,7 @@
     </template>
 
     <template id="energy-view-template">
+        <div id="energy-loading" class="loading-overlay hidden">Loading...</div>
         <div class="date-controls section-controls">
             <date-range-picker id="energy-date-picker"></date-range-picker>
         </div>
@@ -158,6 +163,7 @@
 
 
     <template id="raw-data-view-template">
+        <div class="loading-overlay hidden">Loading...</div>
         <div class="data-controls">
             <select id="data-table-select" class="select-input data-table-select">
                 <option value="" disabled selected>Select Table</option>

@@ -93,88 +93,96 @@ export class RawDataView extends DataView {
     async loadTableData() {
         if (!this.currentTable) return;
 
-        const startDate = this.startDate;
-        const endDate = this.endDate;
+        await this.showLoading();
 
-        let query = `SELECT * FROM "${this.currentTable}"`;
-        let params = [];
-        let dateColumn = null;
+        try {
 
-        // Detect date column by checking first row or schema
-        // Simplest way: check column names from a limit 1 query
-        const schemaCheck = dataRepository.executeQuery(`SELECT * FROM "${this.currentTable}" LIMIT 1`);
-        if (schemaCheck.length > 0) {
-            const cols = Object.keys(schemaCheck[0]);
-            // Priority list of date column names
-            const dateCols = ['timestamp', 'time', 'date', 'time_watched', 'created_at', 'datetime'];
-            dateColumn = dateCols.find(col => cols.includes(col));
-        }
 
-        if (dateColumn && startDate && endDate) {
-            query += ` WHERE "${dateColumn}" >= ? AND "${dateColumn}" <= ?`;
-            // Convert to integer timestamp (Local Day)
-            const startTs = new Date(startDate + 'T00:00:00').getTime();
-            const endTs = new Date(endDate + 'T23:59:59.999').getTime();
-            params.push(startTs);
-            params.push(endTs);
-            query += ` ORDER BY "${dateColumn}" DESC`;
-        } else if (dateColumn) {
-            query += ` ORDER BY "${dateColumn}" DESC`;
-        }
+            const startDate = this.startDate;
+            const endDate = this.endDate;
 
-        query += ` LIMIT 100`;
+            let query = `SELECT * FROM "${this.currentTable}"`;
+            let params = [];
+            let dateColumn = null;
 
-        const data = dataRepository.executeQuery(query, params);
+            // Detect date column by checking first row or schema
+            // Simplest way: check column names from a limit 1 query
+            const schemaCheck = dataRepository.executeQuery(`SELECT * FROM "${this.currentTable}" LIMIT 1`);
+            if (schemaCheck.length > 0) {
+                const cols = Object.keys(schemaCheck[0]);
+                // Priority list of date column names
+                const dateCols = ['timestamp', 'time', 'date', 'time_watched', 'created_at', 'datetime'];
+                dateColumn = dateCols.find(col => cols.includes(col));
+            }
 
-        if (data.length > 0) {
-            console.log(`Loaded table ${this.currentTable}. Columns:`, Object.keys(data[0]));
-        } else {
-            // If data is empty, we can't easily see columns unless we use PRAGMA
-            const info = dataRepository.executeQuery(`PRAGMA table_info("${this.currentTable}")`);
-            console.log(`Loaded table ${this.currentTable} (empty). Schema:`, info);
-        }
+            if (dateColumn && startDate && endDate) {
+                query += ` WHERE "${dateColumn}" >= ? AND "${dateColumn}" <= ?`;
+                // Convert to integer timestamp (Local Day)
+                const startTs = new Date(startDate + 'T00:00:00').getTime();
+                const endTs = new Date(endDate + 'T23:59:59.999').getTime();
+                params.push(startTs);
+                params.push(endTs);
+                query += ` ORDER BY "${dateColumn}" DESC`;
+            } else if (dateColumn) {
+                query += ` ORDER BY "${dateColumn}" DESC`;
+            }
 
-        const table = this.querySelector('#data-table');
-        const thead = table.querySelector('thead');
-        const tbody = table.querySelector('tbody');
-        const countSpan = this.querySelector('#data-count');
+            query += ` LIMIT 100`;
 
-        thead.innerHTML = '';
-        tbody.innerHTML = '';
-        countSpan.textContent = '';
+            const data = dataRepository.executeQuery(query, params);
 
-        if (data.length === 0) {
-            tbody.innerHTML = '<tr><td class="table-empty-message">No data found</td></tr>';
-            return;
-        }
+            if (data.length > 0) {
+                console.log(`Loaded table ${this.currentTable}. Columns:`, Object.keys(data[0]));
+            } else {
+                // If data is empty, we can't easily see columns unless we use PRAGMA
+                const info = dataRepository.executeQuery(`PRAGMA table_info("${this.currentTable}")`);
+                console.log(`Loaded table ${this.currentTable} (empty). Schema:`, info);
+            }
 
-        countSpan.textContent = `Showing ${data.length} rows` + (dateColumn ? ` (sorted by ${dateColumn})` : '');
+            const table = this.querySelector('#data-table');
+            const thead = table.querySelector('thead');
+            const tbody = table.querySelector('tbody');
+            const countSpan = this.querySelector('#data-count');
 
-        // Headers
-        const columns = Object.keys(data[0]);
-        const headerRow = document.createElement('tr');
-        columns.forEach(col => {
-            const th = document.createElement('th');
-            th.textContent = col;
-            headerRow.appendChild(th);
-        });
-        thead.appendChild(headerRow);
+            thead.innerHTML = '';
+            tbody.innerHTML = '';
+            countSpan.textContent = '';
 
-        // Body
-        data.forEach(row => {
-            const tr = document.createElement('tr');
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td class="table-empty-message">No data found</td></tr>';
+                return;
+            }
+
+            countSpan.textContent = `Showing ${data.length} rows` + (dateColumn ? ` (sorted by ${dateColumn})` : '');
+
+            // Headers
+            const columns = Object.keys(data[0]);
+            const headerRow = document.createElement('tr');
             columns.forEach(col => {
-                const td = document.createElement('td');
-                // Format timestamp if it's the probable date column and is a number
-                if (col === dateColumn && typeof row[col] === 'number') {
-                    td.textContent = new Date(row[col]).toLocaleString();
-                } else {
-                    td.textContent = row[col];
-                }
-                tr.appendChild(td);
+                const th = document.createElement('th');
+                th.textContent = col;
+                headerRow.appendChild(th);
             });
-            tbody.appendChild(tr);
-        });
+            thead.appendChild(headerRow);
+
+            // Body
+            data.forEach(row => {
+                const tr = document.createElement('tr');
+                columns.forEach(col => {
+                    const td = document.createElement('td');
+                    // Format timestamp if it's the probable date column and is a number
+                    if (col === dateColumn && typeof row[col] === 'number') {
+                        td.textContent = new Date(row[col]).toLocaleString();
+                    } else {
+                        td.textContent = row[col];
+                    }
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+        } finally {
+            this.hideLoading();
+        }
     }
 }
 

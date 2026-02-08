@@ -92,21 +92,21 @@ export class MapView extends DataView {
         if (!this.map) return;
         if (!this.currentTable) return;
 
-        // Clear existing markers
-        if (this.markersLayer) {
-            this.map.removeLayer(this.markersLayer);
-        }
-        this.markersLayer = L.layerGroup().addTo(this.map);
-
-        const statsDiv = this.querySelector('#map-stats');
-        statsDiv.textContent = 'Loading...';
-
-        const startDate = this.startDate;
-        const endDate = this.endDate;
+        await this.showLoading();
 
         try {
-            // Heuristic to find lat/lng columns
-            // We'll fetch one row to inspect columns or use PRAGMA
+            // Clear existing markers
+            if (this.markersLayer) {
+                this.map.removeLayer(this.markersLayer);
+            }
+            this.markersLayer = L.layerGroup().addTo(this.map);
+
+            const statsDiv = this.querySelector('#map-stats');
+            statsDiv.textContent = '';
+
+            const startDate = this.startDate;
+            const endDate = this.endDate;
+
             // Heuristic to find lat/lng columns
             // We'll fetch one row to inspect columns or use PRAGMA
             // const sample = dbService.query(`SELECT * FROM "${this.currentTable}" LIMIT 1`);
@@ -164,7 +164,10 @@ export class MapView extends DataView {
 
         } catch (err) {
             console.error('Error loading map data:', err);
-            statsDiv.textContent = 'Error loading data';
+            const statsDiv = this.querySelector('#map-stats');
+            if (statsDiv) statsDiv.textContent = 'Error loading data';
+        } finally {
+            this.hideLoading();
         }
     }
 }

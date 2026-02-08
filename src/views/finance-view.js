@@ -96,43 +96,48 @@ export class FinanceView extends DataView {
     }
 
     async loadTransactions() {
-        const tbody = this.querySelector('#transaction-body');
-        tbody.innerHTML = '<tr><td colspan="3" class="text-center p-1">Loading...</td></tr>';
+        await this.showLoading();
+        try {
+            const tbody = this.querySelector('#transaction-body');
+            tbody.innerHTML = ''; // Clear previous content
 
-        const tables = dataRepository.getTables();
-        if (!tables.includes('transactions')) {
-            tbody.innerHTML = '<tr><td colspan="3" class="text-center p-1">No transactions table found</td></tr>';
-            return;
+            const tables = dataRepository.getTables();
+            if (!tables.includes('transactions')) {
+                tbody.innerHTML = '<tr><td colspan="3" class="text-center p-1">No transactions table found</td></tr>';
+                return;
+            }
+
+            const transactions = dataRepository.getTransactions({
+                accountId: this.currentAccount,
+                startDate: this.startDate,
+                endDate: this.endDate,
+                limit: 50
+            });
+
+            if (transactions.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="text-center p-1">No transactions found</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = transactions.map(t => {
+                const date = new Date(t.timestamp).toLocaleDateString();
+                const desc = t.description || t.payee || 'Unknown';
+                const amount = parseFloat(t.amount || t.value || 0);
+                const amountClass = amount >= 0 ? '' : 'accent-color';
+
+                return `
+                    <tr>
+                        <td>${date}</td>
+                        <td>${desc}</td>
+                        <td class="align-right ${amountClass}">
+                            ${this.formatCurrency(amount)}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        } finally {
+            this.hideLoading();
         }
-
-        const transactions = dataRepository.getTransactions({
-            accountId: this.currentAccount,
-            startDate: this.startDate,
-            endDate: this.endDate,
-            limit: 50
-        });
-
-        if (transactions.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="3" class="text-center p-1">No transactions found</td></tr>';
-            return;
-        }
-
-        tbody.innerHTML = transactions.map(t => {
-            const date = new Date(t.timestamp).toLocaleDateString();
-            const desc = t.description || t.payee || 'Unknown';
-            const amount = parseFloat(t.amount || t.value || 0);
-            const amountClass = amount >= 0 ? '' : 'accent-color';
-
-            return `
-                <tr>
-                    <td>${date}</td>
-                    <td>${desc}</td>
-                    <td class="align-right ${amountClass}">
-                        ${this.formatCurrency(amount)}
-                    </td>
-                </tr>
-            `;
-        }).join('');
     }
 
     updateAmount(id, amount) {

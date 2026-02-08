@@ -50,20 +50,26 @@ export class EnergyView extends DataView {
     }
 
     async loadCharts() {
-        const startDate = this.startDate;
-        const endDate = this.endDate;
+        await this.showLoading();
 
-        // Hypothetical table names: electricity, gas
-        await this.createMultiLineChart('solar-chart', 'electricity_solar_hourly',
-            [{ label: 'Solar Production', col: 'solar_kwh', color: getChartColor(ChartColors.Yellow) },
-            { label: 'Consumption', col: 'consumption_kwh', color: getChartColor(ChartColors.Magenta) }],
-            startDate, endDate);
+        try {
+            const startDate = this.startDate;
+            const endDate = this.endDate;
 
-        await this.createSingleLineChart('elec-import-chart', 'Electricity Import', 'electricity_grid_hourly', 'import_kwh', getChartColor(ChartColors.Cyan), startDate, endDate);
+            // Hypothetical table names: electricity, gas
+            await this.createMultiLineChart('solar-chart', 'electricity_solar_hourly',
+                [{ label: 'Solar Production', col: 'solar_kwh', color: getChartColor(ChartColors.Yellow) },
+                { label: 'Consumption', col: 'consumption_kwh', color: getChartColor(ChartColors.Magenta) }],
+                startDate, endDate);
 
-        await this.createSingleLineChart('gas-chart', 'Gas Import', 'gas_daily', 'usage_therms', getChartColor(ChartColors.Red), startDate, endDate);
+            await this.createSingleLineChart('elec-import-chart', 'Electricity Import', 'electricity_grid_hourly', 'import_kwh', getChartColor(ChartColors.Cyan), startDate, endDate);
 
-        await this.createSingleLineChart('water-chart', 'Water Usage', 'water_daily', 'usage_liters', getChartColor(ChartColors.Blue), startDate, endDate);
+            await this.createSingleLineChart('gas-chart', 'Gas Import', 'gas_daily', 'usage_therms', getChartColor(ChartColors.Red), startDate, endDate);
+
+            await this.createSingleLineChart('water-chart', 'Water Usage', 'water_daily', 'usage_liters', getChartColor(ChartColors.Blue), startDate, endDate);
+        } finally {
+            this.hideLoading();
+        }
     }
 
     async createMultiLineChart(chartId, tableName, datasetsConfig, startDate, endDate) {

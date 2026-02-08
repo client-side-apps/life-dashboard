@@ -120,6 +120,21 @@ export class DataView extends HTMLElement {
     onDateRangeChanged() {
         // To be overridden by subclasses
     }
+    async showLoading() {
+        const loadingOverlay = this.querySelector('.loading-overlay');
+        if (loadingOverlay) {
+            loadingOverlay.classList.remove('hidden');
+            // Yield to UI to allow paint
+            await new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 0)));
+        }
+    }
+
+    hideLoading() {
+        const loadingOverlay = this.querySelector('.loading-overlay');
+        if (loadingOverlay) {
+            loadingOverlay.classList.add('hidden');
+        }
+    }
 }
 
 customElements.define('data-view', DataView);
