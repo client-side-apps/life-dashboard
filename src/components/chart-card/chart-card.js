@@ -384,10 +384,15 @@ export class ChartCard extends HTMLElement {
 
     _updateThemeColors() {
         const style = getComputedStyle(document.body);
+        // Use --text-color for both primary and secondary text as we don't have a secondary text variable
+        // This ensures readability in both light and dark modes.
+        const textColor = style.getPropertyValue('--text-color').trim() || '#000';
+        const borderColor = style.getPropertyValue('--border-color').trim() || '#ccc';
+        
         this._themeColors = {
-            textPrimary: style.getPropertyValue('--text-primary').trim() || '#333',
-            textSecondary: style.getPropertyValue('--text-secondary').trim() || '#666',
-            borderColor: style.getPropertyValue('--border-color').trim() || '#eee'
+            textPrimary: textColor,
+            textSecondary: textColor,
+            borderColor: borderColor
         };
     }
 

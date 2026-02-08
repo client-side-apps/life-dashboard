@@ -119,6 +119,25 @@ export class DataView extends HTMLElement {
     }
 
     /**
+     * Updates the theme for the view and its children.
+     * Propagates theme update to any child component that supports it.
+     * @param {string} theme - 'dark' or 'light'
+     */
+    updateTheme(theme) {
+        // Find all elements that might need theme update
+        this.querySelectorAll('*').forEach(el => {
+            if (typeof el.updateTheme === 'function') {
+                el.updateTheme(theme);
+            }
+        });
+
+        // Also call onThemeChanged hook if implemented by subclass
+        if (typeof this.onThemeChanged === 'function') {
+            this.onThemeChanged(theme);
+        }
+    }
+
+    /**
      * Hook for subclasses to respond to date changes.
      * Default implementation calls refresh().
      */

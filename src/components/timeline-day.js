@@ -6,6 +6,22 @@ export class TimelineDay extends HTMLElement {
         super();
         this._data = null;
         this.map = null;
+        this.observer = null;
+    }
+
+    connectedCallback() {
+        // No-op for now, render is called by setter
+    }
+
+    disconnectedCallback() {
+        if (this.map) {
+            this.map.remove();
+            this.map = null;
+        }
+        if (this.observer) {
+            this.observer.disconnect();
+            this.observer = null;
+        }
     }
 
     set data({ date, events }) {
@@ -13,8 +29,24 @@ export class TimelineDay extends HTMLElement {
         this.render();
     }
 
+    updateTheme(theme) {
+        // Re-render to update map styles
+        this.render();
+    }
+
     render() {
         if (!this._data) return;
+
+        // Cleanup previous map/observer
+        if (this.map) {
+            this.map.remove();
+            this.map = null;
+        }
+        if (this.observer) {
+            this.observer.disconnect();
+            this.observer = null;
+        }
+
         const { date, events } = this._data;
 
         // Categorize events
@@ -187,7 +219,7 @@ export class TimelineDay extends HTMLElement {
 
         if (locationEvents.length > 0) {
             // Lazy load map using IntersectionObserver
-            const observer = new IntersectionObserver((entries) => {
+            this.observer = new IntersectionObserver((entries, observer) => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
                         // Using requestAnimationFrame to ensure we are in a paint frame,
@@ -196,13 +228,14 @@ export class TimelineDay extends HTMLElement {
                         this.initMap(locationEvents, `map-${date}`);
                         observer.unobserve(entry.target);
                         observer.disconnect();
+                        this.observer = null;
                     }
                 });
             }, { rootMargin: '50px' }); // Preload slightly before view
 
             const mapContainer = this.querySelector(`#map-${date}`);
             if (mapContainer) {
-                observer.observe(mapContainer);
+                this.observer.observe(mapContainer);
             }
         }
 
