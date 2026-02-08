@@ -44,7 +44,7 @@ export class ChartCard extends HTMLElement {
         this.innerHTML = `
             <div class="chart-container">
                 <h3>${title}</h3>
-                <canvas id="${chartId}"></canvas>
+                <canvas id="${chartId}" role="img" aria-label="${title}"></canvas>
             </div>
         `;
     }

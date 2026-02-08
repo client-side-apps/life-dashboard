@@ -23,11 +23,12 @@
 </head>
 
 <body>
+    <a href="#app-content" class="skip-link">Skip to content</a>
     <header class="app-header">
         <div class="header-left">
             <h1>Life Dashboard</h1>
         </div>
-        <nav class="main-nav">
+        <nav class="main-nav" aria-label="Main navigation">
             <a href="#/map" class="nav-btn active">Map</a>
             <a href="#/timeline" class="nav-btn">Timeline</a>
             <a href="#/health" class="nav-btn">Health</a>
@@ -37,7 +38,7 @@
         </nav>
         <div class="header-right">
             <date-range-picker id="global-date-picker"></date-range-picker>
-            <div id="db-status" class="status-indicator"></div>
+            <div id="db-status" class="status-indicator" role="status" aria-live="polite"></div>
             <button id="theme-toggle" class="icon-btn" aria-label="Toggle Theme">
                 <svg class="icon-sun" viewBox="0 0 24 24" width="24" height="24">
                     <path fill="currentColor"
@@ -67,17 +68,17 @@
 
     <!-- View Templates -->
     <template id="map-view-template">
-        <div class="loading-overlay hidden">Loading...</div>
+        <div class="loading-overlay hidden" role="status" aria-live="polite">Loading...</div>
         <div class="map-overlay">
 
             <!-- Global date picker used -->
             <div id="map-stats" class="map-stats"></div>
         </div>
-        <div id="leaflet-map" class="full-map"></div>
+        <div id="leaflet-map" class="full-map" role="application" aria-label="Location map"></div>
     </template>
 
     <template id="timeline-view-template">
-        <div class="loading-overlay hidden">Loading...</div>
+        <div class="loading-overlay hidden" role="status" aria-live="polite">Loading...</div>
         <div class="timeline-controls">
 
             <!-- Global date picker used -->
@@ -89,7 +90,7 @@
     </template>
 
     <template id="health-view-template">
-        <div class="loading-overlay hidden">Loading...</div>
+        <div class="loading-overlay hidden" role="status" aria-live="polite">Loading...</div>
         <div class="health-nav">
             <a href="#" class="secondary-btn active" data-subview="dashboard">Dashboard</a>
             <a href="#" class="secondary-btn" data-subview="heart">Heart</a>
@@ -107,7 +108,7 @@
     </template>
 
     <template id="finance-view-template">
-        <div class="loading-overlay hidden">Loading...</div>
+        <div class="loading-overlay hidden" role="status" aria-live="polite">Loading...</div>
         <div class="finance-dashboard">
             <div class="card">
                 <h3>Total Available</h3>
@@ -124,7 +125,8 @@
         </div>
 
         <div class="finance-controls">
-            <select id="finance-account-select" class="select-input finance-account-select">
+            <label for="finance-account-select" class="sr-only">Account</label>
+            <select id="finance-account-select" class="select-input finance-account-select" aria-label="Filter by account">
                 <option value="">All Accounts</option>
             </select>
             <!-- Global date picker used -->
@@ -134,9 +136,9 @@
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th width="20%">Date</th>
-                        <th width="60%">Description</th>
-                        <th width="20%" class="align-right">Amount</th>
+                        <th scope="col" width="20%">Date</th>
+                        <th scope="col" width="60%">Description</th>
+                        <th scope="col" width="20%" class="align-right">Amount</th>
                     </tr>
                 </thead>
                 <tbody id="transaction-body">
@@ -146,7 +148,7 @@
     </template>
 
     <template id="energy-view-template">
-        <div id="energy-loading" class="loading-overlay hidden">Loading...</div>
+        <div id="energy-loading" class="loading-overlay hidden" role="status" aria-live="polite">Loading...</div>
         <!-- Global date picker used -->
         <div class="charts-grid">
             <chart-card title="Electricity: Solar vs Consumption" chart-id="solar-chart"></chart-card>
@@ -159,9 +161,10 @@
 
 
     <template id="raw-data-view-template">
-        <div class="loading-overlay hidden">Loading...</div>
+        <div class="loading-overlay hidden" role="status" aria-live="polite">Loading...</div>
         <div class="data-controls">
-            <select id="data-table-select" class="select-input data-table-select">
+            <label for="data-table-select" class="sr-only">Data table</label>
+            <select id="data-table-select" class="select-input data-table-select" aria-label="Select data table">
                 <option value="" disabled selected>Select Table</option>
             </select>
             <!-- Global date picker used -->
@@ -183,12 +186,12 @@
             <h2>Import Data</h2>
 
             <div class="form-group">
-                <label class="form-label">Select File</label>
+                <label class="form-label" for="import-file">Select File</label>
                 <input type="file" id="import-file" class="file-input full-width" accept=".csv,.json,.zip">
             </div>
 
             <div class="form-group">
-                <label class="form-label">Data Type</label>
+                <label class="form-label" for="import-type">Data Type</label>
                 <select id="import-type" class="select-input full-width">
                     <option value="generic">Generic CSV/JSON</option>
                     <option value="location">Location History</option>
@@ -202,8 +205,8 @@
     </template>
 
     <div id="modal-overlay" class="modal-overlay hidden">
-        <div class="modal-content">
-            <span class="close-modal">&times;</span>
+        <div class="modal-content" role="dialog" aria-modal="true" aria-label="Dialog">
+            <button class="close-modal" aria-label="Close dialog">&times;</button>
             <div id="modal-body"></div>
         </div>
     </div>

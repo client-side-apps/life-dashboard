@@ -72,8 +72,6 @@ select {
     color: var(--text-color);
     font-family: 'Courier New', Courier, monospace;
     font-size: 0.9rem;
-    outline: none;
-    outline: none;
     vertical-align: middle;
     box-shadow: none;
 }
@@ -270,14 +268,23 @@ select {
     color: var(--text-color);
     font-family: 'Courier New', Courier, monospace;
     font-size: 0.9rem;
-    outline: none;
+}
+
+/* Focus Indicators */
+:focus-visible {
+    outline: 2px solid var(--border-color);
+    outline-offset: 2px;
+}
+
+.nav-btn:focus-visible {
+    outline-offset: -2px;
 }
 
 .select-input:focus,
 .date-input:focus,
 input:focus {
-    background-color: var(--primary-color);
-    color: var(--primary-text);
+    outline: 2px solid var(--border-color);
+    outline-offset: 1px;
 }
 
 /* Main Content */
@@ -576,4 +583,43 @@ chart-card .chart-container {
 
 .loading-overlay.hidden {
     display: none !important;
+}
+
+/* Screen Reader Only */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Skip Link */
+.skip-link {
+    position: absolute;
+    top: -100%;
+    left: 0;
+    z-index: 10000;
+    padding: 0.5rem 1rem;
+    background: var(--text-color);
+    color: var(--bg-color);
+    font-weight: bold;
+    border: 2px solid var(--border-color);
+}
+
+.skip-link:focus {
+    top: 0;
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
 }

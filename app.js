@@ -249,6 +249,33 @@ function setupEventListeners() {
     });
 
 
+    // Modal keyboard support
+    document.addEventListener('keydown', (e) => {
+        const modal = document.getElementById('modal-overlay');
+        if (!modal || modal.classList.contains('hidden')) return;
+
+        if (e.key === 'Escape') {
+            modal.classList.add('hidden');
+            return;
+        }
+
+        // Focus trap
+        if (e.key === 'Tab') {
+            const focusable = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+            if (focusable.length === 0) return;
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+
+            if (e.shiftKey && document.activeElement === first) {
+                e.preventDefault();
+                last.focus();
+            } else if (!e.shiftKey && document.activeElement === last) {
+                e.preventDefault();
+                first.focus();
+            }
+        }
+    });
+
     // Global Date Picker
     if (elements.datePicker) {
         elements.datePicker.addEventListener('date-change', (e) => {
@@ -302,13 +329,13 @@ async function handleRouting() {
 
     // Update Nav Activity
     elements.navButtons.forEach(btn => {
-        // Match href to hash
-        // We will update hrefs in HTML to be #/view
         const btnHash = btn.getAttribute('href');
         if (btnHash === `#/${viewName}`) {
             btn.classList.add('active');
+            btn.setAttribute('aria-current', 'page');
         } else {
             btn.classList.remove('active');
+            btn.removeAttribute('aria-current');
         }
     });
 
@@ -432,6 +459,18 @@ async function renderView(viewName) {
 
         elements.viewContainer.appendChild(element);
         state.currentViewInstance = element;
+
+        // Focus management: move focus to new content
+        requestAnimationFrame(() => {
+            const heading = element.querySelector('h2, h3');
+            if (heading) {
+                heading.setAttribute('tabindex', '-1');
+                heading.focus();
+            } else {
+                elements.viewContainer.setAttribute('tabindex', '-1');
+                elements.viewContainer.focus();
+            }
+        });
     } else {
         elements.viewContainer.innerHTML = `
             <div class="view-placeholder">

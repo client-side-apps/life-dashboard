@@ -57,12 +57,12 @@ export class DateRangePicker extends HTMLElement {
         this.innerHTML = `
             <div class="date-controls-wrapper">
                 <label class="date-input-label">
-                    Start: 
-                    <input type="date" class="start-date date-input">
+                    Start:
+                    <input type="date" class="start-date date-input" aria-label="Start date">
                 </label>
                 <label class="date-input-label">
-                    End: 
-                    <input type="date" class="end-date date-input">
+                    End:
+                    <input type="date" class="end-date date-input" aria-label="End date">
                 </label>
             </div>
         `;
