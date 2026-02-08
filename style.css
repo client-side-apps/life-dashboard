@@ -681,3 +681,59 @@ chart-card .chart-container {
         transition-duration: 0.01ms !important;
     }
 }
+
+/* Timeline Scale */
+#timeline-scale {
+    position: fixed;
+    top: var(--header-height);
+    right: 0;
+    bottom: 0;
+    width: 40px;
+    z-index: 999;
+    pointer-events: none; /* Let clicks pass through to scrollbar if not on a marker */
+}
+
+.scale-marker {
+    position: absolute;
+    right: 15px; /* Clear the scrollbar */
+    font-size: 0.7rem;
+    font-weight: bold;
+    color: var(--text-color);
+    background: var(--bg-color);
+    padding: 2px 4px;
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    pointer-events: auto;
+    transform: translateY(-50%);
+    white-space: nowrap;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+.scale-marker:hover {
+    opacity: 1;
+    background: var(--primary-color);
+    color: var(--primary-text);
+    z-index: 1000;
+}
+
+.scale-marker.major {
+    font-weight: 900;
+    border-width: 2px;
+    right: 15px;
+}
+
+#timeline-date-indicator {
+    position: fixed;
+    right: 60px; /* Left of scale */
+    background: var(--primary-color);
+    color: var(--primary-text);
+    padding: 4px 8px;
+    font-weight: bold;
+    border: 2px solid var(--border-color);
+    z-index: 10001;
+    pointer-events: none;
+    display: none; /* Hidden by default */
+    white-space: nowrap;
+    box-shadow: 4px 4px 0 rgba(0,0,0,0.2);
+}

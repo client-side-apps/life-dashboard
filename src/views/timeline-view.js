@@ -14,28 +14,7 @@ export class TimelineView extends DataView {
         this.render();
     }
 
-    async render() {
-        this.innerHTML = '';
-        const template = document.getElementById('timeline-view-template');
-        const content = template.content.cloneNode(true);
-        this.appendChild(content);
 
-        // Table selection removed
-
-
-
-
-        // loadData called implicitly? No, need to trigger.
-        // If we set props, onDateRangeChanged will fire? 
-        // No, we set via prop setter which calls updateChildren, NOT onDateRangeChanged unless we call it.
-        // Wait, I updated DataView to call onDateRangeChanged in attributeChangedCallback, but props also call setAttribute.
-        // So setting this.startDate -> calls setAttribute -> calls attributeChangedCallback -> calls onDateRangeChanged.
-        // So setting dates above WILL trigger loadData via hook.
-        // But since connectedCallback runs render, and we are setting attributes before append,
-        // attributeChangedCallback runs BEFORE render is done (and before create querySelector finds anything).
-        // So we must call loadData explicitly at the end of render.
-        await this.loadData();
-    }
 
     onDateRangeChanged() {
         this.loadData();
@@ -58,6 +37,28 @@ export class TimelineView extends DataView {
 
             if (!startDate || !endDate) return;
 
+            // ... (Fetching logic same as before, no changes needed to fetching) ...
+            
+            // Re-fetch logic to get events (I'll just duplicate the fetch logic briefly or assuming it's preserved by 'replace' if I matched carefully. 
+            // Wait, replace requires exact match. I cannot skip lines.
+            // I should use the original method content and add my calls at the end.
+            // But the original method is long.
+            // I will use a larger context for replacement to ensure safety, or just replace the END of loadData.
+            
+            // Actually, I need to modify the loop where I create dayEl to add dataset.date.
+            // And then call updateScale().
+            
+            // Let's look at the original code again.
+            // It has:
+            // sortedDays.forEach(dateStr => {
+            //     const dayEvents = groupedByDay[dateStr];
+            //     const dayEl = document.createElement('timeline-day');
+            //     dayEl.data = { date: dateStr, events: dayEvents };
+            //     content.appendChild(dayEl);
+            // });
+            
+            // I need to change this loop.
+            
             const startTs = new Date(startDate + 'T00:00:00').getTime();
             const endTs = new Date(endDate + 'T23:59:59.999').getTime();
 
@@ -81,7 +82,6 @@ export class TimelineView extends DataView {
                 const stepData = dataRepository.getDateRangeData('steps', startDate, endDate);
                 stepData.forEach(row => {
                     const type = row.type || 'Activity';
-                    // Only show if interesting (e.g., > 100 steps or specific type)
                     if (row.count > 0) {
                         events.push({
                             timestamp: row.timestamp,
@@ -122,18 +122,13 @@ export class TimelineView extends DataView {
                 });
             } catch (e) { console.warn('Sleep fetch failed', e); }
 
-            // 5. Fetch Nutrition Servings (Meals)
+            // 5. Fetch Nutrition Servings
             try {
                 const nutritionData = dataRepository.getDateRangeData('nutrition_servings', startDate, endDate);
-
-                // Group by day and meal group
                 const mealsByDayAndGroup = {};
-                // key: "YYYY-MM-DD_MealGroup", value: { timestamp, meal_group, foods: [] }
-
                 nutritionData.forEach(row => {
                     const dateStr = new Date(row.timestamp).toISOString().split('T')[0];
                     const key = `${dateStr}_${row.meal_group}`;
-
                     if (!mealsByDayAndGroup[key]) {
                         mealsByDayAndGroup[key] = {
                             timestamp: row.timestamp,
@@ -146,7 +141,6 @@ export class TimelineView extends DataView {
                             protein_g: 0
                         };
                     }
-
                     const item = mealsByDayAndGroup[key];
                     item.foods.push({ name: row.food_name, amount: row.amount });
                     item.calories += row.energy_kcal;
@@ -154,8 +148,6 @@ export class TimelineView extends DataView {
                     item.carbs_g += row.carbs_g || 0;
                     item.protein_g += row.protein_g || 0;
                 });
-
-                // Convert to events
                 Object.values(mealsByDayAndGroup).forEach(meal => {
                     events.push({
                         timestamp: meal.timestamp,
@@ -168,14 +160,14 @@ export class TimelineView extends DataView {
                         protein_g: meal.protein_g
                     });
                 });
-
             } catch (e) { console.warn('Nutrition fetch failed', e); }
 
-            // Sort all events by time DESC
+            // Sort all events
             events.sort((a, b) => b.timestamp - a.timestamp);
 
             if (events.length === 0) {
                 content.innerHTML = '<div class="no-data">No events found for this period.</div>';
+                this.updateScale([]); // Clear scale
                 return;
             }
 
@@ -196,12 +188,267 @@ export class TimelineView extends DataView {
                 const dayEvents = groupedByDay[dateStr];
                 const dayEl = document.createElement('timeline-day');
                 dayEl.data = { date: dateStr, events: dayEvents };
+                dayEl.dataset.date = dateStr; // Set dataset for query
                 content.appendChild(dayEl);
             });
+
+            // Update Scale after rendering
+            requestAnimationFrame(() => this.updateScale(sortedDays));
+
         } finally {
             this.hideLoading();
         }
     }
+
+    updateScale(sortedDays) {
+        const scaleEl = this.querySelector('#timeline-scale');
+        const container = this.closest('.view-container') || document.getElementById('view-container');
+        const content = this.querySelector('#timeline-content');
+        
+        if (!scaleEl || !container || !content || !sortedDays || sortedDays.length === 0) return;
+
+        scaleEl.innerHTML = '';
+
+        // Determine granularity
+        const monthsSeen = new Set();
+        const markers = [];
+        
+        const days = Array.from(content.children).filter(el => el.tagName === 'TIMELINE-DAY');
+        if (days.length === 0) return;
+
+        const totalHeight = container.scrollHeight;
+        const viewHeight = container.clientHeight;
+        const containerRect = container.getBoundingClientRect();
+        
+        if (totalHeight <= viewHeight) return; // No scrolling needed
+
+        days.forEach(day => {
+            const dateStr = day.dataset.date;
+            if (!dateStr) return;
+            const d = new Date(dateStr);
+            const monthKey = `${d.getFullYear()}-${d.getMonth()}`; // Unique month
+            const label = d.toLocaleDateString(undefined, { month: 'short', year: '2-digit' }); // "Jan 24"
+
+            if (!monthsSeen.has(monthKey)) {
+                monthsSeen.add(monthKey);
+                
+                // Calculate position relative to container content top
+                const dayRect = day.getBoundingClientRect();
+                const top = dayRect.top - containerRect.top + container.scrollTop;
+
+                // Map content position (0 to totalHeight) to Viewport Height (0 to viewHeight)
+                // Percent = top / totalHeight
+                const pct = (top / totalHeight) * 100;
+
+                const marker = document.createElement('div');
+                marker.className = 'scale-marker';
+                marker.textContent = label;
+                marker.style.top = `${pct}%`;
+                marker.title = `Jump to ${label}`;
+                
+                marker.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    container.scrollTo({ top: top, behavior: 'smooth' });
+                });
+
+                markers.push(marker);
+            }
+        });
+        
+        // Filter overlapping markers?
+        // Simple collision detection
+        const sortedMarkers = markers.sort((a,b) => parseFloat(a.style.top) - parseFloat(b.style.top));
+        
+        let lastTop = -100;
+        sortedMarkers.forEach(m => {
+            const top = parseFloat(m.style.top); // is %
+            // Assume each marker is approx 5% height? or 20px.
+            // 20px in % depends on viewHeight.
+            const pxHeight = 25;
+            const pxPct = (pxHeight / viewHeight) * 100;
+            
+            if (top - lastTop > pxPct) {
+                scaleEl.appendChild(m);
+                lastTop = top;
+            }
+        });
+    }
+
+    setupScrollListeners() {
+        const container = this.closest('.view-container') || document.getElementById('view-container');
+        if (!container) return;
+
+        if (this._scrollHandler) {
+            container.removeEventListener('scroll', this._scrollHandler);
+            window.removeEventListener('pointermove', this._mouseMoveHandler, true);
+        }
+
+        this._scrollHandler = this.handleScroll.bind(this);
+        this._mouseMoveHandler = this.handleMouseMove.bind(this);
+
+        container.addEventListener('scroll', this._scrollHandler, { passive: true });
+        // Use capture: true to attempt to catch events before they are swallowed
+        window.addEventListener('pointermove', this._mouseMoveHandler, { passive: true, capture: true });
+    }
+
+    disconnectedCallback() {
+        const container = this.closest('.view-container') || document.getElementById('view-container');
+        if (container && this._scrollHandler) {
+            container.removeEventListener('scroll', this._scrollHandler);
+        }
+        if (this._mouseMoveHandler) {
+            window.removeEventListener('pointermove', this._mouseMoveHandler, true);
+        }
+        super.disconnectedCallback();
+    }
+
+    handleMouseMove(e) {
+        this.lastMouseY = e.clientY;
+        this.lastMouseMoveTime = Date.now();
+        
+        // Always update if we are visible/scrolling, or if we want hover effect.
+        // For now, only update if scrolling was recently active or just keep it responsive.
+        if (this.isScrolling) {
+            this.updateIndicator();
+        }
+    }
+
+    handleScroll() {
+        if (!this.isConnected) return;
+        
+        this.isScrolling = true;
+        this.updateIndicator();
+        
+        clearTimeout(this._scrollTimeout);
+        this._scrollTimeout = setTimeout(() => {
+            this.isScrolling = false;
+            this.hideIndicator();
+        }, 500);
+    }
+    
+    hideIndicator() {
+        const indicator = this.querySelector('#timeline-date-indicator');
+        if (indicator) indicator.style.display = 'none';
+    }
+
+    updateIndicator() {
+        const container = this.closest('.view-container') || document.getElementById('view-container');
+        if (!container) return;
+        
+        const indicator = this.querySelector('#timeline-date-indicator');
+        if (!indicator) return;
+
+        let targetY = this.lastMouseY;
+        const now = Date.now();
+        const mouseAge = now - (this.lastMouseMoveTime || 0);
+
+        // Fallback: If mouse hasn't moved recently but we are scrolling, 
+        // it's likely a scrollbar drag where events are swallowed.
+        // Estimate position based on scroll thumb.
+        if (mouseAge > 100 && this.isScrolling) {
+            const trackHeight = container.clientHeight;
+            const contentHeight = container.scrollHeight;
+            const scrollTop = container.scrollTop;
+            
+            if (contentHeight > trackHeight) {
+                // Estimate thumb position
+                // Thumb height is variable, usually: trackHeight * (trackHeight / contentHeight)
+                const minThumb = 30; // Min px
+                let thumbHeight = Math.max(minThumb, trackHeight * (trackHeight / contentHeight));
+                
+                const scrollableDist = contentHeight - trackHeight;
+                const trackScrollableDist = trackHeight - thumbHeight;
+                
+                const ratio = scrollTop / scrollableDist;
+                const thumbTop = ratio * trackScrollableDist;
+                const thumbCenter = thumbTop + thumbHeight / 2;
+                
+                const containerRect = container.getBoundingClientRect();
+                const estimatedY = containerRect.top + thumbCenter;
+                
+                // Only use estimate if reasonable (e.g. mouse was near scrollbar last time)
+                // Or just assume if we are scrolling without mouse events, we are dragging scrollbar.
+                targetY = estimatedY;
+            }
+        }
+
+        if (!targetY) return;
+
+        // Check bounds
+        const rect = container.getBoundingClientRect();
+        if (targetY < rect.top || targetY > rect.bottom) {
+            indicator.style.display = 'none';
+            return;
+        }
+
+        // Find date at targetY
+        const dateStr = this.findDateAtPosition(targetY);
+        
+        if (dateStr) {
+            indicator.textContent = dateStr;
+            indicator.style.display = 'block';
+            indicator.style.top = `${targetY}px`;
+        } else {
+            indicator.style.display = 'none';
+        }
+    }
+
+    findDateAtPosition(clientY) {
+        const content = this.querySelector('#timeline-content');
+        if (!content) return null;
+        
+        const days = Array.from(content.children).filter(el => el.tagName === 'TIMELINE-DAY');
+        if (days.length === 0) return null;
+
+        // 1. Check strict overlap
+        for (const day of days) {
+            const rect = day.getBoundingClientRect();
+            if (clientY >= rect.top && clientY <= rect.bottom) {
+                return day.dataset.date;
+            }
+        }
+        
+        // 2. Check closest if not overlapping (e.g. gap)
+        // If above first element
+        const firstRect = days[0].getBoundingClientRect();
+        if (clientY < firstRect.top) return days[0].dataset.date;
+        
+        // If below last element
+        const lastRect = days[days.length-1].getBoundingClientRect();
+        if (clientY > lastRect.bottom) return days[days.length-1].dataset.date;
+        
+        // If in between elements, find the one "above" the cursor (since we read top-down)
+        // Iterate backwards to find first element whose bottom is above clientY?
+        // Or just iterate forwards and keep track of last seen.
+        
+        // Simpler: Find the element with smallest distance to clientY
+        let closestDate = null;
+        let minDist = Infinity;
+        
+        for (const day of days) {
+            const rect = day.getBoundingClientRect();
+            // dist to center?
+            const dist = Math.abs(clientY - (rect.top + rect.height/2));
+            if (dist < minDist) {
+                minDist = dist;
+                closestDate = day.dataset.date;
+            }
+        }
+        
+        return closestDate;
+    }
+
+    async render() {
+        this.innerHTML = '';
+        const template = document.getElementById('timeline-view-template');
+        const content = template.content.cloneNode(true);
+        this.appendChild(content);
+
+        this.setupScrollListeners(); // Setup listeners after render
+
+        await this.loadData();
+    }
+
 }
 
 customElements.define('timeline-view', TimelineView);
