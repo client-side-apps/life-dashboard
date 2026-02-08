@@ -120,10 +120,35 @@ export class DataView extends HTMLElement {
 
     /**
      * Hook for subclasses to respond to date changes.
+     * Default implementation calls refresh().
      */
     onDateRangeChanged() {
-        // To be overridden by subclasses
+        this.refresh();
     }
+
+    /**
+     * Refreshes the view data.
+     * Handles loading state and error handling.
+     */
+    async refresh() {
+        await this.showLoading();
+        try {
+            await this.loadData();
+        } catch (error) {
+            console.error('DataView: Error refreshing data', error);
+        } finally {
+            this.hideLoading();
+        }
+    }
+
+    /**
+     * Abstract method to load data.
+     * Should be overridden by subclasses.
+     */
+    async loadData() {
+        // To be overridden
+    }
+
     handleChartHover(e) {
         const timestamp = e.detail.timestamp;
         const sourceChart = e.target;
@@ -142,7 +167,7 @@ export class DataView extends HTMLElement {
         const loadingOverlay = this.querySelector('.loading-overlay');
         if (loadingOverlay) {
             loadingOverlay.classList.remove('hidden');
-            // Yield to UI to allow paint
+            // Yield to UI to allow paint ensures the loading spinner appears before heavy JS runs
             await new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 0)));
         }
     }

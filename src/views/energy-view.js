@@ -9,47 +9,43 @@ export class EnergyView extends DataView {
 
     connectedCallback() {
         super.connectedCallback();
-        this.render();
+        // Stage 1: Immediate Loading State
+        this.innerHTML = '<div class="loading-overlay" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.8); z-index: 100;">Loading Energy View...</div>';
+
+        // Stage 2: Defer full render to ensure paint
+        setTimeout(() => {
+            this.setupView();
+            this.refresh();
+        }, 50);
     }
 
-    async render() {
+    setupView() {
         this.innerHTML = '';
         const template = document.getElementById('energy-view-template');
         const content = template.content.cloneNode(true);
         this.appendChild(content);
 
-
-
-        await this.loadCharts();
+        // Ensure overlay is visible initially (it might be hidden in template)
+        // refresh() will handle it, but to avoid flash of content we can force it
+        const loader = this.querySelector('.loading-overlay');
+        if (loader) loader.classList.remove('hidden');
     }
 
-    onDateRangeChanged() {
-        this.loadCharts();
-    }
+    async loadData() {
+        const startDate = this.startDate;
+        const endDate = this.endDate;
 
-    async loadCharts() {
-        await this.showLoading();
+        // Hypothetical table names: electricity, gas
+        await this.createMultiLineChart('solar-chart', 'electricity_solar_hourly',
+            [{ label: 'Solar Production', col: 'solar_kwh', color: getChartColor(ChartColors.Yellow) },
+            { label: 'Consumption', col: 'consumption_kwh', color: getChartColor(ChartColors.Magenta) }],
+            startDate, endDate);
 
-        try {
-            const startDate = this.startDate;
-            const endDate = this.endDate;
+        await this.createSingleLineChart('elec-import-chart', 'Electricity Import', 'electricity_grid_hourly', 'import_kwh', getChartColor(ChartColors.Cyan), startDate, endDate);
 
-            // Hypothetical table names: electricity, gas
-            await this.createMultiLineChart('solar-chart', 'electricity_solar_hourly',
-                [{ label: 'Solar Production', col: 'solar_kwh', color: getChartColor(ChartColors.Yellow) },
-                { label: 'Consumption', col: 'consumption_kwh', color: getChartColor(ChartColors.Magenta) }],
-                startDate, endDate);
+        await this.createSingleLineChart('gas-chart', 'Gas Import', 'gas_daily', 'usage_therms', getChartColor(ChartColors.Red), startDate, endDate);
 
-            await this.createSingleLineChart('elec-import-chart', 'Electricity Import', 'electricity_grid_hourly', 'import_kwh', getChartColor(ChartColors.Cyan), startDate, endDate);
-
-            await this.createSingleLineChart('gas-chart', 'Gas Import', 'gas_daily', 'usage_therms', getChartColor(ChartColors.Red), startDate, endDate);
-
-            await this.createSingleLineChart('water-chart', 'Water Usage', 'water_daily', 'usage_liters', getChartColor(ChartColors.Blue), startDate, endDate);
-        } catch (e) {
-            console.error('EnergyView: Error loading charts', e);
-        } finally {
-            this.hideLoading();
-        }
+        await this.createSingleLineChart('water-chart', 'Water Usage', 'water_daily', 'usage_liters', getChartColor(ChartColors.Blue), startDate, endDate);
     }
 
     async createMultiLineChart(chartId, tableName, datasetsConfig, startDate, endDate) {
