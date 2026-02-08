@@ -18,7 +18,7 @@ const state = {
     // db is now managed by dbService, but we might keep track of loaded status here
     isDbLoaded: false,
     currentView: 'map',
-    theme: localStorage.getItem('theme') || 'light',
+    theme: localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'),
     isDirty: false,
     lastSavedTime: null
 };
@@ -181,6 +181,14 @@ function setupEventListeners() {
         state.theme = state.theme === 'light' ? 'dark' : 'light';
         localStorage.setItem('theme', state.theme);
         applyTheme(state.theme);
+    });
+
+    // System Theme Listener because why not
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+        if (!localStorage.getItem('theme')) {
+            state.theme = e.matches ? 'dark' : 'light';
+            applyTheme(state.theme);
+        }
     });
 
     // Routing
