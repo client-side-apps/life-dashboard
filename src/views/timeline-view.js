@@ -114,7 +114,7 @@ export class TimelineView extends DataView {
                         timestamp: row.timestamp,
                         type: 'sleep',
                         title: 'Sleep',
-                        details: `${row.duration_hours} hrs`
+                        duration_hours: row.duration_hours
                     });
                 });
             } catch (e) { console.warn('Sleep fetch failed', e); }

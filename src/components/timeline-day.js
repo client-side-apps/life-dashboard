@@ -50,11 +50,10 @@ export class TimelineDay extends HTMLElement {
             });
         }
 
-        // Sleep
+        // Sleep (use max record to avoid double-counting segments)
         let sleepDuration = 0;
         sleepEvents.forEach(e => {
-            const hours = parseFloat(e.details.match(/([\d\.]+) hrs/)?.[1] || 0);
-            sleepDuration += hours;
+            sleepDuration = Math.max(sleepDuration, e.duration_hours || 0);
         });
 
         if (sleepDuration > 0) {
