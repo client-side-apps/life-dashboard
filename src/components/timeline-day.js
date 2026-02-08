@@ -52,32 +52,91 @@ export class TimelineDay extends HTMLElement {
 
         // Sleep (use max record to avoid double-counting segments)
         let sleepDuration = 0;
+        let bestSleep = null;
         sleepEvents.forEach(e => {
-            sleepDuration = Math.max(sleepDuration, e.duration_hours || 0);
+            if ((e.duration_hours || 0) > sleepDuration) {
+                sleepDuration = e.duration_hours;
+                bestSleep = e;
+            }
         });
 
         if (sleepDuration > 0) {
+            const formatPhase = (seconds) => {
+                if (!seconds) return '0h 0m';
+                const h = Math.floor(seconds / 3600);
+                const m = Math.floor((seconds % 3600) / 60);
+                return h > 0 ? `${h}h ${m}m` : `${m}m`;
+            };
+
             stats.push({
                 icon: '😴',
                 label: 'Sleep',
-                value: `${sleepDuration.toFixed(1)}h`
+                value: `${sleepDuration.toFixed(1)}h`,
+                linkId: `sleep-toggle-${date}`,
+                expandHtml: `<div class="stat-details-collapsible" id="sleep-toggle-${date}" hidden>
+                    <ul class="sleep-phases">
+                        <li>Deep: ${formatPhase(bestSleep.deep_seconds)}</li>
+                        <li>Light: ${formatPhase(bestSleep.light_seconds)}</li>
+                        <li>REM: ${formatPhase(bestSleep.rem_seconds)}</li>
+                        <li>Awake: ${formatPhase(bestSleep.awake_seconds)}</li>
+                    </ul>
+                </div>`
             });
         }
 
         // Nutrition (Total Calories)
         if (nutritionEvents.length > 0) {
             let totalCals = 0;
+            let totalFat = 0;
+            let totalCarbs = 0;
+            let totalProtein = 0;
             nutritionEvents.forEach(e => {
-                // Title format: "Breakfast (450 kcal)"
-                const calMatch = e.title.match(/\((\d+) kcal\)/);
-                if (calMatch) {
-                    totalCals += parseInt(calMatch[1]);
-                }
+                totalCals += e.calories || 0;
+                totalFat += e.fat_g || 0;
+                totalCarbs += e.carbs_g || 0;
+                totalProtein += e.protein_g || 0;
             });
+            // Sort meals: Breakfast, Lunch, Snacks, Dinner
+            const mealOrder = { 'Breakfast': 0, 'Lunch': 1, 'Snacks': 2, 'Dinner': 3 };
+            const sorted = [...nutritionEvents].sort((a, b) =>
+                (mealOrder[a.meal_group] ?? 99) - (mealOrder[b.meal_group] ?? 99)
+            );
+
+            const formatAmount = (amount) => {
+                if (!amount) return '';
+                const mulMatch = amount.match(/^([\d.]+)\s*x\s*([\d.]+)\s*(.+)$/);
+                if (mulMatch) {
+                    const qty = parseFloat(mulMatch[1]) * parseFloat(mulMatch[2]);
+                    const unit = mulMatch[3].trim();
+                    const rounded = parseFloat(qty.toFixed(1));
+                    return rounded === 1 ? unit : `${rounded} ${unit}`;
+                }
+                const simpleMatch = amount.match(/^([\d.]+)\s+(.+)$/);
+                if (simpleMatch) {
+                    const qty = parseFloat(simpleMatch[1]);
+                    const unit = simpleMatch[2].trim();
+                    const rounded = parseFloat(qty.toFixed(1));
+                    return rounded === 1 ? unit : `${rounded} ${unit}`;
+                }
+                return amount;
+            };
+
             stats.push({
                 icon: '🥗',
                 label: 'Nutrition',
-                value: `${Math.round(totalCals)} kcal`
+                value: `${Math.round(totalCals)} kcal`,
+                linkId: `nutrition-toggle-${date}`,
+                expandHtml: `<div class="stat-details-collapsible" id="nutrition-toggle-${date}" hidden>
+                    <div class="nutrition-macros">Fat: ${Math.round(totalFat)}g · Carbs: ${Math.round(totalCarbs)}g · Protein: ${Math.round(totalProtein)}g</div>
+                    ${sorted.map(meal => `
+                        <div class="nutrition-meal">
+                            <strong>${meal.meal_group} (${meal.calories} kcal)</strong>
+                            <ul class="nutrition-foods">${meal.foods.map(f =>
+                                `<li>${f.name} (${formatAmount(f.amount)})</li>`
+                            ).join('')}</ul>
+                        </div>
+                    `).join('')}
+                </div>`
             });
         }
 
@@ -109,22 +168,17 @@ export class TimelineDay extends HTMLElement {
                             ${stats.map(s => `
                                 <div class="stat-item">
                                     <span class="stat-icon">${s.icon}</span>
-                                    <span class="stat-label">${s.label}:</span>
+                                    ${s.linkId
+                                        ? `<a href="#" class="stat-label stat-toggle" data-target="${s.linkId}">${s.label}:</a>`
+                                        : `<span class="stat-label">${s.label}:</span>`
+                                    }
                                     <span class="stat-value">${s.value}</span>
                                     ${s.sub ? `<span class="stat-sub">(${s.sub})</span>` : ''}
                                 </div>
+                                ${s.expandHtml || ''}
                             `).join('')}
                         </div>
                      ` : '<div class="day-empty">No activity data recorded</div>'}
-
-                     ${nutritionEvents.length > 0 ? `
-                        <div class="day-nutrition-list">
-                            ${nutritionEvents.map(e => {
-                                const mealName = e.title.replace(/\s*\(\d+ kcal\)/, '');
-                                return `<div class="nutrition-item"><strong>${mealName}:</strong> <span class="nutrition-details">${e.details.replace(/\n/g, ', ')}</span></div>`;
-                            }).join('')}
-                        </div>
-                     ` : ''}
 
                 </div>
                 </div>
@@ -151,6 +205,15 @@ export class TimelineDay extends HTMLElement {
                 observer.observe(mapContainer);
             }
         }
+
+        // Stat toggles (sleep, nutrition)
+        this.querySelectorAll('.stat-toggle').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const target = this.querySelector(`#${link.dataset.target}`);
+                if (target) target.hidden = !target.hidden;
+            });
+        });
     }
 
     initMap(locations, elementId) {

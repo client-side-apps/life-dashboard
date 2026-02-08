@@ -113,8 +113,11 @@ export class TimelineView extends DataView {
                     events.push({
                         timestamp: row.timestamp,
                         type: 'sleep',
-                        title: 'Sleep',
-                        duration_hours: row.duration_hours
+                        duration_hours: row.duration_hours,
+                        deep_seconds: row.deep_seconds,
+                        light_seconds: row.light_seconds,
+                        rem_seconds: row.rem_seconds,
+                        awake_seconds: row.awake_seconds
                     });
                 });
             } catch (e) { console.warn('Sleep fetch failed', e); }
@@ -133,19 +136,23 @@ export class TimelineView extends DataView {
 
                     if (!mealsByDayAndGroup[key]) {
                         mealsByDayAndGroup[key] = {
-                            timestamp: row.timestamp, // Use timestamp of first item
+                            timestamp: row.timestamp,
                             type: 'nutrition',
-                            title: `${row.meal_group}`, // Breakfast, Lunch, etc.
-                            details: [], // Will store food names + calories
-                            calories: 0
+                            meal_group: row.meal_group,
+                            foods: [],
+                            calories: 0,
+                            fat_g: 0,
+                            carbs_g: 0,
+                            protein_g: 0
                         };
                     }
 
                     const item = mealsByDayAndGroup[key];
-                    // Format: "Food Name (Amount)"
-                    const foodDetail = `${row.food_name} (${row.amount})`;
-                    item.details.push(foodDetail);
+                    item.foods.push({ name: row.food_name, amount: row.amount });
                     item.calories += row.energy_kcal;
+                    item.fat_g += row.fat_g || 0;
+                    item.carbs_g += row.carbs_g || 0;
+                    item.protein_g += row.protein_g || 0;
                 });
 
                 // Convert to events
@@ -153,8 +160,12 @@ export class TimelineView extends DataView {
                     events.push({
                         timestamp: meal.timestamp,
                         type: 'nutrition',
-                        title: `${meal.title} (${Math.round(meal.calories)} kcal)`,
-                        details: meal.details.join('\n') // TimelineDay should handle newlines or we format as list
+                        meal_group: meal.meal_group,
+                        foods: meal.foods,
+                        calories: Math.round(meal.calories),
+                        fat_g: meal.fat_g,
+                        carbs_g: meal.carbs_g,
+                        protein_g: meal.protein_g
                     });
                 });
 

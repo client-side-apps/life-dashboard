@@ -490,18 +490,36 @@ map-view {
     font-size: 0.9em;
 }
 
-.day-nutrition-list {
-    margin-top: 0.25rem;
+.stat-toggle {
+    color: var(--text-color);
+    cursor: pointer;
+}
+
+.stat-details-collapsible {
     padding-left: 1.75rem;
-    opacity: 0.8;
     font-size: 0.85em;
 }
 
-.nutrition-item {
-    margin-bottom: 0.1rem;
+.sleep-phases {
+    margin: 0;
+    padding-left: 1.25rem;
+    list-style: disc;
+    opacity: 0.8;
 }
 
-.nutrition-details {
+.nutrition-macros {
+    margin-bottom: 0.25rem;
+    font-weight: 600;
+}
+
+.nutrition-meal {
+    margin-bottom: 0.25rem;
+}
+
+.nutrition-foods {
+    margin: 0;
+    padding-left: 1.25rem;
+    list-style: disc;
     opacity: 0.8;
 }
 
