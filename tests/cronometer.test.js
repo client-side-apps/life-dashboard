@@ -13,13 +13,13 @@ describe('CronometerImporter', () => {
         assert.ok(CronometerImporter.detect(rows), 'Should detect daily summary CSV');
 
         const mapped = rows.map(row => CronometerImporter.mapRow(row)).filter(r => r);
-        assert.strictEqual(mapped.length, 3, 'Should parse 3 rows');
+        assert.strictEqual(mapped.length, 365, 'Should parse 365 rows');
 
         const first = mapped[0];
         assert.strictEqual(first.table, 'nutrition_daily');
-        assert.strictEqual(new Date(first.data.timestamp).toISOString().split('T')[0], '2026-02-01');
-        assert.strictEqual(first.data.energy_kcal, 2000.00);
-        assert.strictEqual(first.data.protein_g, 100.00);
+        assert.strictEqual(new Date(first.data.timestamp).toISOString().split('T')[0], '2025-01-01');
+        assert.strictEqual(first.data.energy_kcal, 2244.85);
+        assert.strictEqual(first.data.protein_g, 147.34);
         assert.strictEqual(first.data.completed, 1);
     });
 

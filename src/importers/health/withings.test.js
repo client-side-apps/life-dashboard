@@ -22,14 +22,14 @@ test('WithingsImporter', async (t) => {
         });
 
         await t.test('maps weight row correctly', () => {
-            // "2026-01-10 08:00:00",75.5,12.5,3.2,59.8,43.5,
+            // "2025-01-01 08:00:00",74.98,12.5,3.2,59.8,43.5,
             const row = rows[0];
             const result = WithingsImporter.mapRow(row);
 
             assert.strictEqual(result.table, 'weight');
-            assert.strictEqual(result.data.weight_kg, 75.5);
+            assert.strictEqual(result.data.weight_kg, 74.98);
             // Verify timestamp is parsed correctly
-            const expectedTime = new Date("2026-01-10 08:00:00").getTime();
+            const expectedTime = new Date("2025-01-01 08:00:00").getTime();
             assert.strictEqual(result.data.timestamp, expectedTime);
         });
     });
@@ -42,19 +42,19 @@ test('WithingsImporter', async (t) => {
         });
 
         await t.test('maps sleep row correctly', () => {
-            // 2026-01-10T23:30:00-08:00,2026-01-11T07:30:00-08:00,...
-            // light: 18000, deep: 7200, rem: 5400, awake: 1200
+            // 2025-01-01T06:56:55.687Z,2025-01-01T16:14:00.000Z,15887,7944,7944,1650,...
             const row = rows[0];
             const result = WithingsImporter.mapRow(row);
 
             assert.strictEqual(result.table, 'sleep');
-            assert.strictEqual(result.data.duration_hours, 8.5);
-            assert.strictEqual(result.data.light_seconds, 18000);
-            assert.strictEqual(result.data.deep_seconds, 7200);
-            assert.strictEqual(result.data.rem_seconds, 5400);
-            assert.strictEqual(result.data.awake_seconds, 1200);
+            // total sleep = (15887 + 7944 + 7944) / 3600 = 8.83
+            assert.strictEqual(result.data.duration_hours, 8.83);
+            assert.strictEqual(result.data.light_seconds, 15887);
+            assert.strictEqual(result.data.deep_seconds, 7944);
+            assert.strictEqual(result.data.rem_seconds, 7944);
+            assert.strictEqual(result.data.awake_seconds, 1650);
 
-            const expectedTime = new Date("2026-01-11T07:30:00-08:00").getTime();
+            const expectedTime = new Date("2025-01-01T16:14:00.000Z").getTime();
             assert.strictEqual(result.data.timestamp, expectedTime);
         });
     });
@@ -67,17 +67,17 @@ test('WithingsImporter', async (t) => {
         });
 
         await t.test('maps activities row correctly', () => {
-            // 2026-01-10T18:00:00-08:00,...Walking,"{""calories"":120,""effduration"":1800...""steps"":2500,""distance"":1800...
+            // 2025-01-01,Walking,"{""steps"":11906,""distance"":9.52,""calories"":476}",2025-01-01T08:00:00.000Z,...
             const row = rows[0];
             const result = WithingsImporter.mapRow(row);
 
             assert.strictEqual(result.table, 'steps');
-            assert.strictEqual(result.data.count, 2500);
+            assert.strictEqual(result.data.count, 11906);
             assert.strictEqual(result.data.type, 'Walking');
-            assert.strictEqual(result.data.distance, 1800);
-            assert.strictEqual(result.data.calories, 120);
+            assert.strictEqual(result.data.distance, 9.52);
+            assert.strictEqual(result.data.calories, 476);
 
-            const expectedTime = new Date("2026-01-10T18:00:00-08:00").getTime();
+            const expectedTime = new Date("2025-01-01T08:00:00.000Z").getTime();
             assert.strictEqual(result.data.timestamp, expectedTime);
         });
     });

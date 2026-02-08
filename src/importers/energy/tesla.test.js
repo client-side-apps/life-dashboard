@@ -15,20 +15,17 @@ test('TeslaImporter with Real Data', async (t) => {
     });
 
     await t.test('maps valid row correctly', () => {
-        // 2025-11-01T00:00:00-07:00,65.3,48.2,7.3,1.3,0.3,57.7,6.3,0
-        // Home(65.3), Solar(48.2), FromGrid(7.3)
-
-        const row = rows.find(r => r['Date time'] === '2025-11-01T00:00:00-07:00');
+        // 2025-11-01T07:00:00.000-08:00,26.8,0.0,0.0,36.8,0.0,10.0
+        const row = rows.find(r => r['Date time'] === '2025-11-01T07:00:00.000-08:00');
         assert.ok(row, 'Should find the specific row');
 
         const mapped = TeslaImporter.mapRow(row);
 
-        // 2025-11-01T00:00:00-07:00 -> ISO 2025-11-01T07:00:00.000Z
-        const expectedTime = new Date('2025-11-01T00:00:00-07:00').toISOString();
+        const expectedTimestamp = new Date('2025-11-01T07:00:00.000-08:00').getTime();
 
         assert.strictEqual(mapped.table, 'electricity_solar_hourly');
-        assert.strictEqual(mapped.data.time, expectedTime);
-        assert.strictEqual(mapped.data.consumption_kwh, 65.3);
-        assert.strictEqual(mapped.data.solar_kwh, 48.2);
+        assert.strictEqual(mapped.data.timestamp, expectedTimestamp);
+        assert.strictEqual(mapped.data.consumption_kwh, 26.8);
+        assert.strictEqual(mapped.data.solar_kwh, 36.8);
     });
 });
