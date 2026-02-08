@@ -78,8 +78,6 @@ export class ChartCard extends HTMLElement {
 
 
         this.chartInstance = new Chart(canvas, config);
-        // Verify onHover in instance
-        // console.log('ChartCard instance onHover:', !!this.chartInstance.options.onHover);
     }
 
     /**
@@ -387,7 +385,6 @@ export class ChartCard extends HTMLElement {
      */
     setHighlightTimestamp(timestamp) {
         if (!this.chartInstance) return;
-        // console.log('ChartCard: setHighlightTimestamp', timestamp, this.getAttribute('title'));
 
         if (timestamp === null) {
             this.chartInstance.tooltip.setActiveElements([], { x: 0, y: 0 });

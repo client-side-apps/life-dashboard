@@ -18,29 +18,7 @@ export class EnergyView extends DataView {
         const content = template.content.cloneNode(true);
         this.appendChild(content);
 
-        // Date selection logic
-        const datePicker = this.querySelector('#energy-date-picker');
 
-        // Set default dates logic remains, but we push it to the picker which syncs back to us
-        const today = new Date().toISOString().split('T')[0];
-
-        // Find oldest date
-        let oldestDate = today;
-        try {
-            oldestDate = dataRepository.getEnergyOldestDate();
-        } catch (e) {
-            console.warn('Error fetching oldest date:', e);
-        }
-
-        // Initialize picker. DataView listens to this via MutationObserver/bubbling
-        datePicker.startDate = oldestDate;
-        datePicker.endDate = today;
-
-        // Ensure we initialize our own state too if the picker doesn't bubble immediately on set
-        // But DataView setupDatePicker tries to sync.
-        // Let's force sync or just call loadCharts which reads from properties
-        this.startDate = oldestDate;
-        this.endDate = today;
 
         await this.loadCharts();
     }
@@ -67,6 +45,8 @@ export class EnergyView extends DataView {
             await this.createSingleLineChart('gas-chart', 'Gas Import', 'gas_daily', 'usage_therms', getChartColor(ChartColors.Red), startDate, endDate);
 
             await this.createSingleLineChart('water-chart', 'Water Usage', 'water_daily', 'usage_liters', getChartColor(ChartColors.Blue), startDate, endDate);
+        } catch (e) {
+            console.error('EnergyView: Error loading charts', e);
         } finally {
             this.hideLoading();
         }

@@ -20,7 +20,10 @@ const state = {
     currentView: 'map',
     theme: localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'),
     isDirty: false,
-    lastSavedTime: null
+    isDirty: false,
+    lastSavedTime: null,
+    startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Default 30 days
+    endDate: new Date().toISOString().split('T')[0]
 };
 
 
@@ -32,12 +35,22 @@ const elements = {
     importDataBtn: document.getElementById('import-data-btn'),
     statusIndicator: document.getElementById('db-status'),
     iconSun: document.querySelector('.icon-sun'),
-    iconMoon: document.querySelector('.icon-moon')
+    statusIndicator: document.getElementById('db-status'),
+    iconSun: document.querySelector('.icon-sun'),
+    iconMoon: document.querySelector('.icon-moon'),
+    datePicker: document.getElementById('global-date-picker')
 };
 
 // Initialization
 async function init() {
     applyTheme(state.theme);
+
+    // Initialize Date Picker
+    if (elements.datePicker) {
+        elements.datePicker.startDate = state.startDate;
+        elements.datePicker.endDate = state.endDate;
+    }
+
     setupEventListeners();
     // Check for stored DB handle
     // Check for stored DB handle
@@ -235,6 +248,22 @@ function setupEventListeners() {
             }
         }
     });
+
+
+    // Global Date Picker
+    if (elements.datePicker) {
+        elements.datePicker.addEventListener('date-change', (e) => {
+            const { startDate, endDate } = e.detail;
+            state.startDate = startDate;
+            state.endDate = endDate;
+
+            // Update current view if it exists
+            if (state.currentViewInstance) {
+                state.currentViewInstance.setAttribute('start-date', startDate);
+                state.currentViewInstance.setAttribute('end-date', endDate);
+            }
+        });
+    }
 }
 
 function applyTheme(theme) {
@@ -398,6 +427,10 @@ async function renderView(viewName) {
 
     if (tagName) {
         const element = document.createElement(tagName);
+        // Set dates immediately
+        element.setAttribute('start-date', state.startDate);
+        element.setAttribute('end-date', state.endDate);
+
         elements.viewContainer.appendChild(element);
         state.currentViewInstance = element;
     } else {

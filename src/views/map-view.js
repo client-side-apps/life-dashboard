@@ -30,24 +30,7 @@ export class MapView extends DataView {
         this.appendChild(content);
 
         this.initMap();
-
-
-        // Initialize picker.
-        // For map, probably last 30 days is good default?
-        const picker = this.querySelector('date-range-picker');
-        if (picker) {
-            const today = new Date();
-            const past = new Date();
-            past.setDate(today.getDate() - 30);
-
-            const endDate = today.toISOString().split('T')[0];
-            const startDate = past.toISOString().split('T')[0];
-
-            picker.startDate = startDate;
-            picker.endDate = endDate;
-            this.startDate = startDate;
-            this.endDate = endDate;
-        }
+        await this.loadData();
     }
 
     onDateRangeChanged() {

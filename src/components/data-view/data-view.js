@@ -127,7 +127,6 @@ export class DataView extends HTMLElement {
     handleChartHover(e) {
         const timestamp = e.detail.timestamp;
         const sourceChart = e.target;
-        // console.log('DataView: handleChartHover', timestamp, sourceChart.getAttribute('title'));
 
         const charts = this.querySelectorAll('chart-card');
         charts.forEach(chart => {

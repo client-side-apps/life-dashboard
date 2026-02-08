@@ -25,22 +25,7 @@ export class HealthView extends DataView {
         const content = template.content.cloneNode(true);
         this.appendChild(content);
 
-        // Date selection logic
-        const datePicker = this.querySelector('#health-date-picker');
 
-        // Set default dates (Last 30 days)
-        const today = new Date();
-        const past30 = new Date();
-        past30.setDate(today.getDate() - 30);
-
-        const endDate = today.toISOString().split('T')[0];
-        const startDate = past30.toISOString().split('T')[0];
-
-        datePicker.startDate = startDate;
-        datePicker.endDate = endDate;
-
-        this.startDate = startDate;
-        this.endDate = endDate;
 
         // Sub-navigation is now handled by the main router calling loadSubView
         // We just ensure the links are correct
@@ -51,6 +36,17 @@ export class HealthView extends DataView {
         });
 
         // The router will call loadSubView which will populate #health-content
+        // But if router logic fails or timing is off, we ensure a default load
+        // Actually router calls loadSubView after renderView awaits...
+        // Wait, renderView in app.js is async and awaits renderView(viewName).
+        // But renderView function does NOT await element.render() because element creation is sync custom element lifecycle?
+        // No, connectedCallback is sync. render() is async.
+        // We should probably await rendering in connectedCallback if possible? No.
+        // So safe bet: load default here if empty?
+        // Or simply trust the router? The user says it's broken.
+        // Let's force load 'dashboard' if nothing else calls it.
+        // But router calls it.
+        // Let's rely on app.js. If HealthView is broken, maybe it is because onDateRangeChanged calls loadSubView?
     }
 
     onDateRangeChanged() {

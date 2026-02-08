@@ -23,16 +23,7 @@ export class TimelineView extends DataView {
         // Table selection removed
 
 
-        // Initialize picker.
-        // Default to today
-        const today = new Date().toISOString().split('T')[0];
-        const picker = this.querySelector('date-range-picker');
-        if (picker) {
-            picker.startDate = today;
-            picker.endDate = today;
-            this.startDate = today;
-            this.endDate = today;
-        }
+
 
         // loadData called implicitly? No, need to trigger.
         // If we set props, onDateRangeChanged will fire? 
@@ -40,6 +31,10 @@ export class TimelineView extends DataView {
         // Wait, I updated DataView to call onDateRangeChanged in attributeChangedCallback, but props also call setAttribute.
         // So setting this.startDate -> calls setAttribute -> calls attributeChangedCallback -> calls onDateRangeChanged.
         // So setting dates above WILL trigger loadData via hook.
+        // But since connectedCallback runs render, and we are setting attributes before append,
+        // attributeChangedCallback runs BEFORE render is done (and before create querySelector finds anything).
+        // So we must call loadData explicitly at the end of render.
+        await this.loadData();
     }
 
     onDateRangeChanged() {

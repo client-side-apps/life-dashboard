@@ -36,6 +36,7 @@
             <a href="#/data" class="nav-btn">Data</a>
         </nav>
         <div class="header-right">
+            <date-range-picker id="global-date-picker"></date-range-picker>
             <div id="db-status" class="status-indicator"></div>
             <button id="theme-toggle" class="icon-btn" aria-label="Toggle Theme">
                 <svg class="icon-sun" viewBox="0 0 24 24" width="24" height="24">
@@ -69,9 +70,7 @@
         <div class="loading-overlay hidden">Loading...</div>
         <div class="map-overlay">
 
-            <div class="date-controls">
-                <date-range-picker id="map-date-picker"></date-range-picker>
-            </div>
+            <!-- Global date picker used -->
             <div id="map-stats" class="map-stats"></div>
         </div>
         <div id="leaflet-map" class="full-map"></div>
@@ -81,7 +80,7 @@
         <div class="loading-overlay hidden">Loading...</div>
         <div class="timeline-controls">
 
-            <date-range-picker id="timeline-date-picker"></date-range-picker>
+            <!-- Global date picker used -->
             <span id="timeline-stats"></span>
         </div>
         <div id="timeline-content" class="timeline-content">
@@ -101,9 +100,7 @@
             <a href="#" class="secondary-btn" data-subview="vaccines">Vaccines</a>
             <a href="#" class="secondary-btn" data-subview="nutrition">Nutrition</a>
         </div>
-        <div class="date-controls health-controls-section">
-            <date-range-picker id="health-date-picker"></date-range-picker>
-        </div>
+        <!-- Global date picker used -->
         <div id="health-content" class="health-content">
             <!-- Charts will go here -->
         </div>
@@ -130,7 +127,7 @@
             <select id="finance-account-select" class="select-input finance-account-select">
                 <option value="">All Accounts</option>
             </select>
-            <date-range-picker id="finance-date-picker"></date-range-picker>
+            <!-- Global date picker used -->
         </div>
 
         <div class="transaction-list">
@@ -150,9 +147,7 @@
 
     <template id="energy-view-template">
         <div id="energy-loading" class="loading-overlay hidden">Loading...</div>
-        <div class="date-controls section-controls">
-            <date-range-picker id="energy-date-picker"></date-range-picker>
-        </div>
+        <!-- Global date picker used -->
         <div class="charts-grid">
             <chart-card title="Electricity: Solar vs Consumption" chart-id="solar-chart"></chart-card>
             <chart-card title="Electricity Import" chart-id="elec-import-chart"></chart-card>
@@ -169,7 +164,7 @@
             <select id="data-table-select" class="select-input data-table-select">
                 <option value="" disabled selected>Select Table</option>
             </select>
-            <date-range-picker id="data-date-picker"></date-range-picker>
+            <!-- Global date picker used -->
             <button id="open-db-btn" class="secondary-btn">Open Database</button>
             <button id="import-data-btn" class="secondary-btn">Import Data</button>
             <button id="download-db-btn" class="secondary-btn">Download Database</button>

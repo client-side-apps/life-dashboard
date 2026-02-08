@@ -19,23 +19,7 @@ export class FinanceView extends DataView {
         const content = template.content.cloneNode(true);
         this.appendChild(content);
 
-        // Initialize picker defaults (optional, e.g. last 30 days or all time?)
-        // Let's defaut to all time or last year? Or let user pick.
-        // For finance, maybe last 30 days is good default.
-        const today = new Date();
-        const past30 = new Date();
-        past30.setDate(today.getDate() - 30);
 
-        const endDate = today.toISOString().split('T')[0];
-        const startDate = past30.toISOString().split('T')[0];
-
-        const picker = this.querySelector('date-range-picker');
-        if (picker) {
-            picker.startDate = startDate;
-            picker.endDate = endDate;
-            this.startDate = startDate;
-            this.endDate = endDate;
-        }
 
         this.loadSummary();
         this.loadTransactions();

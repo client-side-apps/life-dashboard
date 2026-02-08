@@ -19,6 +19,10 @@ export class RawDataView extends DataView {
         this.appendChild(content);
 
         this.loadTableOptions();
+        // If we have a default table or restored state, load it.
+        if (this.currentTable) {
+            await this.loadTableData();
+        }
     }
 
     onDateRangeChanged() {
@@ -64,10 +68,7 @@ export class RawDataView extends DataView {
             this.loadTableData();
         });
 
-        // Date picker listener
-        // DataView handles this via onDateRangeChanged
-        // The picker in the template needs to be detected by DataView's mechanism
-        // Since we render from template, DataView's observer will pick it up
+
     }
 
     async downloadDatabase() {
@@ -132,11 +133,10 @@ export class RawDataView extends DataView {
             const data = dataRepository.executeQuery(query, params);
 
             if (data.length > 0) {
-                console.log(`Loaded table ${this.currentTable}. Columns:`, Object.keys(data[0]));
+                // Loaded data
             } else {
                 // If data is empty, we can't easily see columns unless we use PRAGMA
                 const info = dataRepository.executeQuery(`PRAGMA table_info("${this.currentTable}")`);
-                console.log(`Loaded table ${this.currentTable} (empty). Schema:`, info);
             }
 
             const table = this.querySelector('#data-table');
