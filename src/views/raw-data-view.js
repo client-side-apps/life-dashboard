@@ -17,6 +17,56 @@ export class RawDataView extends DataView {
         const template = document.getElementById('raw-data-view-template');
         const content = template.content.cloneNode(true);
         this.appendChild(content);
+        
+        // Embed Import View
+        const importContainer = this.querySelector('#import-view-container');
+        if (importContainer) {
+            const importView = document.createElement('import-view');
+            importContainer.appendChild(importView);
+        }
+
+        // Add styles for layout
+        const style = document.createElement('style');
+        style.textContent = `
+            .data-view-layout {
+                display: flex;
+                flex-direction: column;
+                gap: 2rem;
+            }
+            .data-section {
+                border: 1px solid var(--border-color);
+                padding: 1rem;
+                background: var(--bg-color);
+            }
+            .data-section h3 {
+                border-bottom: 1px solid var(--border-color);
+                padding-bottom: 0.5rem;
+                margin-bottom: 1rem;
+                text-transform: uppercase;
+                font-size: 1.1rem;
+            }
+            .section-controls {
+                display: flex;
+                gap: 1rem;
+                flex-wrap: wrap;
+            }
+            /* Hide redundant headers in embedded import view */
+            import-view h1, import-view .card > h2 {
+                display: none;
+            }
+            import-view .card {
+                border: none;
+                padding: 0;
+                margin: 0;
+            }
+            import-view .import-container {
+                padding: 0;
+            }
+            import-view {
+                padding: 0 !important;
+            }
+        `;
+        this.appendChild(style);
 
         this.loadTableOptions();
         // If we have a default table or restored state, load it.
@@ -35,30 +85,29 @@ export class RawDataView extends DataView {
             downloadBtn.addEventListener('click', () => this.downloadDatabase());
         }
 
-        // Assuming the 'open-db-btn' is added to the raw-data-view-template HTML
         const openDbBtn = this.querySelector('#open-db-btn');
         if (openDbBtn) {
             openDbBtn.addEventListener('click', () => {
-                // Placeholder for open database logic
-                alert('Open Database functionality not yet implemented.');
-                // You would typically trigger a file input here to load a database file
+                const globalInput = document.getElementById('start-db-input');
+                if (globalInput) {
+                    globalInput.click();
+                } else {
+                    alert('Open Database functionality not fully wired in this view.');
+                }
             });
         }
-
-        const importBtn = this.querySelector('#import-data-btn');
-        if (importBtn) {
-            importBtn.addEventListener('click', () => {
-                window.location.hash = '#/import';
-            });
-        }
-
+        
         const tables = dataRepository.getTables();
         const select = this.querySelector('#data-table-select');
+        const demoBtn = this.querySelector('#load-demo-btn');
 
         if (tables.length === 0) {
             select.innerHTML = '<option value="" disabled selected>No tables found</option>';
+            if (demoBtn) demoBtn.classList.remove('hidden');
             return;
         }
+
+        if (demoBtn) demoBtn.classList.add('hidden');
 
         select.innerHTML = '<option value="" disabled selected>Select Table</option>' +
             tables.map(t => `<option value="${t}">${t}</option>`).join('');

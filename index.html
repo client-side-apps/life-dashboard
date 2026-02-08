@@ -162,22 +162,40 @@
 
     <template id="raw-data-view-template">
         <div class="loading-overlay hidden" role="status" aria-live="polite">Loading...</div>
-        <div class="data-controls">
-            <label for="data-table-select" class="sr-only">Data table</label>
-            <select id="data-table-select" class="select-input data-table-select" aria-label="Select data table">
-                <option value="" disabled selected>Select Table</option>
-            </select>
-            <!-- Global date picker used -->
-            <button id="open-db-btn" class="secondary-btn">Open Database</button>
-            <button id="import-data-btn" class="secondary-btn">Import Data</button>
-            <button id="download-db-btn" class="secondary-btn">Download Database</button>
-            <span id="data-count" class="data-count-label"></span>
-        </div>
-        <div class="table-wrapper">
-            <table id="data-table" class="generic-table">
-                <thead></thead>
-                <tbody></tbody>
-            </table>
+        
+        <div class="data-view-layout">
+            <section class="data-section">
+                <h3>Database</h3>
+                <div class="section-controls">
+                    <button id="open-db-btn" class="secondary-btn">Open Database</button>
+                    <button id="load-demo-btn" class="secondary-btn hidden">Load Demo Database</button>
+                    <button id="download-db-btn" class="secondary-btn">Download Database</button>
+                    <input type="file" id="start-db-input" class="file-input" accept=".sqlite,.db,.sqlite3" style="display: none;">
+                </div>
+            </section>
+
+            <section class="data-section">
+                <h3>Import Data</h3>
+                <div id="import-view-container"></div>
+            </section>
+
+            <section class="data-section">
+                <h3>Explore Data</h3>
+                <div class="data-controls">
+                    <label for="data-table-select" class="sr-only">Data table</label>
+                    <select id="data-table-select" class="select-input data-table-select" aria-label="Select data table">
+                        <option value="" disabled selected>Select Table</option>
+                    </select>
+                    <!-- Global date picker used -->
+                    <span id="data-count" class="data-count-label"></span>
+                </div>
+                <div class="table-wrapper">
+                    <table id="data-table" class="generic-table">
+                        <thead></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
         </div>
     </template>
 
