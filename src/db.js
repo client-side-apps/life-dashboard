@@ -100,7 +100,27 @@ class DatabaseService {
             `CREATE TABLE IF NOT EXISTS water_daily (id INTEGER PRIMARY KEY, timestamp INTEGER, usage_liters REAL)`
         ];
 
+        // Create indexes for performance
+        const indexes = [
+            `CREATE INDEX IF NOT EXISTS idx_location_timestamp ON location (timestamp)`,
+            `CREATE INDEX IF NOT EXISTS idx_steps_timestamp ON steps (timestamp)`,
+
+            `CREATE INDEX IF NOT EXISTS idx_weight_timestamp ON weight (timestamp)`,
+            `CREATE INDEX IF NOT EXISTS idx_sleep_timestamp ON sleep (timestamp)`,
+            `CREATE INDEX IF NOT EXISTS idx_steps_timestamp ON steps (timestamp)`,
+            `CREATE INDEX IF NOT EXISTS idx_transactions_timestamp ON transactions (timestamp)`,
+            `CREATE INDEX IF NOT EXISTS idx_electricity_grid_hourly_timestamp ON electricity_grid_hourly (timestamp)`,
+            `CREATE INDEX IF NOT EXISTS idx_electricity_solar_hourly_timestamp ON electricity_solar_hourly (timestamp)`,
+            `CREATE INDEX IF NOT EXISTS idx_gas_daily_timestamp ON gas_daily (timestamp)`,
+            `CREATE INDEX IF NOT EXISTS idx_movies_timestamp ON movies (timestamp)`,
+            `CREATE INDEX IF NOT EXISTS idx_blood_pressure_timestamp ON blood_pressure (timestamp)`,
+            `CREATE INDEX IF NOT EXISTS idx_body_temperature_timestamp ON body_temperature (timestamp)`,
+            `CREATE INDEX IF NOT EXISTS idx_height_timestamp ON height (timestamp)`,
+            `CREATE INDEX IF NOT EXISTS idx_water_daily_timestamp ON water_daily (timestamp)`
+        ];
+
         schemas.forEach(sql => this.db.run(sql));
+        indexes.forEach(sql => this.db.run(sql));
         this.refreshTables();
     }
 
