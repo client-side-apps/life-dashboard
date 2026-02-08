@@ -24,4 +24,13 @@ export class BaseImporter {
     static getTable() {
         return 'electricity';
     }
+    /**
+     * Optional hook to process items after mapping but before insertion.
+     * Useful for aggregation or cross-table logic.
+     * @param {Object} itemsByTable - Map of table name to array of data objects
+     * @returns {Object} - Updated itemsByTable
+     */
+    static postProcess(itemsByTable) {
+        return itemsByTable;
+    }
 }

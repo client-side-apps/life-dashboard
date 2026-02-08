@@ -1,4 +1,5 @@
 import { dbService } from './src/db.js';
+import * as dataRepository from './src/services/data-repository.js';
 import { FileStorage } from './src/utils/file-storage.js';
 import { MapView } from './src/views/map-view.js';
 import { TimelineView } from './src/views/timeline-view.js';
@@ -451,6 +452,9 @@ async function loadDatabase(file) {
         updateStatus(); // Update status on load
 
         console.log('Database loaded successfully');
+
+        // Backfill daily data if needed
+        await dataRepository.ensureDailyEnergyData();
 
         // Refresh current view
         await renderView(state.currentView);

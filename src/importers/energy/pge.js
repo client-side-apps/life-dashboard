@@ -48,4 +48,34 @@ export class PgeImporter extends BaseImporter {
     static getTable() {
         return null; // Dynamic
     }
+
+    static postProcess(itemsByTable) {
+        if (!itemsByTable['electricity_grid_hourly']) return itemsByTable;
+
+        const dailyMap = new Map();
+        for (const item of itemsByTable['electricity_grid_hourly']) {
+            const day = new Date(item.timestamp);
+            day.setHours(0, 0, 0, 0);
+            const dayTimestamp = day.getTime();
+
+            if (!dailyMap.has(dayTimestamp)) {
+                dailyMap.set(dayTimestamp, 0);
+            }
+            dailyMap.set(dayTimestamp, dailyMap.get(dayTimestamp) + (item.import_kwh || 0));
+        }
+
+        if (dailyMap.size > 0) {
+            if (!itemsByTable['electricity_grid_daily']) {
+                itemsByTable['electricity_grid_daily'] = [];
+            }
+            for (const [timestamp, usage] of dailyMap.entries()) {
+                itemsByTable['electricity_grid_daily'].push({
+                    timestamp: timestamp,
+                    import_kwh: usage
+                });
+            }
+        }
+
+        return itemsByTable;
+    }
 }

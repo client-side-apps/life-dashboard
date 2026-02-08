@@ -184,9 +184,9 @@ async function run() {
             db.run(`CREATE TABLE IF NOT EXISTS transactions (id INTEGER PRIMARY KEY, timestamp INTEGER, description TEXT, amount REAL, account_id INTEGER)`);
 
             // Energy Data
-            // Energy Data
             db.run(`CREATE TABLE IF NOT EXISTS electricity_grid_hourly (id INTEGER PRIMARY KEY, timestamp INTEGER, import_kwh REAL)`);
             db.run(`CREATE TABLE IF NOT EXISTS electricity_solar_hourly (id INTEGER PRIMARY KEY, timestamp INTEGER, solar_kwh REAL, consumption_kwh REAL)`);
+            db.run(`CREATE TABLE IF NOT EXISTS electricity_grid_daily (id INTEGER PRIMARY KEY, timestamp INTEGER, import_kwh REAL)`);
             db.run(`CREATE TABLE IF NOT EXISTS gas_daily (id INTEGER PRIMARY KEY, timestamp INTEGER, usage_therms REAL)`);
 
 
@@ -288,34 +288,55 @@ async function processFile(filePath) {
     console.log(`Using ${ImporterClass.name}`);
     const defaultTable = ImporterClass.getTable();
 
-    db.serialize(() => {
-        db.run("BEGIN TRANSACTION");
+    // Prepare items (Sync/Async safe now)
+    const itemsToProcess = isJson ? (ImporterClass.extractItems ? ImporterClass.extractItems(jsonData) : (Array.isArray(jsonData) ? jsonData : [jsonData])) : rows;
 
-        // Prepare statements could be optimized but simple runs are fine for demo script
-        const itemsToProcess = isJson ? (ImporterClass.extractItems ? ImporterClass.extractItems(jsonData) : (Array.isArray(jsonData) ? jsonData : [jsonData])) : rows;
+    // 1. Buffer items by table
+    let itemsByTable = {};
+    for (const row of itemsToProcess) {
+        try {
+            const mapped = ImporterClass.mapRow(row);
+            if (!mapped) continue;
 
-        for (const row of itemsToProcess) {
-            try {
-                const mapped = ImporterClass.mapRow(row);
-                if (!mapped) continue;
+            let table = defaultTable;
+            let data = mapped;
 
-                let table = defaultTable;
-                let data = mapped;
-
-                if (mapped.table && mapped.data) {
-                    table = mapped.table;
-                    data = mapped.data;
-                }
-
-                if (!table) continue;
-
-                insertData(table, data);
-
-            } catch (err) {
-                console.warn("Row error", err);
+            if (mapped.table && mapped.data) {
+                table = mapped.table;
+                data = mapped.data;
             }
+
+            if (!table) continue;
+
+            if (!itemsByTable[table]) itemsByTable[table] = [];
+            itemsByTable[table].push(data);
+
+        } catch (err) {
+            console.warn("Row error", err);
         }
-        db.run("COMMIT");
+    }
+
+    // 2. Post-process hook (Aggregation)
+    if (ImporterClass.postProcess) {
+        itemsByTable = await ImporterClass.postProcess(itemsByTable);
+    }
+
+    // 3. Insert Data (Wrapped in Promise)
+    return new Promise((resolve, reject) => {
+        db.serialize(() => {
+            db.run("BEGIN TRANSACTION");
+
+            for (const [table, items] of Object.entries(itemsByTable)) {
+                for (const data of items) {
+                    insertData(table, data);
+                }
+            }
+
+            db.run("COMMIT", (err) => {
+                if (err) reject(err);
+                else resolve();
+            });
+        });
     });
 }
 
@@ -333,6 +354,12 @@ function insertData(table, data) {
         db.run(
             'INSERT INTO electricity_solar_hourly (timestamp, solar_kwh, consumption_kwh) VALUES (?, ?, ?)',
             [data.timestamp, solar, consumption],
+            (err) => { if (err) console.error(err.message); }
+        );
+    } else if (table === 'electricity_grid_daily') {
+        db.run(
+            'INSERT INTO electricity_grid_daily (timestamp, import_kwh) VALUES (?, ?)',
+            [data.timestamp, data.import_kwh],
             (err) => { if (err) console.error(err.message); }
         );
     } else if (table === 'gas_daily') {

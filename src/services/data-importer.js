@@ -96,11 +96,18 @@ export class DataImporter {
         // Group by table to minimize context switching? 
         // Actually, we just need to know which ones exist.
         // Let's do it per table.
-        const itemsByTable = {};
+        let itemsByTable = {};
         for (const item of processedItems) {
             if (!itemsByTable[item.table]) itemsByTable[item.table] = [];
             itemsByTable[item.table].push(item.data);
         }
+
+        // Post-process hook (e.g. aggregation)
+        if (ImporterClass.postProcess) {
+            itemsByTable = ImporterClass.postProcess(itemsByTable);
+        }
+
+
 
         dbService.query('BEGIN TRANSACTION');
 
@@ -175,14 +182,14 @@ export class DataImporter {
     }
 
     static async findExistingBatch(table, minTime, maxTime) {
-        if (['location', 'electricity_grid_hourly', 'electricity_solar_hourly', 'gas_daily', 'steps', 'weight', 'height', 'body_temperature', 'sleep', 'blood_pressure', 'water_daily', 'nutrition_daily', 'nutrition_servings'].includes(table)) {
+        if (['location', 'electricity_grid_hourly', 'electricity_solar_hourly', 'electricity_grid_daily', 'gas_daily', 'steps', 'weight', 'height', 'body_temperature', 'sleep', 'blood_pressure', 'water_daily', 'nutrition_daily', 'nutrition_servings'].includes(table)) {
             return dbService.query(`SELECT id, timestamp FROM "${table}" WHERE timestamp >= ? AND timestamp <= ?`, [minTime, maxTime]);
         }
         return [];
     }
 
     static async findExisting(table, data) {
-        if (['location', 'electricity_grid_hourly', 'electricity_solar_hourly', 'gas_daily', 'steps', 'weight', 'height', 'body_temperature', 'sleep', 'blood_pressure', 'water_daily', 'nutrition_daily', 'nutrition_servings'].includes(table)) {
+        if (['location', 'electricity_grid_hourly', 'electricity_solar_hourly', 'electricity_grid_daily', 'gas_daily', 'steps', 'weight', 'height', 'body_temperature', 'sleep', 'blood_pressure', 'water_daily', 'nutrition_daily', 'nutrition_servings'].includes(table)) {
             // Unique key: timestamp
             const result = dbService.query(`SELECT id FROM "${table}" WHERE timestamp = ?`, [data.timestamp]);
             return result.length > 0 ? result[0].id : null;
@@ -222,6 +229,11 @@ export class DataImporter {
             dbService.query(
                 'INSERT INTO electricity_solar_hourly (timestamp, solar_kwh, consumption_kwh) VALUES (?, ?, ?)',
                 [data.timestamp, data.solar_kwh || 0, data.consumption_kwh || 0]
+            );
+        } else if (table === 'electricity_grid_daily') {
+            dbService.query(
+                'INSERT INTO electricity_grid_daily (timestamp, import_kwh) VALUES (?, ?)',
+                [data.timestamp, data.import_kwh || 0]
             );
         } else if (table === 'gas_daily') {
             dbService.query(

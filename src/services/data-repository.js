@@ -107,6 +107,50 @@ export function getTimeSeriesData(tableName, startDate, endDate, orderBy = 'ASC'
     return dbService.query(query, params);
 }
 
+export async function ensureDailyEnergyData() {
+    const tables = getTables();
+    if (!tables.includes('electricity_grid_hourly') || !tables.includes('electricity_grid_daily')) return;
+
+    // Check if daily data exists
+    const dailyCount = dbService.query('SELECT COUNT(*) as c FROM electricity_grid_daily')[0].c;
+    if (dailyCount > 0) return;
+
+    // Check if hourly data exists
+    const hourlyData = dbService.query('SELECT timestamp, import_kwh FROM electricity_grid_hourly');
+    if (hourlyData.length === 0) return;
+
+    console.log('Backfilling electricity_grid_daily from hourly data...');
+
+    const dailyMap = new Map();
+    for (const item of hourlyData) {
+        const day = new Date(item.timestamp);
+        day.setHours(0, 0, 0, 0);
+        const dayTimestamp = day.getTime();
+
+        if (!dailyMap.has(dayTimestamp)) {
+            dailyMap.set(dayTimestamp, 0);
+        }
+        dailyMap.set(dayTimestamp, dailyMap.get(dayTimestamp) + (item.import_kwh || 0));
+    }
+
+    if (dailyMap.size > 0) {
+        dbService.query('BEGIN TRANSACTION');
+        try {
+            for (const [timestamp, usage] of dailyMap.entries()) {
+                dbService.query(
+                    'INSERT INTO electricity_grid_daily (timestamp, import_kwh) VALUES (?, ?)',
+                    [timestamp, usage]
+                );
+            }
+            dbService.query('COMMIT');
+            console.log(`Backfilled ${dailyMap.size} daily records.`);
+        } catch (e) {
+            dbService.query('ROLLBACK');
+            console.error('Failed to backfill daily energy data', e);
+        }
+    }
+}
+
 // --- Map ---
 
 export function getSpatialData(tableName, startDate, endDate, limit = 2000) {
