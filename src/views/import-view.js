@@ -28,14 +28,15 @@ export class ImportView extends HTMLElement {
                             <option value="">(Auto-detect)</option>
                             <option value="energy">Energy</option>
                             <option value="finance">Finance</option>
+                            <option value="health">Health</option>
+                            <option value="location">Location</option>
+                            <option value="water">Water</option>
                         </select>
                         
                         <label for="provider-select">Provider:</label>
                         <select id="provider-select" class="select-input">
                             <option value="">(Auto-detect)</option>
-                            <option value="pge">PG&E</option>
-                            <option value="tesla">Tesla</option>
-                            <option value="sfcu">SFCU</option>
+                            <!-- Options populated dynamically -->
                         </select>
                     </div>
 
@@ -59,8 +60,60 @@ export class ImportView extends HTMLElement {
         const input = this.querySelector('#csv-input');
         const status = this.querySelector('#status-area');
         const folderBtn = this.querySelector('#folder-btn');
+        const typeSelect = this.querySelector('#type-select');
+        const providerSelect = this.querySelector('#provider-select');
+
+        // Provider mapping
+        const providers = {
+            energy: [
+                { value: 'pge', label: 'PG&E' },
+                { value: 'tesla', label: 'Tesla' }
+            ],
+            finance: [
+                { value: 'sfcu', label: 'SFCU' }
+            ],
+            health: [
+                { value: 'cronometer', label: 'Cronometer' },
+                { value: 'withings', label: 'Withings' }
+            ],
+            location: [
+                { value: 'google-timeline', label: 'Google Timeline' }
+            ],
+            water: [
+                { value: 'flume', label: 'Flume' }
+            ]
+        };
+
+        const updateProviders = () => {
+            const type = typeSelect.value;
+            const currentProvider = providerSelect.value;
+            
+            providerSelect.innerHTML = '<option value="">(Auto-detect)</option>';
+            
+            if (type && providers[type]) {
+                providers[type].forEach(p => {
+                    const option = document.createElement('option');
+                    option.value = p.value;
+                    option.textContent = p.label;
+                    providerSelect.appendChild(option);
+                });
+            } else if (!type) {
+                 // Show all flattened for manual override if auto-detect fails
+                 Object.values(providers).flat().forEach(p => {
+                    const option = document.createElement('option');
+                    option.value = p.value;
+                    option.textContent = p.label;
+                    providerSelect.appendChild(option);
+                 });
+            }
+        };
+
+        // Initialize providers
+        updateProviders();
 
         // Bind events
+        typeSelect.addEventListener('change', updateProviders);
+
         input.addEventListener('change', (e) => this.handleFileSelection(e.target.files));
 
         if (folderBtn) {
