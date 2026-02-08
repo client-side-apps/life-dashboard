@@ -157,7 +157,7 @@ export class ChartCard extends HTMLElement {
 
         while (currentTs <= endTs) {
             const dateObj = new Date(currentTs);
-            labels.push(dateObj.toLocaleDateString() + (interval === 'hourly' ? ' ' + dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''));
+            labels.push(`${dateObj.getFullYear()}-${String(dateObj.getMonth()+1).padStart(2,'0')}-${String(dateObj.getDate()).padStart(2,'0')}` + (interval === 'hourly' ? ' ' + dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''));
 
             // Look for data point
             // We check if we have a data point roughly at this time (within step/2?)
@@ -185,9 +185,9 @@ export class ChartCard extends HTMLElement {
             const dateObj = new Date(currentTs);
             // Format label
             if (interval === 'daily') {
-                labels.push(dateObj.toLocaleDateString());
+                labels.push(`${dateObj.getFullYear()}-${String(dateObj.getMonth()+1).padStart(2,'0')}-${String(dateObj.getDate()).padStart(2,'0')}`);
             } else {
-                labels.push(dateObj.toLocaleString());
+                labels.push(`${dateObj.getFullYear()}-${String(dateObj.getMonth()+1).padStart(2,'0')}-${String(dateObj.getDate()).padStart(2,'0')} ${dateObj.toLocaleTimeString()}`);
             }
             this.timestamps.push(currentTs);
 

@@ -156,7 +156,7 @@ export class TimelineDay extends HTMLElement {
         this.innerHTML = `
             <div class="day-card">
                 <div class="day-header">
-                    <span class="day-date">${new Date(date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                    <span class="day-date">${(() => { const d = new Date(date); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} (${d.toLocaleDateString(undefined, {weekday: 'long'})})`; })()}</span>
                 </div>
 
                 <div class="day-body">
