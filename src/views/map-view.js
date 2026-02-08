@@ -140,7 +140,6 @@ export class MapView extends DataView {
 
             if (data.length > 0) {
                 this.map.fitBounds(bounds);
-                statsDiv.textContent = `Showing ${data.length} points`;
             } else {
                 statsDiv.textContent = 'No valid points found';
             }
