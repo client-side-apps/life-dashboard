@@ -36,22 +36,18 @@ class DatabaseService {
 
     async connect(file) {
         try {
-            console.log('Initializing SQL.js...');
             // initSqlJs is provided globally by the script tag
             const SQL = await initSqlJs({
                 locateFile: filename => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${filename}`
             });
 
-            console.log('Reading file...');
             const arrayBuffer = await file.arrayBuffer();
             const uint8Array = new Uint8Array(arrayBuffer);
 
-            console.log('Creating database instance...');
             this.db = new SQL.Database(uint8Array);
 
             // Load table list
             this.ensureSchema();
-            console.log('Database loaded with tables:', this.tables);
 
             return true;
         } catch (error) {
@@ -65,14 +61,12 @@ class DatabaseService {
             this.ensureSchema();
             return;
         }
-        console.log('Initializing new empty database...');
         try {
             const SQL = await initSqlJs({
                 locateFile: filename => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${filename}`
             });
             this.db = new SQL.Database();
             this.ensureSchema();
-            console.log('New database initialized.');
         } catch (error) {
             console.error('Failed to initialize empty database:', error);
             throw error;
