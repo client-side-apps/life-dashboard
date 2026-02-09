@@ -20,11 +20,14 @@ export class PgeImporter extends BaseImporter {
             if (!dateStr || !timeStr) return null;
 
             const isoTime = new Date(`${dateStr} ${timeStr}`).getTime();
+            const costStr = (row['COST'] || '').replace('$', '');
             return {
-                table: 'electricity_grid_hourly',
+                table: 'electricity_hourly',
                 data: {
                     timestamp: isoTime,
-                    import_kwh: parseFloat(row['IMPORT (kWh)']) || 0
+                    grid_import_kwh: parseFloat(row['IMPORT (kWh)']) || 0,
+                    grid_export_kwh: parseFloat(row['EXPORT (kWh)']) || 0,
+                    cost: parseFloat(costStr) || 0
                 }
             };
         } else if (type === 'Natural gas usage') {
@@ -34,11 +37,13 @@ export class PgeImporter extends BaseImporter {
 
             const isoTime = new Date(`${dateStr} ${timeStr}`).getTime();
             const usage = parseFloat(row['Usage']) || parseFloat(row['USAGE (therms)']) || 0;
+            const costStr = (row['Cost'] || row['COST'] || '').replace('$', '');
             return {
                 table: 'gas_daily',
                 data: {
                     timestamp: isoTime,
-                    usage_therms: usage
+                    usage_therms: usage,
+                    cost: parseFloat(costStr) || 0
                 }
             };
         }
@@ -50,28 +55,31 @@ export class PgeImporter extends BaseImporter {
     }
 
     static postProcess(itemsByTable) {
-        if (!itemsByTable['electricity_grid_hourly']) return itemsByTable;
+        if (!itemsByTable['electricity_hourly']) return itemsByTable;
 
         const dailyMap = new Map();
-        for (const item of itemsByTable['electricity_grid_hourly']) {
+        for (const item of itemsByTable['electricity_hourly']) {
             const day = new Date(item.timestamp);
             day.setHours(0, 0, 0, 0);
             const dayTimestamp = day.getTime();
 
             if (!dailyMap.has(dayTimestamp)) {
-                dailyMap.set(dayTimestamp, 0);
+                dailyMap.set(dayTimestamp, { import: 0, cost: 0 });
             }
-            dailyMap.set(dayTimestamp, dailyMap.get(dayTimestamp) + (item.import_kwh || 0));
+            const current = dailyMap.get(dayTimestamp);
+            current.import += (item.grid_import_kwh || 0);
+            current.cost += (item.cost || 0);
         }
 
         if (dailyMap.size > 0) {
             if (!itemsByTable['electricity_grid_daily']) {
                 itemsByTable['electricity_grid_daily'] = [];
             }
-            for (const [timestamp, usage] of dailyMap.entries()) {
+            for (const [timestamp, totals] of dailyMap.entries()) {
                 itemsByTable['electricity_grid_daily'].push({
                     timestamp: timestamp,
-                    import_kwh: usage
+                    import_kwh: totals.import,
+                    cost: totals.cost
                 });
             }
         }
