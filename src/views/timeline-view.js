@@ -82,12 +82,20 @@ export class TimelineView extends DataView {
                 const stepData = dataRepository.getDateRangeData('steps', startDate, endDate);
                 stepData.forEach(row => {
                     const type = row.type || 'Activity';
-                    if (row.count > 0) {
+                    const parts = [];
+                    if (row.count > 0) parts.push(`${row.count} steps`);
+                    if (row.distance > 0) parts.push(`${(row.distance / 1000).toFixed(2)}km`);
+                    if (row.calories > 0) parts.push(`${Math.round(row.calories)} kcal`);
+
+                    // Display if any part exists, or if we have a type (so 0-step/0-dist activities are still logged if they exist in DB)
+                    // But filter out completely empty ones if count=0 and no other info?
+                    // The importer now ensures we have something.
+                    if (parts.length > 0 || row.count >= 0) {
                         events.push({
                             timestamp: row.timestamp,
                             type: 'activity',
                             title: type,
-                            details: `${row.count} steps` + (row.distance ? `, ${(row.distance / 1000).toFixed(2)}km` : '')
+                            details: parts.join(', ')
                         });
                     }
                 });

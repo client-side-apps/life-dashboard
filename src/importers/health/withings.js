@@ -26,17 +26,19 @@ export class WithingsImporter extends BaseImporter {
             try {
                 const data = JSON.parse(row.Data);
                 const steps = data.steps || 0;
+                const distance = parseFloat(data.distance || 0);
+                const calories = parseFloat(data.calories || 0);
 
-                // Only import if there are steps
-                if (steps > 0) {
+                // Import if steps > 0 OR if there's other meaningful data (distance, calories)
+                if (steps > 0 || distance > 0 || calories > 0) {
                     return {
                         table: 'steps',
                         data: {
                             timestamp: new Date(row.from).getTime(),
                             count: parseInt(steps, 10),
                             type: row['Activity type'] || 'Unknown',
-                            distance: parseFloat(data.distance || 0),
-                            calories: parseFloat(data.calories || 0)
+                            distance: distance,
+                            calories: calories
                         }
                     };
                 }

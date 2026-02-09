@@ -59,17 +59,31 @@ export class TimelineDay extends HTMLElement {
         // Calculate Stats
         let stats = [];
 
-        // Steps
+        // Steps and Activities
         let totalSteps = 0;
         let totalDist = 0;
-        activityEvents.forEach(e => {
-            const steps = parseInt(e.details.match(/(\d+) steps/)?.[1] || 0);
-            totalSteps += steps;
+        const otherActivities = [];
 
-            // Extract distance if present "2000 steps, 1.50km"
-            const distMatch = e.details.match(/([\d\.]+)km/);
-            if (distMatch) {
-                totalDist += parseFloat(distMatch[1]);
+        activityEvents.forEach(e => {
+            const title = e.title || '';
+            const isWalking = title.toLowerCase() === 'walking' || title.toLowerCase() === 'steps';
+
+            // Check for steps
+            const stepsMatch = e.details.match(/(\d+) steps/);
+            const steps = parseInt(stepsMatch?.[1] || 0);
+
+            if (isWalking || steps > 0) {
+                 totalSteps += steps;
+                 // Extract distance if present "2000 steps, 1.50km"
+                 const distMatch = e.details.match(/([\d\.]+)km/);
+                 if (distMatch) {
+                     totalDist += parseFloat(distMatch[1]);
+                 }
+            }
+
+            // If it is NOT walking (and has a specific title), list it separately.
+            if (!isWalking && title !== 'Activity') {
+                otherActivities.push(e);
             }
         });
 
@@ -81,6 +95,23 @@ export class TimelineDay extends HTMLElement {
                 sub: totalDist > 0 ? `${totalDist.toFixed(1)} km` : null
             });
         }
+
+        otherActivities.forEach(e => {
+            let icon = '⚡';
+            const t = e.title.toLowerCase();
+            if (t.includes('cycle') || t.includes('bike')) icon = '🚴';
+            else if (t.includes('run')) icon = '🏃';
+            else if (t.includes('swim')) icon = '🏊';
+            else if (t.includes('yoga')) icon = '🧘';
+            else if (t.includes('weight') || t.includes('lift')) icon = '🏋️';
+            else if (t.includes('hike')) icon = '🥾';
+
+            stats.push({
+                icon: icon,
+                label: e.title,
+                value: e.details
+            });
+        });
 
         // Sleep (use max record to avoid double-counting segments)
         let sleepDuration = 0;
