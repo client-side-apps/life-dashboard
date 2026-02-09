@@ -234,6 +234,19 @@ class DatabaseService {
 
         schemas.forEach(sql => this.db.run(sql));
         indexes.forEach(sql => this.db.run(sql));
+
+        // Migration for steps table duration
+        try {
+            const columns = this.query("PRAGMA table_info(steps)");
+            const hasDuration = columns.some(c => c.name === 'duration');
+            if (!hasDuration) {
+                this.db.run("ALTER TABLE steps ADD COLUMN duration REAL");
+                console.log("Migrated steps table: Added duration column.");
+            }
+        } catch (e) {
+            console.error("Migration failed:", e);
+        }
+
         this.refreshTables();
     }
 

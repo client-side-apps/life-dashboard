@@ -24,6 +24,7 @@ export class HealthActivityView extends DataView {
         this.innerHTML = `
             <div class="dashboard-grid">
                 <chart-card title="Steps" chart-id="activity-steps-chart"></chart-card>
+                <chart-card title="Active Time (min)" chart-id="activity-time-chart"></chart-card>
             </div>
              <div class="list-container">
                 <div class="list-header">
@@ -34,8 +35,39 @@ export class HealthActivityView extends DataView {
             </div>
         `;
 
-        this.createChart('activity-steps-chart', 'Steps', 'steps', 'count', getChartColor(ChartColors.Green), startDate, endDate);
+        this.createChart('activity-steps-chart', 'Steps', 'steps', 'count', getChartColor(ChartColors.Green), startDate, endDate, (data) => {
+            return this.aggregateDailyData(data, 'count');
+        });
+
+        this.createChart('activity-time-chart', 'Active Time (min)', 'steps', 'duration', getChartColor(ChartColors.Blue), startDate, endDate, (data) => {
+            // Filter out 'Walking' and convert duration to minutes
+            return this.aggregateDailyData(data, 'duration', item => item.type !== 'Walking')
+                .map(d => ({ ...d, duration: Math.round((d.duration || 0) / 60) }));
+        });
+
         this.renderActivityList(startDate, endDate);
+    }
+
+    aggregateDailyData(data, valueKey, filterFn) {
+        const dailyMap = new Map();
+
+        data.forEach(item => {
+            if (filterFn && !filterFn(item)) return;
+
+            const date = new Date(item.timestamp);
+            date.setHours(0, 0, 0, 0);
+            const key = date.getTime();
+
+            if (!dailyMap.has(key)) {
+                dailyMap.set(key, 0);
+            }
+            dailyMap.set(key, dailyMap.get(key) + (item[valueKey] || 0));
+        });
+
+        return Array.from(dailyMap.entries()).map(([timestamp, value]) => ({
+            timestamp,
+            [valueKey]: value
+        })).sort((a, b) => a.timestamp - b.timestamp);
     }
 
     async renderActivityList(startDate, endDate) {
@@ -93,7 +125,7 @@ export class HealthActivityView extends DataView {
         }).join('');
     }
 
-    async createChart(chartId, label, tableName, valueCol, color, startDate, endDate) {
+    async createChart(chartId, label, tableName, valueCol, color, startDate, endDate, processDataFn) {
         const chartCard = this.querySelector(`chart-card[chart-id="${chartId}"]`);
         if (!chartCard) return;
 
@@ -103,7 +135,11 @@ export class HealthActivityView extends DataView {
             return;
         }
 
-        const data = dataRepository.getTimeSeriesData(tableName, startDate, endDate, 'ASC');
+        let data = dataRepository.getTimeSeriesData(tableName, startDate, endDate, 'ASC');
+
+        if (processDataFn) {
+            data = processDataFn(data);
+        }
 
         chartCard.setDateRange(startDate, endDate);
 

@@ -26,9 +26,21 @@ export class WithingsImporter extends BaseImporter {
             try {
                 const data = JSON.parse(row.Data);
                 const steps = data.steps || 0;
+                let duration = 0;
 
-                // Only import if there are steps
-                if (steps > 0) {
+                // Duration can be in Data or calculated from range
+                if (data.duration) {
+                    duration = parseFloat(data.duration);
+                } else if (row.from && row.to) {
+                    const fromTime = new Date(row.from).getTime();
+                    const toTime = new Date(row.to).getTime();
+                    if (toTime > fromTime) {
+                        duration = (toTime - fromTime) / 1000;
+                    }
+                }
+
+                // Import if steps > 0 OR duration > 0 (for non-step activities)
+                if (steps > 0 || duration > 0) {
                     return {
                         table: 'steps',
                         data: {
@@ -36,7 +48,8 @@ export class WithingsImporter extends BaseImporter {
                             count: parseInt(steps, 10),
                             type: row['Activity type'] || 'Unknown',
                             distance: parseFloat(data.distance || 0),
-                            calories: parseFloat(data.calories || 0)
+                            calories: parseFloat(data.calories || 0),
+                            duration: duration
                         }
                     };
                 }
