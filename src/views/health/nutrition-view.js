@@ -64,7 +64,8 @@ export class HealthNutritionView extends DataView {
             }],
             startDate: startDate,
             endDate: endDate,
-            interval: 'daily'
+            interval: 'daily',
+            fill: true
         });
     }
 
@@ -86,7 +87,8 @@ export class HealthNutritionView extends DataView {
             series: seriesConfig,
             startDate: startDate,
             endDate: endDate,
-            interval: 'daily'
+            interval: 'daily',
+            fill: true
         });
     }
 

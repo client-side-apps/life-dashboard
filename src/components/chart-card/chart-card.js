@@ -102,7 +102,7 @@ export class ChartCard extends HTMLElement {
      * @param {string|number} [config.endDate] - End date/timestamp
      */
     setTimeSeriesData(data, config) {
-        const { series, interval = 'daily', startDate, endDate } = config;
+        const { series, interval = 'daily', startDate, endDate, fill = false, stacked = false } = config;
 
         // Reset timestamps
         this.timestamps = [];
@@ -269,7 +269,7 @@ export class ChartCard extends HTMLElement {
         const datasets = [];
         series.forEach(s => {
             // Original Daily Data (Faded)
-            datasets.push({
+            const rawDataset = {
                 label: s.label,
                 data: normalizedData[s.key],
                 borderColor: this._hexToRgba(s.color, 0.2),
@@ -281,10 +281,12 @@ export class ChartCard extends HTMLElement {
                 fill: false,
                 spanGaps: false,
                 order: 1
-            });
+            };
+            if (stacked) rawDataset.stack = 'raw';
+            datasets.push(rawDataset);
 
             // Rolling Average (Prominent)
-            datasets.push({
+            const avgDataset = {
                 label: s.label + ' (7d Avg)',
                 data: movingAverages[s.key],
                 borderColor: s.color,
@@ -292,10 +294,13 @@ export class ChartCard extends HTMLElement {
                 pointRadius: 0,
                 pointHoverRadius: 4,
                 tension: 0.4,
-                fill: false,
+                fill: fill ? (stacked ? true : 'origin') : false,
+                backgroundColor: fill ? this._hexToRgba(s.color, 0.2) : undefined,
                 spanGaps: true,
                 order: 2
-            });
+            };
+            if (stacked) avgDataset.stack = 'avg';
+            datasets.push(avgDataset);
         });
 
         // Initialize cached colors
@@ -406,21 +411,23 @@ export class ChartCard extends HTMLElement {
                 },
                 scales: {
                     y: {
+                        stacked: stacked,
                         beginAtZero: true,
                         grid: {
                             color: this._themeColors.borderColor
                         },
                         ticks: {
-                            display: false,
+                            display: true,
                             color: this._themeColors.textSecondary
                         }
                     },
                     x: {
+                        stacked: stacked,
                         grid: {
                             display: false
                         },
                         ticks: {
-                            display: false,
+                            display: true,
                             color: this._themeColors.textSecondary,
                             maxRotation: 0,
                             autoSkip: true,

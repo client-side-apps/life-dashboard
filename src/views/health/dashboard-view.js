@@ -52,7 +52,6 @@ export class HealthDashboardView extends DataView {
         const data = await dataRepository.getTimeSeriesData('nutrition_daily', startDate, endDate, 'ASC');
 
         // Transform data: Calculate calories from macros
-        // Fat: 9, Protein: 4, Carb: 4
         const transformedData = data.map(row => ({
             timestamp: row.timestamp,
             fat_kcal: (row.fat_g || 0) * 9,
@@ -62,60 +61,17 @@ export class HealthDashboardView extends DataView {
 
         chartCard.setDateRange(startDate, endDate);
 
-        chartCard.setChartData({
-            labels: transformedData.map(d => new Date(d.timestamp).toLocaleDateString()),
-            datasets: [
-                {
-                    label: 'Fat (kcal)',
-                    data: transformedData.map(d => d.fat_kcal),
-                    backgroundColor: getChartColor(ChartColors.Orange),
-                    stack: 'Stack 0'
-                },
-                {
-                    label: 'Protein (kcal)',
-                    data: transformedData.map(d => d.protein_kcal),
-                    backgroundColor: getChartColor(ChartColors.Red),
-                    stack: 'Stack 0'
-                },
-                {
-                    label: 'Carbs (kcal)',
-                    data: transformedData.map(d => d.carbs_kcal),
-                    backgroundColor: getChartColor(ChartColors.Blue),
-                    stack: 'Stack 0'
-                }
-            ]
-        }, {
-            type: 'bar',
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            },
-            scales: {
-                x: {
-                    stacked: true,
-                    grid: {
-                        display: false
-                    },
-                    ticks: {
-                        display: false
-                    }
-                },
-                y: {
-                    stacked: true,
-                    grid: {
-                        display: false
-                    },
-                    ticks: {
-                        display: false
-                    },
-                    title: {
-                        display: false
-                    }
-                }
-            }
+        chartCard.setTimeSeriesData(transformedData, {
+            series: [
+                { label: 'Fat (kcal)', key: 'fat_kcal', color: getChartColor(ChartColors.Orange) },
+                { label: 'Protein (kcal)', key: 'protein_kcal', color: getChartColor(ChartColors.Red) },
+                { label: 'Carbs (kcal)', key: 'carbs_kcal', color: getChartColor(ChartColors.Blue) }
+            ],
+            startDate: startDate,
+            endDate: endDate,
+            interval: 'daily',
+            fill: true,
+            stacked: true
         });
     }
 
@@ -141,7 +97,8 @@ export class HealthDashboardView extends DataView {
             }],
             startDate: startDate,
             endDate: endDate,
-            interval: 'daily'
+            interval: 'daily',
+            fill: true
         });
     }
 
