@@ -536,6 +536,7 @@ chart-card {
     border: 1px solid var(--border-color);
     padding: 1rem;
     background: var(--bg-color);
+    min-width: 0;
 }
 
 chart-card .chart-container {
@@ -596,10 +597,16 @@ chart-card canvas {
 .charts-grid,
 .dashboard-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-    /* Slightly larger min-width for pixel look? Or keep 300 */
+    grid-template-columns: 1fr;
     gap: 1rem;
     margin-bottom: 2rem;
+}
+
+@media (min-width: 2000px) {
+    .charts-grid,
+    .dashboard-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 
 /* Map Dimensions DO NOT REMOVE */
