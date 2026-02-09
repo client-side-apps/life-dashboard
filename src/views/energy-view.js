@@ -2,6 +2,9 @@ import * as dataRepository from '../services/data-repository.js';
 import { DataView } from '../components/data-view/data-view.js';
 import { getChartColor, ChartColors } from '../utils/style.js';
 
+const ELECTRICITY_COST_PER_KWH = 0.20; // $0.20 per kWh
+const GAS_COST_PER_THERM = 1.20; // $1.20 per Therm
+
 export class EnergyView extends DataView {
     constructor() {
         super();
@@ -35,6 +38,9 @@ export class EnergyView extends DataView {
         const startDate = this.startDate;
         const endDate = this.endDate;
 
+        // Daily Cost Chart
+        await this.createCostChart('cost-chart', startDate, endDate);
+
         // Hypothetical table names: electricity, gas
         await this.createMultiLineChart('solar-chart', 'electricity_solar_hourly',
             [{ label: 'Solar Production', col: 'solar_kwh', color: getChartColor(ChartColors.Yellow) },
@@ -46,6 +52,120 @@ export class EnergyView extends DataView {
         await this.createSingleLineChart('gas-chart', 'Gas Import', 'gas_daily', 'usage_therms', getChartColor(ChartColors.Red), startDate, endDate);
 
         await this.createSingleLineChart('water-chart', 'Water Usage', 'water_daily', 'usage_liters', getChartColor(ChartColors.Blue), startDate, endDate);
+    }
+
+    async createCostChart(chartId, startDate, endDate) {
+        const chartCard = this.querySelector(`chart-card[chart-id="${chartId}"]`);
+        if (!chartCard) return;
+
+        const electricityData = dataRepository.getTimeSeriesData('electricity_grid_daily', startDate, endDate, 'ASC');
+        const gasData = dataRepository.getTimeSeriesData('gas_daily', startDate, endDate, 'ASC');
+
+        chartCard.setDateRange(startDate, endDate);
+
+        // Combine data
+        const dataMap = new Map();
+
+        // Helper to add data
+        const addData = (data, key, rate) => {
+            if (!data) return;
+            data.forEach(item => {
+                const day = new Date(item.timestamp);
+                day.setHours(0, 0, 0, 0);
+                const ts = day.getTime();
+
+                if (!dataMap.has(ts)) {
+                    dataMap.set(ts, { timestamp: ts, gas: 0, electricity: 0 });
+                }
+                const entry = dataMap.get(ts);
+                const val = item[key] || 0;
+                if (key === 'import_kwh') entry.electricity += val * rate;
+                if (key === 'usage_therms') entry.gas += val * rate;
+            });
+        };
+
+        addData(electricityData, 'import_kwh', ELECTRICITY_COST_PER_KWH);
+        addData(gasData, 'usage_therms', GAS_COST_PER_THERM);
+
+        // Convert to arrays
+        const timestamps = Array.from(dataMap.keys()).sort((a, b) => a - b);
+        const labels = [];
+        const gasCostData = [];
+        const electricityCostData = [];
+
+        timestamps.forEach(ts => {
+            const dateObj = new Date(ts);
+            // Format label YYYY-MM-DD
+            labels.push(`${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`);
+            const entry = dataMap.get(ts);
+            gasCostData.push(entry.gas);
+            electricityCostData.push(entry.electricity);
+        });
+
+        // Use custom chart type via options
+        chartCard.setChartData({
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Gas Cost ($)',
+                    data: gasCostData,
+                    backgroundColor: getChartColor(ChartColors.Red),
+                    stack: 'cost'
+                },
+                {
+                    label: 'Electricity Cost ($)',
+                    data: electricityCostData,
+                    backgroundColor: getChartColor(ChartColors.Cyan),
+                    stack: 'cost'
+                }
+            ]
+        }, {
+            type: 'bar',
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        stacked: true,
+                        ticks: { color: '#666' },
+                        grid: { display: false }
+                    },
+                    y: {
+                        stacked: true,
+                        beginAtZero: true,
+                        ticks: {
+                            color: '#666',
+                            callback: function(value) {
+                                return '$' + value;
+                            }
+                        },
+                        grid: { color: '#ccc' }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(context.parsed.y);
+                                }
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        display: true, // Show legend for this chart
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
     }
 
     async createMultiLineChart(chartId, tableName, datasetsConfig, startDate, endDate) {
