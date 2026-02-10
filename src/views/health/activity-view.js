@@ -39,9 +39,18 @@ export class HealthActivityView extends DataView {
             return this.aggregateDailyData(data, 'count');
         });
 
-        this.createChart('activity-time-chart', 'Active Time (min)', 'steps', 'duration', getChartColor(ChartColors.Blue), startDate, endDate, (data) => {
+        this.createChart('activity-time-chart', 'Active Time (min)', 'activities', 'duration', getChartColor(ChartColors.Blue), startDate, endDate, (data) => {
             // Filter out 'Walking' and convert duration to minutes
-            return this.aggregateDailyData(data, 'duration', item => item.type !== 'Walking')
+            // Calculate duration from end_timestamp - timestamp if duration is missing
+            const dataWithDuration = data.map(d => {
+                let duration = d.duration || 0;
+                if (!duration && d.end_timestamp) {
+                    duration = (d.end_timestamp - d.timestamp) / 1000;
+                }
+                return { ...d, duration };
+            });
+
+            return this.aggregateDailyData(dataWithDuration, 'duration', item => item.type !== 'Walking')
                 .map(d => ({ ...d, duration: Math.round((d.duration || 0) / 60) }));
         });
 
@@ -76,7 +85,7 @@ export class HealthActivityView extends DataView {
         if (!listContainer) return;
 
         // 1. Get available activity types for the filter
-        const types = dataRepository.getDistinctValues('steps', 'type');
+        const types = dataRepository.getDistinctValues('activities', 'type');
 
         // 2. Render Filter if it doesn't exist or needs update
         if (filterContainer && filterContainer.innerHTML === '') {
@@ -92,7 +101,7 @@ export class HealthActivityView extends DataView {
         }
 
         // 3. Fetch Data
-        const data = dataRepository.getSteps({
+        const data = dataRepository.getActivities({
             startDate,
             endDate,
             type: this.selectedType

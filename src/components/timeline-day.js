@@ -100,10 +100,21 @@ export class TimelineDay extends HTMLElement {
                 return h > 0 ? `${h}h ${m}m` : `${m}m`;
             };
 
+            const formatTime = (ts) => {
+                if (!ts) return '';
+                const d = new Date(ts);
+                return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+            };
+
+            const sleepRange = bestSleep.start_timestamp && bestSleep.timestamp
+                ? `from ${formatTime(bestSleep.start_timestamp)} to ${formatTime(bestSleep.timestamp)}`
+                : null;
+
             stats.push({
                 icon: '😴',
                 label: 'Sleep',
                 value: `${sleepDuration.toFixed(1)}h`,
+                sub: sleepRange,
                 linkId: `sleep-toggle-${date}`,
                 expandHtml: `<div class="stat-details-collapsible" id="sleep-toggle-${date}" hidden>
                     <ul class="sleep-phases">
@@ -164,8 +175,8 @@ export class TimelineDay extends HTMLElement {
                         <div class="nutrition-meal">
                             <strong>${meal.meal_group} (${meal.calories} kcal)</strong>
                             <ul class="nutrition-foods">${meal.foods.map(f =>
-                                `<li>${f.name} (${formatAmount(f.amount)})</li>`
-                            ).join('')}</ul>
+                    `<li>${f.name} (${formatAmount(f.amount)})</li>`
+                ).join('')}</ul>
                         </div>
                     `).join('')}
                 </div>`
@@ -188,7 +199,7 @@ export class TimelineDay extends HTMLElement {
         this.innerHTML = `
             <div class="day-card">
                 <div class="day-header">
-                    <span class="day-date">${(() => { const d = new Date(date); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} (${d.toLocaleDateString(undefined, {weekday: 'long'})})`; })()}</span>
+                    <span class="day-date">${(() => { const d = new Date(date); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} (${d.toLocaleDateString(undefined, { weekday: 'long' })})`; })()}</span>
                 </div>
 
                 <div class="day-body">
@@ -201,9 +212,9 @@ export class TimelineDay extends HTMLElement {
                                 <div class="stat-item">
                                     <span class="stat-icon">${s.icon}</span>
                                     ${s.linkId
-                                        ? `<a href="#" class="stat-label stat-toggle" data-target="${s.linkId}">${s.label}:</a>`
-                                        : `<span class="stat-label">${s.label}:</span>`
-                                    }
+                ? `<a href="#" class="stat-label stat-toggle" data-target="${s.linkId}">${s.label}:</a>`
+                : `<span class="stat-label">${s.label}:</span>`
+            }
                                     <span class="stat-value">${s.value}</span>
                                     ${s.sub ? `<span class="stat-sub">(${s.sub})</span>` : ''}
                                 </div>

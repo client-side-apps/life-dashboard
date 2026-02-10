@@ -79,15 +79,13 @@ class DatabaseService {
         // Define schemas matching create_demo_db
         const schemas = [
             `CREATE TABLE IF NOT EXISTS location (id INTEGER PRIMARY KEY, timestamp INTEGER, lat REAL, lng REAL)`,
-            `CREATE TABLE IF NOT EXISTS weight (id INTEGER PRIMARY KEY, timestamp INTEGER, weight_kg REAL)`,
-            `CREATE TABLE IF NOT EXISTS sleep (id INTEGER PRIMARY KEY, timestamp INTEGER, duration_hours REAL, light_seconds INTEGER, deep_seconds INTEGER, rem_seconds INTEGER, awake_seconds INTEGER)`,
+            `CREATE TABLE IF NOT EXISTS weight (id INTEGER PRIMARY KEY, timestamp INTEGER, weight_kg REAL, fat_mass_kg REAL, bone_mass_kg REAL, muscle_mass_kg REAL, hydration_kg REAL)`,
+            `CREATE TABLE IF NOT EXISTS sleep (id INTEGER PRIMARY KEY, timestamp INTEGER, start_timestamp INTEGER, duration_hours REAL, light_seconds INTEGER, deep_seconds INTEGER, rem_seconds INTEGER, awake_seconds INTEGER, wake_up_seconds INTEGER, duration_to_sleep_seconds INTEGER, duration_to_wake_up_seconds INTEGER, snoring_seconds INTEGER, snoring_episodes INTEGER, average_heart_rate INTEGER, heart_rate_min INTEGER, heart_rate_max INTEGER)`,
             `CREATE TABLE IF NOT EXISTS steps (id INTEGER PRIMARY KEY, timestamp INTEGER, count INTEGER, type TEXT, distance REAL, calories REAL)`,
+            `CREATE TABLE IF NOT EXISTS activities (id INTEGER PRIMARY KEY, timestamp INTEGER, end_timestamp INTEGER, type TEXT, calories REAL, distance REAL, steps INTEGER, elevation REAL, hr_average INTEGER)`,
             `CREATE TABLE IF NOT EXISTS accounts (id INTEGER PRIMARY KEY, name TEXT, balance REAL, type TEXT)`,
             `CREATE TABLE IF NOT EXISTS transactions (id INTEGER PRIMARY KEY, timestamp INTEGER, description TEXT, amount REAL, account_id INTEGER)`,
-            `CREATE TABLE IF NOT EXISTS electricity_grid_hourly (id INTEGER PRIMARY KEY, timestamp INTEGER, import_kwh REAL)`,
-            `CREATE TABLE IF NOT EXISTS electricity_solar_hourly (id INTEGER PRIMARY KEY, timestamp INTEGER, solar_kwh REAL, consumption_kwh REAL)`,
-            `CREATE TABLE IF NOT EXISTS gas_daily (id INTEGER PRIMARY KEY, timestamp INTEGER, usage_therms REAL)`,
-            `CREATE TABLE IF NOT EXISTS movies (id INTEGER PRIMARY KEY, timestamp INTEGER, title TEXT, year INTEGER, rating INTEGER, poster_url TEXT)`,
+            `CREATE TABLE IF NOT EXISTS electricity_hourly (id INTEGER PRIMARY KEY, timestamp INTEGER, grid_import_kwh REAL, grid_export_kwh REAL, solar_kwh REAL, home_consumption_kwh REAL, vehicle_kwh REAL, battery_kwh REAL, cost REAL)`,
             `CREATE TABLE IF NOT EXISTS blood_pressure (id INTEGER PRIMARY KEY, timestamp INTEGER, systolic_mmhg INTEGER, diastolic_mmhg INTEGER, heart_rate_bpm INTEGER)`,
             `CREATE TABLE IF NOT EXISTS body_temperature (id INTEGER PRIMARY KEY, timestamp INTEGER, temperature_c REAL)`,
             `CREATE TABLE IF NOT EXISTS height (id INTEGER PRIMARY KEY, timestamp INTEGER, height_m REAL)`,
@@ -220,10 +218,7 @@ class DatabaseService {
             `CREATE INDEX IF NOT EXISTS idx_sleep_timestamp ON sleep (timestamp)`,
             `CREATE INDEX IF NOT EXISTS idx_steps_timestamp ON steps (timestamp)`,
             `CREATE INDEX IF NOT EXISTS idx_transactions_timestamp ON transactions (timestamp)`,
-            `CREATE INDEX IF NOT EXISTS idx_electricity_grid_hourly_timestamp ON electricity_grid_hourly (timestamp)`,
-            `CREATE INDEX IF NOT EXISTS idx_electricity_solar_hourly_timestamp ON electricity_solar_hourly (timestamp)`,
-            `CREATE INDEX IF NOT EXISTS idx_gas_daily_timestamp ON gas_daily (timestamp)`,
-            `CREATE INDEX IF NOT EXISTS idx_movies_timestamp ON movies (timestamp)`,
+            `CREATE INDEX IF NOT EXISTS idx_electricity_hourly_timestamp ON electricity_hourly (timestamp)`,
             `CREATE INDEX IF NOT EXISTS idx_blood_pressure_timestamp ON blood_pressure (timestamp)`,
             `CREATE INDEX IF NOT EXISTS idx_body_temperature_timestamp ON body_temperature (timestamp)`,
             `CREATE INDEX IF NOT EXISTS idx_height_timestamp ON height (timestamp)`,
@@ -234,19 +229,6 @@ class DatabaseService {
 
         schemas.forEach(sql => this.db.run(sql));
         indexes.forEach(sql => this.db.run(sql));
-
-        // Migration for steps table duration
-        try {
-            const columns = this.query("PRAGMA table_info(steps)");
-            const hasDuration = columns.some(c => c.name === 'duration');
-            if (!hasDuration) {
-                this.db.run("ALTER TABLE steps ADD COLUMN duration REAL");
-                console.log("Migrated steps table: Added duration column.");
-            }
-        } catch (e) {
-            console.error("Migration failed:", e);
-        }
-
         this.refreshTables();
     }
 

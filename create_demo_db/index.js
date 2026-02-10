@@ -54,9 +54,10 @@ async function run() {
             )`);
 
             // Health Data
-            db.run(`CREATE TABLE IF NOT EXISTS weight (id INTEGER PRIMARY KEY, timestamp INTEGER, weight_kg REAL)`);
-            db.run(`CREATE TABLE IF NOT EXISTS sleep (id INTEGER PRIMARY KEY, timestamp INTEGER, duration_hours REAL, light_seconds INTEGER, deep_seconds INTEGER, rem_seconds INTEGER, awake_seconds INTEGER)`);
+            db.run(`CREATE TABLE IF NOT EXISTS weight (id INTEGER PRIMARY KEY, timestamp INTEGER, weight_kg REAL, fat_mass_kg REAL, bone_mass_kg REAL, muscle_mass_kg REAL, hydration_kg REAL)`);
+            db.run(`CREATE TABLE IF NOT EXISTS sleep (id INTEGER PRIMARY KEY, timestamp INTEGER, start_timestamp INTEGER, duration_hours REAL, light_seconds INTEGER, deep_seconds INTEGER, rem_seconds INTEGER, awake_seconds INTEGER, wake_up_seconds INTEGER, duration_to_sleep_seconds INTEGER, duration_to_wake_up_seconds INTEGER, snoring_seconds INTEGER, snoring_episodes INTEGER, average_heart_rate INTEGER, heart_rate_min INTEGER, heart_rate_max INTEGER)`);
             db.run(`CREATE TABLE IF NOT EXISTS steps (id INTEGER PRIMARY KEY, timestamp INTEGER, count INTEGER, type TEXT, distance REAL, calories REAL)`);
+            db.run(`CREATE TABLE IF NOT EXISTS activities (id INTEGER PRIMARY KEY, timestamp INTEGER, end_timestamp INTEGER, type TEXT, calories REAL, distance REAL, steps INTEGER, elevation REAL, hr_average INTEGER)`);
             db.run(`CREATE TABLE IF NOT EXISTS blood_pressure (id INTEGER PRIMARY KEY, timestamp INTEGER, systolic_mmhg INTEGER, diastolic_mmhg INTEGER, heart_rate_bpm INTEGER)`);
             db.run(`CREATE TABLE IF NOT EXISTS height (id INTEGER PRIMARY KEY, timestamp INTEGER, height_m REAL)`);
             db.run(`CREATE TABLE IF NOT EXISTS body_temperature (id INTEGER PRIMARY KEY, timestamp INTEGER, temperature_c REAL)`);
@@ -115,8 +116,7 @@ async function run() {
                 threonine_g REAL,
                 tryptophan_g REAL,
                 tyrosine_g REAL,
-                valine_g REAL,
-                completed INTEGER
+                valine_g REAL
             )`);
             db.run(`CREATE TABLE IF NOT EXISTS nutrition_servings (
                 id INTEGER PRIMARY KEY,
@@ -184,10 +184,19 @@ async function run() {
             db.run(`CREATE TABLE IF NOT EXISTS transactions (id INTEGER PRIMARY KEY, timestamp INTEGER, description TEXT, amount REAL, account_id INTEGER)`);
 
             // Energy Data
-            db.run(`CREATE TABLE IF NOT EXISTS electricity_grid_hourly (id INTEGER PRIMARY KEY, timestamp INTEGER, import_kwh REAL)`);
-            db.run(`CREATE TABLE IF NOT EXISTS electricity_solar_hourly (id INTEGER PRIMARY KEY, timestamp INTEGER, solar_kwh REAL, consumption_kwh REAL)`);
-            db.run(`CREATE TABLE IF NOT EXISTS electricity_grid_daily (id INTEGER PRIMARY KEY, timestamp INTEGER, import_kwh REAL)`);
-            db.run(`CREATE TABLE IF NOT EXISTS gas_daily (id INTEGER PRIMARY KEY, timestamp INTEGER, usage_therms REAL)`);
+            db.run(`CREATE TABLE IF NOT EXISTS electricity_hourly (
+                id INTEGER PRIMARY KEY,
+                timestamp INTEGER,
+                grid_import_kwh REAL,
+                grid_export_kwh REAL,
+                solar_kwh REAL,
+                home_consumption_kwh REAL,
+                vehicle_kwh REAL,
+                battery_kwh REAL,
+                cost REAL
+            )`);
+            db.run(`CREATE TABLE IF NOT EXISTS electricity_grid_daily (id INTEGER PRIMARY KEY, timestamp INTEGER, import_kwh REAL, cost REAL)`);
+            db.run(`CREATE TABLE IF NOT EXISTS gas_daily (id INTEGER PRIMARY KEY, timestamp INTEGER, usage_therms REAL, cost REAL)`);
 
 
             // 2. Generate Random Data (for things missing samples)
@@ -341,31 +350,35 @@ async function processFile(filePath) {
 }
 
 function insertData(table, data) {
-    if (table === 'electricity_grid_hourly') {
-        const imp = data.import_kwh !== null ? data.import_kwh : 0;
+    if (table === 'electricity_hourly') {
         db.run(
-            'INSERT INTO electricity_grid_hourly (timestamp, import_kwh) VALUES (?, ?)',
-            [data.timestamp, imp],
-            (err) => { if (err) console.error(err.message); }
-        );
-    } else if (table === 'electricity_solar_hourly') {
-        const solar = data.solar_kwh !== null ? data.solar_kwh : 0;
-        const consumption = data.consumption_kwh !== null ? data.consumption_kwh : 0;
-        db.run(
-            'INSERT INTO electricity_solar_hourly (timestamp, solar_kwh, consumption_kwh) VALUES (?, ?, ?)',
-            [data.timestamp, solar, consumption],
+            'INSERT INTO electricity_hourly (timestamp, grid_import_kwh, grid_export_kwh, solar_kwh, home_consumption_kwh, vehicle_kwh, battery_kwh, cost) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            [
+                data.timestamp,
+                data.grid_import_kwh || 0,
+                data.grid_export_kwh || 0,
+                data.solar_kwh || 0,
+                data.home_consumption_kwh || 0,
+                data.vehicle_kwh || 0,
+                data.battery_kwh || 0,
+                data.cost || 0
+            ],
             (err) => { if (err) console.error(err.message); }
         );
     } else if (table === 'electricity_grid_daily') {
+        const imp = data.import_kwh !== null ? data.import_kwh : 0;
+        const cost = data.cost !== null ? data.cost : 0;
         db.run(
-            'INSERT INTO electricity_grid_daily (timestamp, import_kwh) VALUES (?, ?)',
-            [data.timestamp, data.import_kwh],
+            'INSERT INTO electricity_grid_daily (timestamp, import_kwh, cost) VALUES (?, ?, ?)',
+            [data.timestamp, imp, cost],
             (err) => { if (err) console.error(err.message); }
         );
     } else if (table === 'gas_daily') {
+        const usage = data.usage_therms !== null ? data.usage_therms : 0;
+        const cost = data.cost !== null ? data.cost : 0;
         db.run(
-            'INSERT INTO gas_daily (timestamp, usage_therms) VALUES (?, ?)',
-            [data.timestamp, data.usage_therms],
+            'INSERT INTO gas_daily (timestamp, usage_therms, cost) VALUES (?, ?, ?)',
+            [data.timestamp, usage, cost],
             (err) => { if (err) console.error(err.message); }
         );
     } else if (table === 'transactions') {
@@ -377,9 +390,29 @@ function insertData(table, data) {
     } else if (table === 'weight') {
         db.run('INSERT INTO weight (timestamp, weight_kg) VALUES (?, ?)', [data.timestamp, data.weight_kg], (err) => { if (err) console.error(err.message); });
     } else if (table === 'sleep') {
-        db.run('INSERT INTO sleep (timestamp, duration_hours, light_seconds, deep_seconds, rem_seconds, awake_seconds) VALUES (?, ?, ?, ?, ?, ?)', [data.timestamp, data.duration_hours, data.light_seconds, data.deep_seconds, data.rem_seconds, data.awake_seconds], (err) => { if (err) console.error(err.message); });
+        db.run(
+            'INSERT INTO sleep (timestamp, start_timestamp, duration_hours, light_seconds, deep_seconds, rem_seconds, awake_seconds, wake_up_seconds, duration_to_sleep_seconds, duration_to_wake_up_seconds, snoring_seconds, snoring_episodes, average_heart_rate, heart_rate_min, heart_rate_max) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [
+                data.timestamp,
+                data.start_timestamp || null,
+                data.duration_hours,
+                data.light_seconds || 0,
+                data.deep_seconds || 0,
+                data.rem_seconds || 0,
+                data.awake_seconds || 0,
+                data.wake_up_seconds || 0,
+                data.duration_to_sleep_seconds || 0,
+                data.duration_to_wake_up_seconds || 0,
+                data.snoring_seconds || 0,
+                data.snoring_episodes || 0,
+                data.average_heart_rate || null,
+                data.heart_rate_min || null,
+                data.heart_rate_max || null
+            ],
+            (err) => { if (err) console.error(err.message); }
+        );
     } else if (table === 'steps') {
-        db.run('INSERT INTO steps (timestamp, count, type, distance, calories) VALUES (?, ?, ?, ?, ?)', [data.timestamp, data.count, data.type, data.distance, data.calories], (err) => { if (err) console.error(err.message); });
+        db.run('INSERT INTO steps (timestamp, count, type, distance, calories) VALUES (?, ?, ?, ?, ?)', [data.timestamp, data.count, data.type, data.distance || null, data.calories || null], (err) => { if (err) console.error(err.message); });
     } else if (table === 'blood_pressure') {
         db.run('INSERT INTO blood_pressure (timestamp, systolic_mmhg, diastolic_mmhg, heart_rate_bpm) VALUES (?, ?, ?, ?)', [data.timestamp, data.systolic_mmhg, data.diastolic_mmhg, data.heart_rate_bpm], (err) => { if (err) console.error(err.message); });
     } else if (table === 'height') {
@@ -390,25 +423,30 @@ function insertData(table, data) {
         db.run('INSERT INTO location (timestamp, lat, lng) VALUES (?, ?, ?)', [data.timestamp, data.lat, data.lng], (err) => { if (err) console.error(err.message); });
     } else if (table === 'water_daily') {
         db.run('INSERT INTO water_daily (timestamp, usage_liters) VALUES (?, ?)', [data.timestamp, data.usage_liters], (err) => { if (err) console.error(err.message); });
-    } else if (table === 'nutrition_daily') {
-        // Construct query dynamically because of many columns
+    } else if (table === 'nutrition_daily' || table === 'nutrition_servings') {
         const keys = Object.keys(data).filter(k => k !== 'timestamp' && k !== 'id');
         const cols = ['timestamp', ...keys].join(', ');
         const placeholders = ['?', ...keys.map(() => '?')].join(', ');
         const values = [data.timestamp, ...keys.map(k => data[k])];
 
-        db.run(`INSERT INTO nutrition_daily (${cols}) VALUES (${placeholders})`, values, (err) => {
-            if (err) console.error('Error inserting nutrition_daily', err.message);
+        db.run(`INSERT INTO ${table} (${cols}) VALUES (${placeholders})`, values, (err) => {
+            if (err) console.error(`Error inserting ${table}`, err.message);
         });
-    } else if (table === 'nutrition_servings') {
-        const keys = Object.keys(data).filter(k => k !== 'timestamp' && k !== 'id');
-        const cols = ['timestamp', ...keys].join(', ');
-        const placeholders = ['?', ...keys.map(() => '?')].join(', ');
-        const values = [data.timestamp, ...keys.map(k => data[k])];
-
-        db.run(`INSERT INTO nutrition_servings (${cols}) VALUES (${placeholders})`, values, (err) => {
-            if (err) console.error('Error inserting nutrition_servings', err.message);
-        });
+    } else if (table === 'activities') {
+        db.run(
+            'INSERT INTO activities (timestamp, end_timestamp, type, calories, distance, steps, elevation, hr_average) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            [
+                data.timestamp,
+                data.end_timestamp || null,
+                data.type,
+                data.calories || 0,
+                data.distance || 0,
+                data.steps || 0,
+                data.elevation || 0,
+                data.hr_average || null
+            ],
+            (err) => { if (err) console.error(err.message); }
+        );
     }
 }
 

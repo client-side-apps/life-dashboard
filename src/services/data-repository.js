@@ -62,6 +62,37 @@ export function getTransactions({ accountId, startDate, endDate, limit = 50 } = 
     return dbService.query(query, params);
 }
 
+export function getActivities({ startDate, endDate, type } = {}) {
+    const tableName = 'activities';
+    const tables = getTables();
+    if (!tables.includes(tableName)) return [];
+
+    let query = `SELECT * FROM "${tableName}"`;
+    let params = [];
+    let whereClauses = [];
+
+    if (startDate && endDate) {
+        whereClauses.push(`timestamp >= ? AND timestamp <= ?`);
+        const startTs = new Date(startDate + 'T00:00:00').getTime();
+        const endTs = new Date(endDate + 'T23:59:59.999').getTime();
+        params.push(startTs);
+        params.push(endTs);
+    }
+
+    if (type && type !== 'All') {
+        whereClauses.push(`type = ?`);
+        params.push(type);
+    }
+
+    if (whereClauses.length > 0) {
+        query += ` WHERE ` + whereClauses.join(' AND ');
+    }
+
+    query += ` ORDER BY timestamp DESC`;
+
+    return dbService.query(query, params);
+}
+
 // --- Energy ---
 
 export function getEnergyOldestDate() {

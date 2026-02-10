@@ -128,7 +128,8 @@
 
         <div class="finance-controls">
             <label for="finance-account-select" class="sr-only">Account</label>
-            <select id="finance-account-select" class="select-input finance-account-select" aria-label="Filter by account">
+            <select id="finance-account-select" class="select-input finance-account-select"
+                aria-label="Filter by account">
                 <option value="">All Accounts</option>
             </select>
             <!-- Global date picker used -->
@@ -154,7 +155,7 @@
         <!-- Global date picker used -->
         <div class="charts-grid">
             <chart-card title="Electricity: Solar vs Consumption" chart-id="solar-chart"></chart-card>
-            <chart-card title="Electricity Import" chart-id="elec-import-chart"></chart-card>
+            <chart-card title="Electricity: Grid Flow" chart-id="grid-flow-chart"></chart-card>
             <chart-card title="Gas Import" chart-id="gas-chart"></chart-card>
             <chart-card title="Water Usage" chart-id="water-chart"></chart-card>
         </div>
@@ -164,7 +165,7 @@
 
     <template id="raw-data-view-template">
         <div class="loading-overlay hidden" role="status" aria-live="polite">Loading...</div>
-        
+
         <div class="data-view-layout">
             <section class="data-section">
                 <h3>Database</h3>
@@ -172,7 +173,8 @@
                     <button id="open-db-btn" class="secondary-btn">Open Database</button>
                     <button id="load-demo-btn" class="secondary-btn">Load Demo Database</button>
                     <button id="download-db-btn" class="secondary-btn">Download Database</button>
-                    <input type="file" id="start-db-input" class="file-input" accept=".sqlite,.db,.sqlite3" style="display: none;">
+                    <input type="file" id="start-db-input" class="file-input" accept=".sqlite,.db,.sqlite3"
+                        style="display: none;">
                 </div>
             </section>
 
@@ -185,7 +187,8 @@
                 <h3>Explore Data</h3>
                 <div class="data-controls">
                     <label for="data-table-select" class="sr-only">Data table</label>
-                    <select id="data-table-select" class="select-input data-table-select" aria-label="Select data table">
+                    <select id="data-table-select" class="select-input data-table-select"
+                        aria-label="Select data table">
                         <option value="" disabled selected>Select Table</option>
                     </select>
                     <!-- Global date picker used -->
