@@ -64,22 +64,43 @@ export class TimelineDay extends HTMLElement {
         let totalDist = 0;
         const otherActivities = [];
 
+        // Find if we have a daily aggregate (from remote changes)
+        const dailyAggregate = activityEvents.find(e => e.title === 'Daily Aggregate');
+
+        if (dailyAggregate) {
+            const stepsMatch = dailyAggregate.details.match(/(\d+) steps/);
+            totalSteps = parseInt(stepsMatch?.[1] || 0);
+
+            const distMatch = dailyAggregate.details.match(/([\d\.]+)km/);
+            if (distMatch) {
+                totalDist += parseFloat(distMatch[1]);
+            }
+        } else {
+            // No aggregate, sum up manually (legacy behavior)
+            activityEvents.forEach(e => {
+                const title = e.title || '';
+                const isWalking = title.toLowerCase() === 'walking' || title.toLowerCase() === 'steps';
+                // Also check for steps in details even if title is different
+                const stepsMatch = e.details.match(/(\d+) steps/);
+                const steps = parseInt(stepsMatch?.[1] || 0);
+
+                if (isWalking || steps > 0) {
+                     totalSteps += steps;
+                     const distMatch = e.details.match(/([\d\.]+)km/);
+                     if (distMatch) {
+                         totalDist += parseFloat(distMatch[1]);
+                     }
+                }
+            });
+        }
+
         activityEvents.forEach(e => {
             const title = e.title || '';
+
+            // Skip aggregate in the list
+            if (title === 'Daily Aggregate') return;
+
             const isWalking = title.toLowerCase() === 'walking' || title.toLowerCase() === 'steps';
-
-            // Check for steps
-            const stepsMatch = e.details.match(/(\d+) steps/);
-            const steps = parseInt(stepsMatch?.[1] || 0);
-
-            if (isWalking || steps > 0) {
-                 totalSteps += steps;
-                 // Extract distance if present "2000 steps, 1.50km"
-                 const distMatch = e.details.match(/([\d\.]+)km/);
-                 if (distMatch) {
-                     totalDist += parseFloat(distMatch[1]);
-                 }
-            }
 
             // If it is NOT walking (and has a specific title), list it separately.
             if (!isWalking && title !== 'Activity') {
@@ -131,10 +152,21 @@ export class TimelineDay extends HTMLElement {
                 return h > 0 ? `${h}h ${m}m` : `${m}m`;
             };
 
+            const formatTime = (ts) => {
+                if (!ts) return '';
+                const d = new Date(ts);
+                return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+            };
+
+            const sleepRange = bestSleep.start_timestamp && bestSleep.timestamp
+                ? `from ${formatTime(bestSleep.start_timestamp)} to ${formatTime(bestSleep.timestamp)}`
+                : null;
+
             stats.push({
                 icon: '😴',
                 label: 'Sleep',
                 value: `${sleepDuration.toFixed(1)}h`,
+                sub: sleepRange,
                 linkId: `sleep-toggle-${date}`,
                 expandHtml: `<div class="stat-details-collapsible" id="sleep-toggle-${date}" hidden>
                     <ul class="sleep-phases">
@@ -195,8 +227,8 @@ export class TimelineDay extends HTMLElement {
                         <div class="nutrition-meal">
                             <strong>${meal.meal_group} (${meal.calories} kcal)</strong>
                             <ul class="nutrition-foods">${meal.foods.map(f =>
-                                `<li>${f.name} (${formatAmount(f.amount)})</li>`
-                            ).join('')}</ul>
+                    `<li>${f.name} (${formatAmount(f.amount)})</li>`
+                ).join('')}</ul>
                         </div>
                     `).join('')}
                 </div>`
@@ -219,7 +251,7 @@ export class TimelineDay extends HTMLElement {
         this.innerHTML = `
             <div class="day-card">
                 <div class="day-header">
-                    <span class="day-date">${(() => { const d = new Date(date); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} (${d.toLocaleDateString(undefined, {weekday: 'long'})})`; })()}</span>
+                    <span class="day-date">${(() => { const d = new Date(date); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} (${d.toLocaleDateString(undefined, { weekday: 'long' })})`; })()}</span>
                 </div>
 
                 <div class="day-body">
@@ -232,9 +264,9 @@ export class TimelineDay extends HTMLElement {
                                 <div class="stat-item">
                                     <span class="stat-icon">${s.icon}</span>
                                     ${s.linkId
-                                        ? `<a href="#" class="stat-label stat-toggle" data-target="${s.linkId}">${s.label}:</a>`
-                                        : `<span class="stat-label">${s.label}:</span>`
-                                    }
+                ? `<a href="#" class="stat-label stat-toggle" data-target="${s.linkId}">${s.label}:</a>`
+                : `<span class="stat-label">${s.label}:</span>`
+            }
                                     <span class="stat-value">${s.value}</span>
                                     ${s.sub ? `<span class="stat-sub">(${s.sub})</span>` : ''}
                                 </div>

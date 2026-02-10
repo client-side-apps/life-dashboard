@@ -97,7 +97,6 @@ export class CronometerImporter extends BaseImporter {
         if ('Date' in row && 'Completed' in row) {
             const data = mapNutrients(row);
             data.timestamp = new Date(row.Date).getTime();
-            data.completed = row.Completed === 'true' ? 1 : 0;
 
             if (!data.timestamp || isNaN(data.timestamp)) return null;
 

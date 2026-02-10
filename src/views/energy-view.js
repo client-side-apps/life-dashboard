@@ -35,13 +35,22 @@ export class EnergyView extends DataView {
         const startDate = this.startDate;
         const endDate = this.endDate;
 
-        // Hypothetical table names: electricity, gas
-        await this.createMultiLineChart('solar-chart', 'electricity_solar_hourly',
+        // All hourly electricity data (Grid + Solar) is in one table
+        await this.createMultiLineChart('solar-chart', 'electricity_hourly',
             [{ label: 'Solar Production', col: 'solar_kwh', color: getChartColor(ChartColors.Yellow) },
-            { label: 'Consumption', col: 'consumption_kwh', color: getChartColor(ChartColors.Magenta) }],
+            { label: 'Consumption', col: 'home_consumption_kwh', color: getChartColor(ChartColors.Magenta) }],
             startDate, endDate);
 
-        await this.createSingleLineChart('elec-import-chart', 'Electricity Import', 'electricity_grid_daily', 'import_kwh', getChartColor(ChartColors.Cyan), startDate, endDate);
+        // Grid Flow Chart: Merge Import and Export into Net Grid (Import - Export)
+        const gridData = dataRepository.getTimeSeriesData('electricity_hourly', startDate, endDate, 'ASC');
+        const netGridData = gridData.map(row => ({
+            ...row,
+            net_grid_kwh: (row.grid_import_kwh || 0) - (row.grid_export_kwh || 0)
+        }));
+
+        await this.renderMultiLineChart('grid-flow-chart', netGridData,
+            [{ label: 'Net Grid (Import-Export)', col: 'net_grid_kwh', color: getChartColor(ChartColors.Orange) }],
+            startDate, endDate);
 
         await this.createSingleLineChart('gas-chart', 'Gas Import', 'gas_daily', 'usage_therms', getChartColor(ChartColors.Red), startDate, endDate);
 
@@ -49,20 +58,15 @@ export class EnergyView extends DataView {
     }
 
     async createMultiLineChart(chartId, tableName, datasetsConfig, startDate, endDate) {
+        const data = dataRepository.getTimeSeriesData(tableName, startDate, endDate, 'ASC');
+        await this.renderMultiLineChart(chartId, data, datasetsConfig, startDate, endDate, tableName);
+    }
+
+    async renderMultiLineChart(chartId, data, datasetsConfig, startDate, endDate, tableName = '') {
         const chartCard = this.querySelector(`chart-card[chart-id="${chartId}"]`);
         if (!chartCard) return;
 
-        // Check table
-        const tables = dataRepository.getTables();
-        if (!tables.includes(tableName)) {
-            chartCard.innerHTML += `<p>Table "${tableName}" not found.</p>`;
-            return;
-        }
-
-        const data = dataRepository.getTimeSeriesData(tableName, startDate, endDate, 'ASC');
-
         chartCard.setDateRange(startDate, endDate);
-
         const interval = this._detectInterval(data, tableName);
 
         chartCard.setTimeSeriesData(data, {

@@ -22,60 +22,43 @@ export class HealthSleepView extends DataView {
 
         this.innerHTML = `
             <div class="dashboard-grid">
-                <chart-card title="Sleep Duration" chart-id="sleep-detail-chart"></chart-card>
-            </div>
-            <div class="list-container">
-                <h3>Sleep History</h3>
-                <ul id="sleep-list" class="data-list"></ul>
+                <chart-card title="Sleep Duration" chart-id="sleep-duration-chart"></chart-card>
+                <chart-card title="Sleep Schedule" chart-id="sleep-schedule-chart"></chart-card>
             </div>
         `;
 
-        this.createChart('sleep-detail-chart', 'Sleep Duration', 'sleep', 'duration_hours', getChartColor(ChartColors.Magenta), startDate, endDate);
-        this.renderSleepList(startDate, endDate);
+        this.createChart('sleep-duration-chart', 'Duration (Hours)', 'sleep', 'duration_hours', getChartColor(ChartColors.Magenta), startDate, endDate);
+        this.renderScheduleChart('sleep-schedule-chart', startDate, endDate);
     }
 
-    async renderSleepList(startDate, endDate) {
-        const listContainer = this.querySelector('#sleep-list');
-        if (!listContainer) return;
+    async renderScheduleChart(chartId, startDate, endDate) {
+        const chartCard = this.querySelector(`chart-card[chart-id="${chartId}"]`);
+        if (!chartCard) return;
 
-        const data = dataRepository.getDateRangeData('sleep', startDate, endDate);
+        const rawData = dataRepository.getTimeSeriesData('sleep', startDate, endDate, 'ASC');
 
-        if (data.length === 0) {
-            listContainer.innerHTML = '<li>No sleep records found.</li>';
-            return;
-        }
+        // Transform data to show bedtime and wake time as offsets from midnight
+        const processedData = rawData.map(row => {
+            const wakeDate = new Date(row.timestamp);
+            const startOfDay = new Date(wakeDate.getFullYear(), wakeDate.getMonth(), wakeDate.getDate()).getTime();
 
-        listContainer.innerHTML = data.map(item => {
-            const date = new Date(item.timestamp).toLocaleDateString();
-            const duration = item.duration_hours.toFixed(1) + 'h';
-
-            const formatTime = (seconds) => {
-                if (!seconds) return '0h 0m';
-                const h = Math.floor(seconds / 3600);
-                const m = Math.floor((seconds % 3600) / 60);
-                return `${h}h ${m}m`;
+            return {
+                timestamp: row.timestamp,
+                bedtime_offset: (row.start_timestamp - startOfDay) / 3600000,
+                wake_offset: (row.timestamp - startOfDay) / 3600000
             };
+        });
 
-            const deep = item.deep_seconds ? formatTime(item.deep_seconds) : 'N/A';
-            const light = item.light_seconds ? formatTime(item.light_seconds) : 'N/A';
-            const rem = item.rem_seconds ? formatTime(item.rem_seconds) : 'N/A';
-            const awake = item.awake_seconds ? formatTime(item.awake_seconds) : 'N/A';
-
-            return `
-                <li class="sleep-item">
-                    <div class="sleep-header">
-                        <span class="sleep-date">${date}</span>
-                        <span class="sleep-duration">${duration} Total</span>
-                    </div>
-                    <div class="sleep-details">
-                        <span title="Deep Sleep">Deep: ${deep}</span>
-                        <span title="Light Sleep">Light: ${light}</span>
-                        <span title="REM Sleep">REM: ${rem}</span>
-                        <span title="Awake">Awake: ${awake}</span>
-                    </div>
-                </li>
-            `;
-        }).join('');
+        chartCard.setDateRange(startDate, endDate);
+        chartCard.setTimeSeriesData(processedData, {
+            series: [
+                { label: 'Bedtime', key: 'bedtime_offset', color: getChartColor(ChartColors.Yellow) },
+                { label: 'Wake Up', key: 'wake_offset', color: getChartColor(ChartColors.Cyan) }
+            ],
+            startDate: startDate,
+            endDate: endDate,
+            interval: 'daily'
+        });
     }
 
     async createChart(chartId, label, tableName, valueCol, color, startDate, endDate) {

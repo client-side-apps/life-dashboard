@@ -38,16 +38,16 @@ export class TimelineView extends DataView {
             if (!startDate || !endDate) return;
 
             // ... (Fetching logic same as before, no changes needed to fetching) ...
-            
+
             // Re-fetch logic to get events (I'll just duplicate the fetch logic briefly or assuming it's preserved by 'replace' if I matched carefully. 
             // Wait, replace requires exact match. I cannot skip lines.
             // I should use the original method content and add my calls at the end.
             // But the original method is long.
             // I will use a larger context for replacement to ensure safety, or just replace the END of loadData.
-            
+
             // Actually, I need to modify the loop where I create dayEl to add dataset.date.
             // And then call updateScale().
-            
+
             // Let's look at the original code again.
             // It has:
             // sortedDays.forEach(dateStr => {
@@ -56,9 +56,9 @@ export class TimelineView extends DataView {
             //     dayEl.data = { date: dateStr, events: dayEvents };
             //     content.appendChild(dayEl);
             // });
-            
+
             // I need to change this loop.
-            
+
             const startTs = new Date(startDate + 'T00:00:00').getTime();
             const endTs = new Date(endDate + 'T23:59:59.999').getTime();
 
@@ -77,20 +77,35 @@ export class TimelineView extends DataView {
                 });
             } catch (e) { console.warn('Location fetch failed', e); }
 
-            // 2. Fetch Activities (Steps)
+            // 2. Fetch Activities (Steps & Detailed Activities)
             try {
+                // Steps (Aggregates)
                 const stepData = dataRepository.getDateRangeData('steps', startDate, endDate);
                 stepData.forEach(row => {
                     const type = row.type || 'Activity';
                     const parts = [];
                     if (row.count > 0) parts.push(`${row.count} steps`);
+                    // Only add aggregate if it has meaningful data
+                    if (parts.length > 0) {
+                        events.push({
+                            timestamp: row.timestamp,
+                            type: 'activity',
+                            title: type, // likely 'Daily Aggregate'
+                            details: parts.join(', ')
+                        });
+                    }
+                });
+
+                // Detailed Activities
+                const activityData = dataRepository.getDateRangeData('activities', startDate, endDate);
+                activityData.forEach(row => {
+                    const type = row.type || 'Activity';
+                    const parts = [];
+                    if (row.steps > 0) parts.push(`${row.steps} steps`);
                     if (row.distance > 0) parts.push(`${(row.distance / 1000).toFixed(2)}km`);
                     if (row.calories > 0) parts.push(`${Math.round(row.calories)} kcal`);
 
-                    // Display if any part exists, or if we have a type (so 0-step/0-dist activities are still logged if they exist in DB)
-                    // But filter out completely empty ones if count=0 and no other info?
-                    // The importer now ensures we have something.
-                    if (parts.length > 0 || row.count >= 0) {
+                    if (parts.length > 0 || row.type) {
                         events.push({
                             timestamp: row.timestamp,
                             type: 'activity',
@@ -99,7 +114,8 @@ export class TimelineView extends DataView {
                         });
                     }
                 });
-            } catch (e) { console.warn('Steps fetch failed', e); }
+
+            } catch (e) { console.warn('Activities/Steps fetch failed', e); }
 
             // 3. Fetch Weight
             try {
@@ -122,6 +138,7 @@ export class TimelineView extends DataView {
                         timestamp: row.timestamp,
                         type: 'sleep',
                         duration_hours: row.duration_hours,
+                        start_timestamp: row.start_timestamp,
                         deep_seconds: row.deep_seconds,
                         light_seconds: row.light_seconds,
                         rem_seconds: row.rem_seconds,
@@ -212,7 +229,7 @@ export class TimelineView extends DataView {
         const scaleEl = this.querySelector('#timeline-scale');
         const container = this.closest('.view-container') || document.getElementById('view-container');
         const content = this.querySelector('#timeline-content');
-        
+
         if (!scaleEl || !container || !content || !sortedDays || sortedDays.length === 0) return;
 
         scaleEl.innerHTML = '';
@@ -220,14 +237,14 @@ export class TimelineView extends DataView {
         // Determine granularity
         const monthsSeen = new Set();
         const markers = [];
-        
+
         const days = Array.from(content.children).filter(el => el.tagName === 'TIMELINE-DAY');
         if (days.length === 0) return;
 
         const totalHeight = container.scrollHeight;
         const viewHeight = container.clientHeight;
         const containerRect = container.getBoundingClientRect();
-        
+
         if (totalHeight <= viewHeight) return; // No scrolling needed
 
         days.forEach(day => {
@@ -239,7 +256,7 @@ export class TimelineView extends DataView {
 
             if (!monthsSeen.has(monthKey)) {
                 monthsSeen.add(monthKey);
-                
+
                 // Calculate position relative to container content top
                 const dayRect = day.getBoundingClientRect();
                 const top = dayRect.top - containerRect.top + container.scrollTop;
@@ -253,7 +270,7 @@ export class TimelineView extends DataView {
                 marker.textContent = label;
                 marker.style.top = `${pct}%`;
                 marker.title = `Jump to ${label}`;
-                
+
                 marker.addEventListener('click', (e) => {
                     e.stopPropagation();
                     container.scrollTo({ top: top, behavior: 'smooth' });
@@ -262,11 +279,11 @@ export class TimelineView extends DataView {
                 markers.push(marker);
             }
         });
-        
+
         // Filter overlapping markers?
         // Simple collision detection
-        const sortedMarkers = markers.sort((a,b) => parseFloat(a.style.top) - parseFloat(b.style.top));
-        
+        const sortedMarkers = markers.sort((a, b) => parseFloat(a.style.top) - parseFloat(b.style.top));
+
         let lastTop = -100;
         sortedMarkers.forEach(m => {
             const top = parseFloat(m.style.top); // is %
@@ -274,7 +291,7 @@ export class TimelineView extends DataView {
             // 20px in % depends on viewHeight.
             const pxHeight = 25;
             const pxPct = (pxHeight / viewHeight) * 100;
-            
+
             if (top - lastTop > pxPct) {
                 scaleEl.appendChild(m);
                 lastTop = top;
@@ -313,7 +330,7 @@ export class TimelineView extends DataView {
     handleMouseMove(e) {
         this.lastMouseY = e.clientY;
         this.lastMouseMoveTime = Date.now();
-        
+
         // Always update if we are visible/scrolling, or if we want hover effect.
         // For now, only update if scrolling was recently active or just keep it responsive.
         if (this.isScrolling) {
@@ -323,17 +340,17 @@ export class TimelineView extends DataView {
 
     handleScroll() {
         if (!this.isConnected) return;
-        
+
         this.isScrolling = true;
         this.updateIndicator();
-        
+
         clearTimeout(this._scrollTimeout);
         this._scrollTimeout = setTimeout(() => {
             this.isScrolling = false;
             this.hideIndicator();
         }, 500);
     }
-    
+
     hideIndicator() {
         const indicator = this.querySelector('#timeline-date-indicator');
         if (indicator) indicator.style.display = 'none';
@@ -342,7 +359,7 @@ export class TimelineView extends DataView {
     updateIndicator() {
         const container = this.closest('.view-container') || document.getElementById('view-container');
         if (!container) return;
-        
+
         const indicator = this.querySelector('#timeline-date-indicator');
         if (!indicator) return;
 
@@ -357,23 +374,23 @@ export class TimelineView extends DataView {
             const trackHeight = container.clientHeight;
             const contentHeight = container.scrollHeight;
             const scrollTop = container.scrollTop;
-            
+
             if (contentHeight > trackHeight) {
                 // Estimate thumb position
                 // Thumb height is variable, usually: trackHeight * (trackHeight / contentHeight)
                 const minThumb = 30; // Min px
                 let thumbHeight = Math.max(minThumb, trackHeight * (trackHeight / contentHeight));
-                
+
                 const scrollableDist = contentHeight - trackHeight;
                 const trackScrollableDist = trackHeight - thumbHeight;
-                
+
                 const ratio = scrollTop / scrollableDist;
                 const thumbTop = ratio * trackScrollableDist;
                 const thumbCenter = thumbTop + thumbHeight / 2;
-                
+
                 const containerRect = container.getBoundingClientRect();
                 const estimatedY = containerRect.top + thumbCenter;
-                
+
                 // Only use estimate if reasonable (e.g. mouse was near scrollbar last time)
                 // Or just assume if we are scrolling without mouse events, we are dragging scrollbar.
                 targetY = estimatedY;
@@ -391,7 +408,7 @@ export class TimelineView extends DataView {
 
         // Find date at targetY
         const dateStr = this.findDateAtPosition(targetY);
-        
+
         if (dateStr) {
             indicator.textContent = dateStr;
             indicator.style.display = 'block';
@@ -404,7 +421,7 @@ export class TimelineView extends DataView {
     findDateAtPosition(clientY) {
         const content = this.querySelector('#timeline-content');
         if (!content) return null;
-        
+
         const days = Array.from(content.children).filter(el => el.tagName === 'TIMELINE-DAY');
         if (days.length === 0) return null;
 
@@ -415,34 +432,34 @@ export class TimelineView extends DataView {
                 return day.dataset.date;
             }
         }
-        
+
         // 2. Check closest if not overlapping (e.g. gap)
         // If above first element
         const firstRect = days[0].getBoundingClientRect();
         if (clientY < firstRect.top) return days[0].dataset.date;
-        
+
         // If below last element
-        const lastRect = days[days.length-1].getBoundingClientRect();
-        if (clientY > lastRect.bottom) return days[days.length-1].dataset.date;
-        
+        const lastRect = days[days.length - 1].getBoundingClientRect();
+        if (clientY > lastRect.bottom) return days[days.length - 1].dataset.date;
+
         // If in between elements, find the one "above" the cursor (since we read top-down)
         // Iterate backwards to find first element whose bottom is above clientY?
         // Or just iterate forwards and keep track of last seen.
-        
+
         // Simpler: Find the element with smallest distance to clientY
         let closestDate = null;
         let minDist = Infinity;
-        
+
         for (const day of days) {
             const rect = day.getBoundingClientRect();
             // dist to center?
-            const dist = Math.abs(clientY - (rect.top + rect.height/2));
+            const dist = Math.abs(clientY - (rect.top + rect.height / 2));
             if (dist < minDist) {
                 minDist = dist;
                 closestDate = day.dataset.date;
             }
         }
-        
+
         return closestDate;
     }
 

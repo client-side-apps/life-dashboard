@@ -182,14 +182,14 @@ export class DataImporter {
     }
 
     static async findExistingBatch(table, minTime, maxTime) {
-        if (['location', 'electricity_grid_hourly', 'electricity_solar_hourly', 'electricity_grid_daily', 'gas_daily', 'steps', 'weight', 'height', 'body_temperature', 'sleep', 'blood_pressure', 'water_daily', 'nutrition_daily', 'nutrition_servings'].includes(table)) {
+        if (['location', 'electricity_grid_hourly', 'electricity_solar_hourly', 'electricity_grid_daily', 'gas_daily', 'steps', 'weight', 'height', 'body_temperature', 'sleep', 'blood_pressure', 'water_daily', 'nutrition_daily', 'nutrition_servings', 'activities'].includes(table)) {
             return dbService.query(`SELECT id, timestamp FROM "${table}" WHERE timestamp >= ? AND timestamp <= ?`, [minTime, maxTime]);
         }
         return [];
     }
 
     static async findExisting(table, data) {
-        if (['location', 'electricity_grid_hourly', 'electricity_solar_hourly', 'electricity_grid_daily', 'gas_daily', 'steps', 'weight', 'height', 'body_temperature', 'sleep', 'blood_pressure', 'water_daily', 'nutrition_daily', 'nutrition_servings'].includes(table)) {
+        if (['location', 'electricity_grid_hourly', 'electricity_solar_hourly', 'electricity_grid_daily', 'gas_daily', 'steps', 'weight', 'height', 'body_temperature', 'sleep', 'blood_pressure', 'water_daily', 'nutrition_daily', 'nutrition_servings', 'activities'].includes(table)) {
             // Unique key: timestamp
             const result = dbService.query(`SELECT id FROM "${table}" WHERE timestamp = ?`, [data.timestamp]);
             return result.length > 0 ? result[0].id : null;
@@ -248,7 +248,7 @@ export class DataImporter {
         } else if (table === 'steps') {
             dbService.query(
                 'INSERT INTO steps (timestamp, count, type, distance, calories) VALUES (?, ?, ?, ?, ?)',
-                [data.timestamp, data.count, data.type, data.distance, data.calories]
+                [data.timestamp, data.count, data.type, data.distance || null, data.calories || null]
             );
         } else if (table === 'weight') {
             dbService.query(
@@ -304,6 +304,20 @@ export class DataImporter {
             dbService.query(
                 `INSERT INTO nutrition_servings (${columns.join(', ')}) VALUES (${placeholders})`,
                 values
+            );
+        } else if (table === 'activities') {
+            dbService.query(
+                'INSERT INTO activities (timestamp, end_timestamp, type, calories, distance, steps, elevation, hr_average) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                [
+                    data.timestamp,
+                    data.end_timestamp || null,
+                    data.type,
+                    data.calories || 0,
+                    data.distance || 0,
+                    data.steps || 0,
+                    data.elevation || 0,
+                    data.hr_average || null
+                ]
             );
         }
     }
