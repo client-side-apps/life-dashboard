@@ -1,4 +1,5 @@
 import Chart from 'chart.js';
+import { calculateMovingAverage } from '../../utils/math.js';
 
 export class ChartCard extends HTMLElement {
     constructor() {
@@ -244,26 +245,7 @@ export class ChartCard extends HTMLElement {
 
         series.forEach(s => {
             const rawData = normalizedData[s.key];
-            const avgData = [];
-            for (let i = 0; i < rawData.length; i++) {
-                let sum = 0;
-                let count = 0;
-                // Average over available data in the window [i - windowSize + 1, i]
-                for (let j = 0; j < windowSize; j++) {
-                    const idx = i - j;
-                    if (idx >= 0 && rawData[idx] !== null && rawData[idx] !== undefined) {
-                        sum += Number(rawData[idx]);
-                        count++;
-                    }
-                }
-                
-                if (count > 0) {
-                    avgData.push(sum / count);
-                } else {
-                    avgData.push(null);
-                }
-            }
-            movingAverages[s.key] = avgData;
+            movingAverages[s.key] = calculateMovingAverage(rawData, windowSize);
         });
 
         const datasets = [];
