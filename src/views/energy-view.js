@@ -67,7 +67,7 @@ export class EnergyView extends DataView {
         const dataMap = new Map();
 
         // Helper to add data
-        const addData = (data, key, rate) => {
+        const addData = (data, key, rate, type) => {
             if (!data) return;
             data.forEach(item => {
                 const day = new Date(item.timestamp);
@@ -78,14 +78,23 @@ export class EnergyView extends DataView {
                     dataMap.set(ts, { timestamp: ts, gas: 0, electricity: 0 });
                 }
                 const entry = dataMap.get(ts);
-                const val = item[key] || 0;
-                if (key === 'import_kwh') entry.electricity += val * rate;
-                if (key === 'usage_therms') entry.gas += val * rate;
+
+                // Use stored cost if available, otherwise calculate
+                let cost = 0;
+                if (item.cost !== undefined && item.cost !== null) {
+                    cost = item.cost;
+                } else {
+                    const val = item[key] || 0;
+                    cost = val * rate;
+                }
+
+                if (type === 'electricity') entry.electricity += cost;
+                if (type === 'gas') entry.gas += cost;
             });
         };
 
-        addData(electricityData, 'import_kwh', ELECTRICITY_COST_PER_KWH);
-        addData(gasData, 'usage_therms', GAS_COST_PER_THERM);
+        addData(electricityData, 'import_kwh', ELECTRICITY_COST_PER_KWH, 'electricity');
+        addData(gasData, 'usage_therms', GAS_COST_PER_THERM, 'gas');
 
         // Convert to arrays
         const timestamps = Array.from(dataMap.keys()).sort((a, b) => a - b);

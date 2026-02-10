@@ -222,8 +222,8 @@ export class DataImporter {
     static async insert(table, data) {
         if (table === 'electricity_grid_hourly') {
             dbService.query(
-                'INSERT INTO electricity_grid_hourly (timestamp, import_kwh) VALUES (?, ?)',
-                [data.timestamp, data.import_kwh || 0]
+                'INSERT INTO electricity_grid_hourly (timestamp, import_kwh, cost) VALUES (?, ?, ?)',
+                [data.timestamp, data.import_kwh || 0, data.cost || 0]
             );
         } else if (table === 'electricity_solar_hourly') {
             dbService.query(
@@ -232,13 +232,13 @@ export class DataImporter {
             );
         } else if (table === 'electricity_grid_daily') {
             dbService.query(
-                'INSERT INTO electricity_grid_daily (timestamp, import_kwh) VALUES (?, ?)',
-                [data.timestamp, data.import_kwh || 0]
+                'INSERT INTO electricity_grid_daily (timestamp, import_kwh, cost) VALUES (?, ?, ?)',
+                [data.timestamp, data.import_kwh || 0, data.cost || 0]
             );
         } else if (table === 'gas_daily') {
             dbService.query(
-                'INSERT INTO gas_daily (timestamp, usage_therms) VALUES (?, ?)',
-                [data.timestamp, data.usage_therms || 0]
+                'INSERT INTO gas_daily (timestamp, usage_therms, cost) VALUES (?, ?, ?)',
+                [data.timestamp, data.usage_therms || 0, data.cost || 0]
             );
         } else if (table === 'transactions') {
             dbService.query(
