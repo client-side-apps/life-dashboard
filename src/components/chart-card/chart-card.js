@@ -145,50 +145,19 @@ export class ChartCard extends HTMLElement {
 
         const step = interval === 'hourly' ? 3600 * 1000 : 86400 * 1000;
 
-        // Map data for quick lookup
-        const dataMap = new Map();
-        data.forEach(d => {
-            // Round timestamp to nearest interval to match our stepping
-            // This prevents slight mismatches.
-            // For simplicty, looking for exact match or within reasonable delta?
-            // Let's assume data is somewhat aligned or we take the first point in the window.
-            // Better: Let's assume data is keyed by timestamp.
-            dataMap.set(d.timestamp, d);
-        });
-
-        while (currentTs <= endTs) {
-            const dateObj = new Date(currentTs);
-            labels.push(`${dateObj.getFullYear()}-${String(dateObj.getMonth()+1).padStart(2,'0')}-${String(dateObj.getDate()).padStart(2,'0')}` + (interval === 'hourly' ? ' ' + dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''));
-
-            // Look for data point
-            // We check if we have a data point roughly at this time (within step/2?)
-            // Or exact match. Let's try finding a point that falls in [currentTs, currentTs + step)
-            // But since we are generating points, better to see if we have an entry.
-            // For now, exact match logic or "closest" logic if needed.
-            // The importers store precise timestamps.
-            // Daily data usually stored as T00:00:00 or similar.
-
-            // Simple approach: Check if we have a point in the map with a tolerance?
-            // Since Map is exact, let's try finding from array (sorted)
-            // With sorted array, we can walk it efficiently.
-
-            // Re-implementation: Walk array alongside generation
-            currentTs += step;
-        }
-
-        // Let's rewrite the loop with a more efficient lookup or array walk
-        labels.length = 0; // clear
-
         let dataIdx = 0;
-        currentTs = startTs;
 
         while (currentTs <= endTs) {
             const dateObj = new Date(currentTs);
             // Format label
+            const datePart = `${dateObj.getFullYear()}-${String(dateObj.getMonth()+1).padStart(2,'0')}-${String(dateObj.getDate()).padStart(2,'0')}`;
             if (interval === 'daily') {
-                labels.push(`${dateObj.getFullYear()}-${String(dateObj.getMonth()+1).padStart(2,'0')}-${String(dateObj.getDate()).padStart(2,'0')}`);
+                labels.push(datePart);
             } else {
-                labels.push(`${dateObj.getFullYear()}-${String(dateObj.getMonth()+1).padStart(2,'0')}-${String(dateObj.getDate()).padStart(2,'0')} ${dateObj.toLocaleTimeString()}`);
+                const hours = String(dateObj.getHours()).padStart(2, '0');
+                const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+                const seconds = String(dateObj.getSeconds()).padStart(2, '0');
+                labels.push(`${datePart} ${hours}:${minutes}:${seconds}`);
             }
             this.timestamps.push(currentTs);
 
