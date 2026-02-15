@@ -77,19 +77,20 @@ class DatabaseService {
         if (!this.db) return;
 
         // Define schemas matching create_demo_db
+        // Added 'source' column to all tables
         const schemas = [
-            `CREATE TABLE IF NOT EXISTS location (id INTEGER PRIMARY KEY, timestamp INTEGER, lat REAL, lng REAL)`,
-            `CREATE TABLE IF NOT EXISTS weight (id INTEGER PRIMARY KEY, timestamp INTEGER, weight_kg REAL, fat_mass_kg REAL, bone_mass_kg REAL, muscle_mass_kg REAL, hydration_kg REAL)`,
-            `CREATE TABLE IF NOT EXISTS sleep (id INTEGER PRIMARY KEY, timestamp INTEGER, start_timestamp INTEGER, duration_hours REAL, light_seconds INTEGER, deep_seconds INTEGER, rem_seconds INTEGER, awake_seconds INTEGER, wake_up_seconds INTEGER, duration_to_sleep_seconds INTEGER, duration_to_wake_up_seconds INTEGER, snoring_seconds INTEGER, snoring_episodes INTEGER, average_heart_rate INTEGER, heart_rate_min INTEGER, heart_rate_max INTEGER)`,
-            `CREATE TABLE IF NOT EXISTS steps (id INTEGER PRIMARY KEY, timestamp INTEGER, count INTEGER, type TEXT, distance REAL, calories REAL)`,
-            `CREATE TABLE IF NOT EXISTS activities (id INTEGER PRIMARY KEY, timestamp INTEGER, end_timestamp INTEGER, type TEXT, calories REAL, distance REAL, steps INTEGER, elevation REAL, hr_average INTEGER)`,
-            `CREATE TABLE IF NOT EXISTS accounts (id INTEGER PRIMARY KEY, name TEXT, balance REAL, type TEXT)`,
-            `CREATE TABLE IF NOT EXISTS transactions (id INTEGER PRIMARY KEY, timestamp INTEGER, description TEXT, amount REAL, account_id INTEGER)`,
-            `CREATE TABLE IF NOT EXISTS electricity_hourly (id INTEGER PRIMARY KEY, timestamp INTEGER, grid_import_kwh REAL, grid_export_kwh REAL, solar_kwh REAL, home_consumption_kwh REAL, vehicle_kwh REAL, battery_kwh REAL, cost REAL)`,
-            `CREATE TABLE IF NOT EXISTS blood_pressure (id INTEGER PRIMARY KEY, timestamp INTEGER, systolic_mmhg INTEGER, diastolic_mmhg INTEGER, heart_rate_bpm INTEGER)`,
-            `CREATE TABLE IF NOT EXISTS body_temperature (id INTEGER PRIMARY KEY, timestamp INTEGER, temperature_c REAL)`,
-            `CREATE TABLE IF NOT EXISTS height (id INTEGER PRIMARY KEY, timestamp INTEGER, height_m REAL)`,
-            `CREATE TABLE IF NOT EXISTS water_daily (id INTEGER PRIMARY KEY, timestamp INTEGER, usage_liters REAL)`,
+            `CREATE TABLE IF NOT EXISTS location (id INTEGER PRIMARY KEY, timestamp INTEGER, lat REAL, lng REAL, source TEXT)`,
+            `CREATE TABLE IF NOT EXISTS weight (id INTEGER PRIMARY KEY, timestamp INTEGER, weight_kg REAL, fat_mass_kg REAL, bone_mass_kg REAL, muscle_mass_kg REAL, hydration_kg REAL, source TEXT)`,
+            `CREATE TABLE IF NOT EXISTS sleep (id INTEGER PRIMARY KEY, timestamp INTEGER, start_timestamp INTEGER, duration_hours REAL, light_seconds INTEGER, deep_seconds INTEGER, rem_seconds INTEGER, awake_seconds INTEGER, wake_up_seconds INTEGER, duration_to_sleep_seconds INTEGER, duration_to_wake_up_seconds INTEGER, snoring_seconds INTEGER, snoring_episodes INTEGER, average_heart_rate INTEGER, heart_rate_min INTEGER, heart_rate_max INTEGER, source TEXT)`,
+            `CREATE TABLE IF NOT EXISTS steps (id INTEGER PRIMARY KEY, timestamp INTEGER, count INTEGER, type TEXT, distance REAL, calories REAL, source TEXT)`,
+            `CREATE TABLE IF NOT EXISTS activities (id INTEGER PRIMARY KEY, timestamp INTEGER, end_timestamp INTEGER, type TEXT, calories REAL, distance REAL, steps INTEGER, elevation REAL, hr_average INTEGER, source TEXT)`,
+            `CREATE TABLE IF NOT EXISTS accounts (id INTEGER PRIMARY KEY, name TEXT, balance REAL, type TEXT, source TEXT)`,
+            `CREATE TABLE IF NOT EXISTS transactions (id INTEGER PRIMARY KEY, timestamp INTEGER, description TEXT, amount REAL, account_id INTEGER, source TEXT)`,
+            `CREATE TABLE IF NOT EXISTS electricity_hourly (id INTEGER PRIMARY KEY, timestamp INTEGER, grid_import_kwh REAL, grid_export_kwh REAL, solar_kwh REAL, home_consumption_kwh REAL, vehicle_kwh REAL, battery_kwh REAL, cost REAL, source TEXT)`,
+            `CREATE TABLE IF NOT EXISTS blood_pressure (id INTEGER PRIMARY KEY, timestamp INTEGER, systolic_mmhg INTEGER, diastolic_mmhg INTEGER, heart_rate_bpm INTEGER, source TEXT)`,
+            `CREATE TABLE IF NOT EXISTS body_temperature (id INTEGER PRIMARY KEY, timestamp INTEGER, temperature_c REAL, source TEXT)`,
+            `CREATE TABLE IF NOT EXISTS height (id INTEGER PRIMARY KEY, timestamp INTEGER, height_m REAL, source TEXT)`,
+            `CREATE TABLE IF NOT EXISTS water_daily (id INTEGER PRIMARY KEY, timestamp INTEGER, usage_liters REAL, source TEXT)`,
             `CREATE TABLE IF NOT EXISTS nutrition_daily (
                 id INTEGER PRIMARY KEY,
                 timestamp INTEGER,
@@ -145,7 +146,8 @@ class DatabaseService {
                 tryptophan_g REAL,
                 tyrosine_g REAL,
                 valine_g REAL,
-                completed INTEGER
+                completed INTEGER,
+                source TEXT
             )`,
             `CREATE TABLE IF NOT EXISTS nutrition_servings (
                 id INTEGER PRIMARY KEY,
@@ -205,7 +207,8 @@ class DatabaseService {
                 threonine_g REAL,
                 tryptophan_g REAL,
                 tyrosine_g REAL,
-                valine_g REAL
+                valine_g REAL,
+                source TEXT
             )`
         ];
 
@@ -229,6 +232,33 @@ class DatabaseService {
 
         schemas.forEach(sql => this.db.run(sql));
         indexes.forEach(sql => this.db.run(sql));
+
+        // Migration: Add 'source' column to existing tables if missing
+        this.refreshTables(); // Ensure this.tables is populated
+        const tablesToMigrate = [
+            'location', 'weight', 'sleep', 'steps', 'activities', 'accounts',
+            'transactions', 'electricity_hourly', 'blood_pressure',
+            'body_temperature', 'height', 'water_daily', 'nutrition_daily', 'nutrition_servings'
+        ];
+
+        tablesToMigrate.forEach(table => {
+            if (this.tables.includes(table)) {
+                try {
+                    // Check if column exists
+                    const cols = this.db.exec(`PRAGMA table_info("${table}")`);
+                    if (cols.length > 0) {
+                        const hasSource = cols[0].values.some(row => row[1] === 'source');
+                        if (!hasSource) {
+                            console.log(`Migrating table ${table}: adding source column`);
+                            this.db.run(`ALTER TABLE "${table}" ADD COLUMN source TEXT`);
+                        }
+                    }
+                } catch (e) {
+                    console.error(`Failed to migrate table ${table}`, e);
+                }
+            }
+        });
+
         this.refreshTables();
     }
 

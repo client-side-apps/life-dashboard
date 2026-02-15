@@ -1,6 +1,9 @@
 import { BaseImporter } from '../base-importer.js';
 
 export class WithingsImporter extends BaseImporter {
+    static get source() {
+        return 'withings';
+    }
     static detect(rows) {
         if (!rows || !Array.isArray(rows) || rows.length === 0) return false;
         const first = rows[0];

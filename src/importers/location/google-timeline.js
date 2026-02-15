@@ -1,6 +1,9 @@
 import { BaseImporter } from '../base-importer.js';
 
 export class GoogleTimelineImporter extends BaseImporter {
+    static get source() {
+        return 'google-timeline';
+    }
 
     static detect(data) {
         // Check if it has semanticSegments which is typical of the semantic JSON export

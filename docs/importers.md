@@ -2,6 +2,8 @@
 
 The application supports importing data from various CSV/JSON sources. Below is a list of supported importers and their details.
 
+**Note**: All importers automatically populate the `source` column in the database with a unique identifier (e.g., `pge`, `tesla`, `withings`) to track the origin of the data.
+
 ## Energy
 
 ### PG&E (Pacific Gas and Electric)

@@ -1,6 +1,9 @@
 import { BaseImporter } from '../base-importer.js';
 
 export class FlumeImporter extends BaseImporter {
+    static get source() {
+        return 'flume';
+    }
     /**
      * @param {Array<Object>} rows
      * @returns {boolean}

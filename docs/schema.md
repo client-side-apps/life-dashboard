@@ -13,6 +13,7 @@ Stores daily history of location coordinates.
 | `timestamp` | INTEGER | Timestamp (Unix ms) |
 | `lat` | REAL | Latitude |
 | `lng` | REAL | Longitude |
+| `source` | TEXT | Source of the data |
 
 ## Health
 
@@ -28,6 +29,7 @@ Stores body weight measurements.
 | `bone_mass_kg` | REAL | Bone mass (kg) |
 | `muscle_mass_kg` | REAL | Muscle mass (kg) |
 | `hydration_kg` | REAL | Hydration (kg) |
+| `source` | TEXT | Source of the data |
 
 ### `sleep`
 Stores sleep duration and detailed sleep metrics.
@@ -50,6 +52,7 @@ Stores sleep duration and detailed sleep metrics.
 | `average_heart_rate` | INTEGER | Average heart rate during sleep (bpm) |
 | `heart_rate_min` | INTEGER | Minimum heart rate during sleep (bpm) |
 | `heart_rate_max` | INTEGER | Maximum heart rate during sleep (bpm) |
+| `source` | TEXT | Source of the data |
 
 ### `steps`
 Stores daily step count aggregates.
@@ -60,6 +63,7 @@ Stores daily step count aggregates.
 | `timestamp` | INTEGER | Time of recording (Unix ms) |
 | `count` | INTEGER | Total steps for the day |
 | `type` | TEXT | Measurement type (e.g. "Daily Aggregate") |
+| `source` | TEXT | Source of the data |
 
 ### `activities`
 Stores non-walking activity sessions (Running, Cycling, Swimming, etc.).
@@ -75,6 +79,7 @@ Stores non-walking activity sessions (Running, Cycling, Swimming, etc.).
 | `steps` | INTEGER | Steps taken |
 | `elevation` | REAL | Elevation gain |
 | `hr_average` | INTEGER | Average heart rate (bpm) |
+| `source` | TEXT | Source of the data |
 
 ### `blood_pressure`
 Stores blood pressure and heart rate measurements.
@@ -86,6 +91,7 @@ Stores blood pressure and heart rate measurements.
 | `systolic_mmhg` | INTEGER | Systolic pressure (mmHg) |
 | `diastolic_mmhg` | INTEGER | Diastolic pressure (mmHg) |
 | `heart_rate_bpm` | INTEGER | Heart rate (bpm) |
+| `source` | TEXT | Source of the data |
 
 ### `body_temperature`
 Stores body temperature measurements.
@@ -95,6 +101,7 @@ Stores body temperature measurements.
 | `id` | INTEGER | Primary Key |
 | `timestamp` | INTEGER | Date/Time of measurement (Unix ms) |
 | `temperature_c` | REAL | Temperature (°C) |
+| `source` | TEXT | Source of the data |
 
 ### `height`
 Stores height measurements.
@@ -104,6 +111,7 @@ Stores height measurements.
 | `id` | INTEGER | Primary Key |
 | `timestamp` | INTEGER | Date/Time of measurement (Unix ms) |
 | `height_m` | REAL | Height (m) |
+| `source` | TEXT | Source of the data |
 
 ### `nutrition_daily`
 Stores daily nutrient and macro totals.
@@ -117,6 +125,7 @@ Stores daily nutrient and macro totals.
 | `carbs_g` | REAL | Total carbohydrates (g) |
 | `fat_g` | REAL | Total fat (g) |
 | `...` | REAL | Other fields (fiber, sugars, vitamins/minerals) |
+| `source` | TEXT | Source of the data |
 
 ### `nutrition_servings`
 Stores individual food entries/servings.
@@ -131,6 +140,7 @@ Stores individual food entries/servings.
 | `category` | TEXT | Food category |
 | `energy_kcal` | REAL | Calories for this serving |
 | `...` | REAL | Other fields (macros, vitamins/minerals) |
+| `source` | TEXT | Source of the data |
 
 ## Finance
 
@@ -143,6 +153,7 @@ Stores financial account information.
 | `name` | TEXT | Name of the account (e.g., "Checking", "Savings") |
 | `balance` | REAL | Current balance |
 | `type` | TEXT | Type of account |
+| `source` | TEXT | Source of the data |
 
 ### `transactions`
 Stores financial transactions associated with accounts.
@@ -154,6 +165,7 @@ Stores financial transactions associated with accounts.
 | `description` | TEXT | Description/Payee |
 | `amount` | REAL | Transaction amount |
 | `account_id` | INTEGER | Foreign Key linking to `accounts.id` |
+| `source` | TEXT | Source of the data |
 
 ## Energy
 
@@ -171,6 +183,7 @@ Stores hourly electricity data: Grid Import/Export, Solar Production, Home Consu
 | `vehicle_kwh` | REAL | Energy used for vehicle charging (kWh) |
 | `battery_kwh` | REAL | Energy from Powerwall (kWh) |
 | `cost` | REAL | Cost of grid interaction ($) |
+| `source` | TEXT | Source of the data |
 
 
 ### `gas_daily`
@@ -182,6 +195,7 @@ Stores daily gas usage data.
 | `timestamp` | INTEGER | Daily timestamp (Unix ms) |
 | `usage_therms` | REAL | Gas usage in therms |
 | `cost` | REAL | Daily cost ($) |
+| `source` | TEXT | Source of the data |
 
 ### `water_daily`
 Stores daily water usage data.
@@ -191,4 +205,5 @@ Stores daily water usage data.
 | `id` | INTEGER | Primary Key |
 | `timestamp` | INTEGER | Daily timestamp (Unix ms) |
 | `usage_liters` | REAL | Water usage (liters) |
+| `source` | TEXT | Source of the data |
 

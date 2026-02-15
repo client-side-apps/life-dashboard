@@ -24,6 +24,13 @@ export class BaseImporter {
     static getTable() {
         return 'electricity';
     }
+
+    /**
+     * @returns {string|null} - The source identifier (e.g. 'withings', 'pge')
+     */
+    static get source() {
+        return null;
+    }
     /**
      * Optional hook to process items after mapping but before insertion.
      * Useful for aggregation or cross-table logic.
