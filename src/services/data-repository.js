@@ -229,3 +229,22 @@ export function getSteps({ startDate, endDate, type } = {}) {
 
     return dbService.query(query, params);
 }
+
+export function getLatestDataDate() {
+    const tables = getTables();
+    let maxTimestamp = 0;
+
+    for (const table of tables) {
+        try {
+            const res = dbService.query(`SELECT MAX(timestamp) as max_ts FROM "${table}"`);
+            if (res.length > 0 && res[0].max_ts) {
+                maxTimestamp = Math.max(maxTimestamp, res[0].max_ts);
+            }
+        } catch (e) {
+            // Ignore tables without timestamp
+            console.warn(`Could not get max timestamp for table ${table}`, e);
+        }
+    }
+
+    return maxTimestamp > 0 ? maxTimestamp : null;
+}

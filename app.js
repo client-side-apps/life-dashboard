@@ -492,8 +492,26 @@ async function loadDatabase(file) {
 
         console.log('Database loaded successfully');
 
+
         // Backfill daily data if needed
         await dataRepository.ensureDailyEnergyData();
+
+        // Update Date Range based on latest data
+        const latestTs = dataRepository.getLatestDataDate();
+        if (latestTs) {
+            const endDateObj = new Date(latestTs);
+            const startDateObj = new Date(latestTs);
+            startDateObj.setFullYear(startDateObj.getFullYear() - 1);
+
+            state.endDate = endDateObj.toISOString().split('T')[0];
+            state.startDate = startDateObj.toISOString().split('T')[0];
+
+            // Update Date Picker Logic
+            if (elements.datePicker) {
+                elements.datePicker.startDate = state.startDate;
+                elements.datePicker.endDate = state.endDate;
+            }
+        }
 
         // Refresh current view
         await renderView(state.currentView);
