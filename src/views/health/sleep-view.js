@@ -22,7 +22,7 @@ export class HealthSleepView extends DataView {
 
         this.innerHTML = `
             <div class="dashboard-grid">
-                <chart-card title="Sleep Duration" chart-id="sleep-duration-chart"></chart-card>
+                <chart-card title="Sleep Duration" chart-id="sleep-duration-chart" y-min="5" y-max="10"></chart-card>
                 <chart-card title="Sleep Schedule" chart-id="sleep-schedule-chart"></chart-card>
             </div>
         `;
@@ -82,6 +82,7 @@ export class HealthSleepView extends DataView {
                 color: color
             }],
             startDate: startDate,
+            endDate: endDate,
             endDate: endDate,
             interval: 'daily'
         });

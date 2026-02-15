@@ -22,7 +22,7 @@ export class HealthBodyView extends DataView {
 
         this.innerHTML = `
             <div class="dashboard-grid">
-                <chart-card title="Weight" chart-id="body-weight-chart"></chart-card>
+                <chart-card title="Weight" chart-id="body-weight-chart" y-grace="0.5"></chart-card>
                 <chart-card title="Body Composition" chart-id="body-composition-chart"></chart-card>
                 <chart-card title="Height" chart-id="body-height-chart"></chart-card>
                 <chart-card title="Body Temperature" chart-id="body-temp-chart"></chart-card>
@@ -78,6 +78,7 @@ export class HealthBodyView extends DataView {
                 color: color
             }],
             startDate: startDate,
+            endDate: endDate,
             endDate: endDate,
             interval: 'daily'
         });

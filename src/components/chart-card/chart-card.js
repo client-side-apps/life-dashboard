@@ -8,6 +8,61 @@ export class ChartCard extends HTMLElement {
         this._startDate = null;
         this._endDate = null;
         this.timestamps = []; // Store timestamps for sync
+        this._yMin = null;
+        this._yMax = null;
+        this._yGrace = null;
+    }
+
+    static get observedAttributes() {
+        return ['y-min', 'y-max', 'y-grace', 'start-date', 'end-date'];
+    }
+
+    attributeChangedCallback(name, oldValue, newValue) {
+        if (oldValue === newValue) return;
+        switch (name) {
+            case 'y-min':
+                this.yMin = newValue === null ? null : Number(newValue);
+                break;
+            case 'y-max':
+                this.yMax = newValue === null ? null : Number(newValue);
+                break;
+            case 'y-grace':
+                this.yGrace = newValue === null ? null : Number(newValue);
+                break;
+            case 'start-date':
+                this.startDate = newValue;
+                break;
+            case 'end-date':
+                this.endDate = newValue;
+                break;
+        }
+    }
+
+    get yMin() { return this._yMin; }
+    set yMin(val) {
+        this._yMin = val;
+        this._updateChartYAxis();
+    }
+
+    get yMax() { return this._yMax; }
+    set yMax(val) {
+        this._yMax = val;
+        this._updateChartYAxis();
+    }
+
+    get yGrace() { return this._yGrace; }
+    set yGrace(val) {
+        this._yGrace = val;
+        this._updateChartYAxis();
+    }
+
+    _updateChartYAxis() {
+        if (!this.chartInstance) return;
+        this.chartInstance.options.scales.y.min = this._yMin;
+        this.chartInstance.options.scales.y.max = this._yMax;
+        this.chartInstance.options.scales.y.grace = this._yGrace;
+        this.chartInstance.options.scales.y.beginAtZero = false; // Ensure this is set
+        this.chartInstance.update();
     }
 
     get startDate() { return this._startDate; }
@@ -54,10 +109,6 @@ export class ChartCard extends HTMLElement {
      * Sets the configuration for the Chart.js instance.
      * @param {Object} config - The Chart.js configuration object.
      */
-    /**
-     * Sets the configuration for the Chart.js instance.
-     * @param {Object} config - The Chart.js configuration object.
-     */
     setConfiguration(config) {
         // Ensure we are rendered
         if (!this.hasAttribute('rendered')) {
@@ -75,8 +126,6 @@ export class ChartCard extends HTMLElement {
             console.error('ChartCard: Canvas element not found.');
             return;
         }
-
-
 
         this.chartInstance = new Chart(canvas, config);
     }
@@ -158,7 +207,7 @@ export class ChartCard extends HTMLElement {
 
         while (currentTs <= endTs) {
             const dateObj = new Date(currentTs);
-            labels.push(`${dateObj.getFullYear()}-${String(dateObj.getMonth()+1).padStart(2,'0')}-${String(dateObj.getDate()).padStart(2,'0')}` + (interval === 'hourly' ? ' ' + dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''));
+            labels.push(`${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}` + (interval === 'hourly' ? ' ' + dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''));
 
             // Look for data point
             // We check if we have a data point roughly at this time (within step/2?)
@@ -186,9 +235,9 @@ export class ChartCard extends HTMLElement {
             const dateObj = new Date(currentTs);
             // Format label
             if (interval === 'daily') {
-                labels.push(`${dateObj.getFullYear()}-${String(dateObj.getMonth()+1).padStart(2,'0')}-${String(dateObj.getDate()).padStart(2,'0')}`);
+                labels.push(`${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`);
             } else {
-                labels.push(`${dateObj.getFullYear()}-${String(dateObj.getMonth()+1).padStart(2,'0')}-${String(dateObj.getDate()).padStart(2,'0')} ${dateObj.toLocaleTimeString()}`);
+                labels.push(`${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')} ${dateObj.toLocaleTimeString()}`);
             }
             this.timestamps.push(currentTs);
 
@@ -256,10 +305,10 @@ export class ChartCard extends HTMLElement {
                 data: normalizedData[s.key],
                 borderColor: this._hexToRgba(s.color, 0.2),
                 borderWidth: 1,
-                pointRadius: 0, 
+                pointRadius: 0,
                 pointHoverRadius: 4,
-                tension: 0, 
-                stepped: 'middle', 
+                tension: 0,
+                stepped: 'middle',
                 fill: false,
                 spanGaps: false,
                 order: 1
@@ -394,7 +443,10 @@ export class ChartCard extends HTMLElement {
                 scales: {
                     y: {
                         stacked: stacked,
-                        beginAtZero: true,
+                        beginAtZero: false, // Default to false so min/max/grace works better, or let user override
+                        min: this.yMin,
+                        max: this.yMax,
+                        grace: this.yGrace,
                         grid: {
                             color: this._themeColors.borderColor
                         },
@@ -445,7 +497,7 @@ export class ChartCard extends HTMLElement {
         // This ensures readability in both light and dark modes.
         const textColor = style.getPropertyValue('--text-color').trim() || '#000';
         const borderColor = style.getPropertyValue('--border-color').trim() || '#ccc';
-        
+
         this._themeColors = {
             textPrimary: textColor,
             textSecondary: textColor,
@@ -521,4 +573,3 @@ export class ChartCard extends HTMLElement {
 }
 
 customElements.define('chart-card', ChartCard);
-

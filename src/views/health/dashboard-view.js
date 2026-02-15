@@ -22,8 +22,8 @@ export class HealthDashboardView extends DataView {
 
         this.innerHTML = `
             <div class="dashboard-grid">
-                <chart-card title="Weight" chart-id="weight-chart"></chart-card>
-                <chart-card title="Sleep Duration" chart-id="sleep-chart"></chart-card>
+                <chart-card title="Weight" chart-id="weight-chart" y-grace="0.5"></chart-card>
+                <chart-card title="Sleep Duration" chart-id="sleep-chart" y-min="5" y-max="10"></chart-card>
                 <chart-card title="Steps" chart-id="steps-chart"></chart-card>
                 <chart-card title="Nutrition (Energy Source)" chart-id="nutrition-chart"></chart-card>
             </div>
