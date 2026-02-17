@@ -1,5 +1,5 @@
-import { CronometerImporter } from '../src/importers/health/cronometer.js';
-import { CSVParser } from '../src/utils/csv-parser.js';
+import { CronometerImporter } from './cronometer.js';
+import { CSVParser } from '../../utils/csv-parser.js';
 import { readFileSync } from 'fs';
 import { describe, it } from 'node:test';
 import assert from 'node:assert';

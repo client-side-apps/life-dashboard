@@ -103,6 +103,8 @@ export class CronometerImporter extends BaseImporter {
 
             if (!data.timestamp || isNaN(data.timestamp)) return null;
 
+            data.completed = row.Completed === 'true' ? 1 : 0;
+
             return {
                 table: 'nutrition_daily',
                 data: data
