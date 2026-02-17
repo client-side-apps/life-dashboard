@@ -55,6 +55,7 @@ export class TimelineDay extends HTMLElement {
         const weightEvents = events.filter(e => e.type === 'weight');
         const sleepEvents = events.filter(e => e.type === 'sleep');
         const nutritionEvents = events.filter(e => e.type === 'nutrition');
+        const musicEvents = events.filter(e => e.type === 'music');
 
         // Calculate Stats
         let stats = [];
@@ -193,6 +194,31 @@ export class TimelineDay extends HTMLElement {
                 icon: '⚖️',
                 label: 'Weight',
                 value: lastWeight
+            });
+            const hours = Math.floor(totalDurationMs / 3600000);
+            const minutes = Math.floor((totalDurationMs % 3600000) / 60000);
+            const timeStr = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+
+            // Group by track to dedupe? Or show all plays? User said "show all tracks".
+            // Let's list them.
+            // Sort by time? Events are already sorted DESC from TimelineView? 
+            // TimelineView: "events.sort((a, b) => b.timestamp - a.timestamp);"
+            // So musicEvents are newest first.
+
+            stats.push({
+                icon: '🎵',
+                label: 'Music',
+                value: `${musicEvents.length} tracks`,
+                sub: timeStr,
+                linkId: `music-toggle-${date}`,
+                expandHtml: `<div class="stat-details-collapsible" id="music-toggle-${date}" hidden>
+                    <ul class="music-tracks">
+                        ${musicEvents.map(t => {
+                    const time = new Date(t.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    return `<li><span class="track-time">${time}</span> <strong>${t.track_name}</strong> <span class="track-artist">by ${t.artist_name}</span></li>`;
+                }).join('')}
+                    </ul>
+                </div>`
             });
         }
 

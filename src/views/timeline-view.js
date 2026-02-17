@@ -167,11 +167,15 @@ export class TimelineView extends DataView {
             try {
                 const musicData = dataRepository.getTimeSeriesData('music', startDate, endDate);
                 musicData.forEach(row => {
-                    events.push({
-                        timestamp: row.timestamp,
-                        type: 'music',
-                        title: 'Music',
-                        details: `${row.track_name} - ${row.artist_name}`
+                    musicData.forEach(row => {
+                        events.push({
+                            timestamp: row.timestamp,
+                            type: 'music',
+                            track_name: row.track_name,
+                            artist_name: row.artist_name,
+                            duration_ms: row.duration_ms,
+                            platform: row.platform
+                        });
                     });
                 });
             } catch (e) { console.warn('Music fetch failed', e); }
