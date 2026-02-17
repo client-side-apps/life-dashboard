@@ -142,6 +142,21 @@ Stores individual food entries/servings.
 | `...` | REAL | Other fields (macros, vitamins/minerals) |
 | `source` | TEXT | Source of the data |
 
+### `music`
+Stores streaming history.
+
+| Column | Type | Description |
+| :--- | :--- | :--- |
+| `id` | INTEGER | Primary Key |
+| `timestamp` | INTEGER | Time of listen (Unix ms) |
+| `track_name` | TEXT | Track name |
+| `artist_name` | TEXT | Artist name |
+| `album_name` | TEXT | Album name |
+| `track_uri` | TEXT | Spotify Track URI |
+| `duration_ms` | INTEGER | Duration played (ms) |
+| `platform` | TEXT | Platform (e.g. android, cast) |
+| `source` | TEXT | Source of the data |
+
 ## Finance
 
 ### `accounts`

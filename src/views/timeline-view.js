@@ -163,6 +163,19 @@ export class TimelineView extends DataView {
                 });
             } catch (e) { console.warn('Nutrition fetch failed', e); }
 
+            // 6. Fetch Music (Spotify)
+            try {
+                const musicData = dataRepository.getTimeSeriesData('music', startDate, endDate);
+                musicData.forEach(row => {
+                    events.push({
+                        timestamp: row.timestamp,
+                        type: 'music',
+                        title: 'Music',
+                        details: `${row.track_name} - ${row.artist_name}`
+                    });
+                });
+            } catch (e) { console.warn('Music fetch failed', e); }
+
             // Sort all events
             events.sort((a, b) => b.timestamp - a.timestamp);
 

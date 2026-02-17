@@ -11,6 +11,7 @@ import { SfcuImporter } from '../src/importers/finance/sfcu.js';
 import { WithingsImporter } from '../src/importers/health/withings.js';
 import { CronometerImporter } from '../src/importers/health/cronometer.js';
 import { GoogleTimelineImporter } from '../src/importers/location/google-timeline.js';
+import { SpotifyImporter } from '../src/importers/music/spotify.js';
 
 const require = createRequire(import.meta.url);
 const sqlite3 = require('sqlite3').verbose();
@@ -36,7 +37,7 @@ if (fs.existsSync(DB_PATH)) {
 
 const db = new sqlite3.Database(DB_PATH);
 
-const importers = [PgeImporter, TeslaImporter, SfcuImporter, WithingsImporter, CronometerImporter, GoogleTimelineImporter];
+const importers = [PgeImporter, TeslaImporter, SfcuImporter, WithingsImporter, CronometerImporter, GoogleTimelineImporter, SpotifyImporter];
 
 async function run() {
     await new Promise((resolve) => {
@@ -177,6 +178,19 @@ async function run() {
                 tryptophan_g REAL,
                 tyrosine_g REAL,
                 valine_g REAL
+            )`);
+
+            // Music Data
+            db.run(`CREATE TABLE IF NOT EXISTS music (
+                id INTEGER PRIMARY KEY,
+                timestamp INTEGER,
+                track_name TEXT,
+                artist_name TEXT,
+                album_name TEXT,
+                track_uri TEXT,
+                duration_ms INTEGER,
+                platform TEXT,
+                source TEXT
             )`);
 
             // Finance Data
@@ -447,7 +461,14 @@ function insertData(table, data) {
             ],
             (err) => { if (err) console.error(err.message); }
         );
+    } else if (table === 'music') {
+        db.run(
+            'INSERT INTO music (timestamp, track_name, artist_name, album_name, track_uri, duration_ms, platform, source) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            [data.timestamp, data.track_name, data.artist_name, data.album_name, data.track_uri, data.duration_ms, data.platform, 'spotify'],
+            (err) => { if (err) console.error(err.message); }
+        );
     }
 }
+
 
 run();

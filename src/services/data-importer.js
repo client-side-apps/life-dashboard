@@ -7,10 +7,11 @@ import { WithingsImporter } from '../importers/health/withings.js';
 import { CronometerImporter } from '../importers/health/cronometer.js';
 import { GoogleTimelineImporter } from '../importers/location/google-timeline.js';
 import { FlumeImporter } from '../importers/water/flume.js';
+import { SpotifyImporter } from '../importers/music/spotify.js';
 
 export class DataImporter {
 
-    static importers = [PgeImporter, TeslaImporter, SfcuImporter, WithingsImporter, CronometerImporter, GoogleTimelineImporter, FlumeImporter];
+    static importers = [PgeImporter, TeslaImporter, SfcuImporter, WithingsImporter, CronometerImporter, GoogleTimelineImporter, FlumeImporter, SpotifyImporter];
 
     static async import(filename, content, options = {}) {
         await dbService.ensureInitialized();
@@ -324,6 +325,11 @@ export class DataImporter {
                     data.hr_average || null,
                     data.source
                 ]
+            );
+        } else if (table === 'music') {
+            dbService.query(
+                'INSERT INTO music (timestamp, track_name, artist_name, album_name, track_uri, duration_ms, source) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                [data.timestamp, data.track_name, data.artist_name, data.album_name, data.track_uri, data.duration_ms, data.source]
             );
         }
     }

@@ -209,6 +209,17 @@ class DatabaseService {
                 tyrosine_g REAL,
                 valine_g REAL,
                 source TEXT
+            )`,
+            `CREATE TABLE IF NOT EXISTS music (
+                id INTEGER PRIMARY KEY,
+                timestamp INTEGER,
+                track_name TEXT,
+                artist_name TEXT,
+                album_name TEXT,
+                track_uri TEXT,
+                duration_ms INTEGER,
+                platform TEXT,
+                source TEXT
             )`
         ];
 
@@ -227,7 +238,8 @@ class DatabaseService {
             `CREATE INDEX IF NOT EXISTS idx_height_timestamp ON height (timestamp)`,
             `CREATE INDEX IF NOT EXISTS idx_water_daily_timestamp ON water_daily (timestamp)`,
             `CREATE INDEX IF NOT EXISTS idx_nutrition_daily_timestamp ON nutrition_daily (timestamp)`,
-            `CREATE INDEX IF NOT EXISTS idx_nutrition_servings_timestamp ON nutrition_servings (timestamp)`
+            `CREATE INDEX IF NOT EXISTS idx_nutrition_servings_timestamp ON nutrition_servings (timestamp)`,
+            `CREATE INDEX IF NOT EXISTS idx_music_timestamp ON music (timestamp)`
         ];
 
         schemas.forEach(sql => this.db.run(sql));
@@ -238,7 +250,7 @@ class DatabaseService {
         const tablesToMigrate = [
             'location', 'weight', 'sleep', 'steps', 'activities', 'accounts',
             'transactions', 'electricity_hourly', 'blood_pressure',
-            'body_temperature', 'height', 'water_daily', 'nutrition_daily', 'nutrition_servings'
+            'body_temperature', 'height', 'water_daily', 'nutrition_daily', 'nutrition_servings', 'music'
         ];
 
         tablesToMigrate.forEach(table => {

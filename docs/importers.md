@@ -58,6 +58,21 @@ The application supports importing data from various CSV/JSON sources. Below is 
     *   **Daily Summary**: Maps to `nutrition_daily` (energy, macros, vitamins, minerals).
     *   **Servings**: Maps to `nutrition_servings` (detailed per-food entries).
 
+## Music
+
+### Spotify
+*   **File Type**: JSON (Streaming History)
+*   **Detection**: Checks for `spotify_track_uri` and `master_metadata_track_name`.
+*   **Data Processed**:
+    *   Imports into `music` table.
+    *   `ts` -> `timestamp`
+    *   `master_metadata_track_name` -> `track_name`
+    *   `master_metadata_album_artist_name` -> `artist_name`
+    *   `master_metadata_album_album_name` -> `album_name`
+    *   `spotify_track_uri` -> `track_uri`
+    *   `ms_played` -> `duration_ms`
+    *   `platform` -> `platform`
+
 ## Location
 
 ### Google Timeline
