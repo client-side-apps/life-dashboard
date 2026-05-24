@@ -1,1 +1,1 @@
-If you rely on AI agents for development, please read [README.md](README.md) and [CONTRIBUTING.md](CONTRIBUTING.md) to understand the codebase and contribution guidelines before making any changes.
+If you rely on AI agents for development, please read [README.md](README.md) and the [.agents/skills/adding-a-new-data-type/SKILL.md](.agents/skills/adding-a-new-data-type/SKILL.md) skill to understand the codebase and contribution guidelines before making any changes.

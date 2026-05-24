@@ -1,29 +1,34 @@
-# Contributing
+---
+name: adding-a-new-data-type
+description: Instructions and guidelines for adding support for a new data type or visualization to the Life Dashboard.
+---
 
-Thank you for your interest in contributing! This guide outlines the process for adding support for new data types and visualizations.
+# Adding a New Data Type
 
-## Adding a New Data Type
+This guide outlines the process for adding support for new data types and visualizations to the Life Dashboard.
 
-To add support for a new data source (e.g., a new health export, financial institution, or activity tracker), you need to follow these steps to ensure the data is correctly imported, stored, and visualized.
+To add support for a new data source (e.g., a new health export, financial institution, or activity tracker), follow these steps to ensure the data is correctly imported, stored, and visualized.
+
+## Steps
 
 ### 1. Update Documentation
-*   **Files**: `docs/schema.md` and `docs/importers.md`
+*   **Files**: [docs/schema.md](docs/schema.md) and [docs/importers.md](docs/importers.md)
 *   **Action**: 
     *   In `schema.md`, document the new table schema or changes to existing tables. Include column names, types, and descriptions.
     *   In `importers.md`, describe the new importer, including file type, detection logic, and how data is mapped.
 
 ### 2. Add Sample Data
-*   **Directory**: `data-samples/`
+*   **Directory**: [data-samples/](data-samples/)
 *   **Action**: Add a sample file (CSV or JSON) of the data you want to import.
     *   Place it in the appropriate subdirectory (e.g., `health/`, `finance/`).
     *   Ensure the sample contains representative data (**covering the year 2025**) but **no sensitive personal information** (sanitize it if necessary).
 
 ### 3. Define Database Schema
 You need to define the SQLite table structure in two places:
-1.  **Demo Generation Script**: `create_demo_db/index.js`
+1.  **Demo Generation Script**: [create_demo_db/index.js](create_demo_db/index.js)
     *   Add a `CREATE TABLE` statement in the `run()` function.
     *   Update the `insertData` function to handle inserts into this new table.
-2.  **Application Database Service**: `src/db.js`
+2.  **Application Database Service**: [src/db.js](src/db.js)
     *   Add the same `CREATE TABLE` statement to the `schemas` array in `ensureSchema()`.
     *   Add any necessary indices to the `indexes` array.
     *   Add the table name to `tablesToMigrate` if you are adding a `source` column to an existing table.
@@ -32,7 +37,7 @@ You need to define the SQLite table structure in two places:
 Create a new importer class to parse your data file and a corresponding test.
 
 #### Importer implementation
-*   **Directory**: `src/importers/<category>/` (e.g., `src/importers/health/my-new-device.js`)
+*   **Directory**: Under [src/importers/](src/importers/) in the appropriate category subfolder (e.g., `src/importers/health/my-new-device.js`)
 *   **Base Class**: Extend `BaseImporter` (import from `../base-importer.js`).
 *   **Implementation**:
     *   `static detect(rows)`: Return `true` if the file headers or content match your data format.
@@ -54,10 +59,10 @@ Create a new importer class to parse your data file and a corresponding test.
 
 ### 5. Register the Importer
 You must register your new importer in two services:
-1.  **Demo Generator**: `create_demo_db/index.js`
+1.  **Demo Generator**: [create_demo_db/index.js](create_demo_db/index.js)
     *   Import your class.
     *   Add it to the `importers` array.
-2.  **App Data Importer**: `src/services/data-importer.js`
+2.  **App Data Importer**: [src/services/data-importer.js](src/services/data-importer.js)
     *   Import your class.
     *   Add it to the `static importers` array.
     *   **Crucial**: Update the `insert` method (and potentially `findExisting`) to handle writing your new data object to the database.
@@ -73,18 +78,17 @@ Verify that `demo.sqlite` is created and contains your data.
 Now that the data is in the database, you can display it in the UI.
 
 #### Add a Dashboard or Chart
-*   **Directory**: `src/views/`
+*   **Directory**: [src/views/](src/views/)
 *   **Action**:
     *   Modify an existing view (e.g., `health-view.js`) or create a new one.
-    *   Use `src/components/chart-card/chart-card.js` for consistent charting.
+    *   Use [src/components/chart-card/chart-card.js](src/components/chart-card/chart-card.js) for consistent charting.
     *   Fetch data using `dataRepository` or `dbService`.
 
 #### Add to Timeline View
-*   **File**: `src/views/timeline-view.js`
+*   **File**: [src/views/timeline-view.js](src/views/timeline-view.js)
 *   **Action**: Update the `loadData()` method.
     *   Add a new fetch block using `dataRepository.getDateRangeData('your_table', ...)`
     *   Map the results to event objects (timestamp, type, title, details) and push them to the `events` array.
-
 
 ## Guidelines
 *   **Dates**: Always use Unix timestamps (milliseconds) for storage.
