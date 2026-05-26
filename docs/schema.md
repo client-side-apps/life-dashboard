@@ -66,6 +66,8 @@ Stores daily step count aggregates.
 | `timestamp` | INTEGER | Time of recording (Unix ms) |
 | `count` | INTEGER | Total steps for the day |
 | `type` | TEXT | Measurement type (e.g. "Daily Aggregate") |
+| `distance` | REAL | Distance covered |
+| `calories` | REAL | Calories burned |
 | `source` | TEXT | Source of the data |
 | `note` | TEXT | User-attached note |
 
@@ -211,6 +213,18 @@ Stores hourly electricity data: Grid Import/Export, Solar Production, Home Consu
 | `vehicle_kwh` | REAL | Energy used for vehicle charging (kWh) |
 | `battery_kwh` | REAL | Energy from Powerwall (kWh) |
 | `cost` | REAL | Cost of grid interaction ($) |
+| `source` | TEXT | Source of the data |
+| `note` | TEXT | User-attached note |
+
+### `electricity_grid_daily`
+Stores daily summary of grid electricity imports.
+
+| Column | Type | Description |
+| :--- | :--- | :--- |
+| `id` | INTEGER | Primary Key |
+| `timestamp` | INTEGER | Daily timestamp (Unix ms) |
+| `import_kwh` | REAL | Daily electricity imported from grid (kWh) |
+| `cost` | REAL | Daily cost of grid electricity ($) |
 | `source` | TEXT | Source of the data |
 | `note` | TEXT | User-attached note |
 
