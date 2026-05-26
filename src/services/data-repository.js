@@ -236,6 +236,10 @@ export function getLatestDataDate() {
 
     for (const table of tables) {
         try {
+            const columns = dbService.query(`PRAGMA table_info("${table}")`);
+            const hasTimestamp = columns.some(c => c.name === 'timestamp');
+            if (!hasTimestamp) continue;
+
             const res = dbService.query(`SELECT MAX(timestamp) as max_ts FROM "${table}"`);
             if (res.length > 0 && res[0].max_ts) {
                 maxTimestamp = Math.max(maxTimestamp, res[0].max_ts);
