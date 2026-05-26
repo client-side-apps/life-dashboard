@@ -38,7 +38,7 @@ class DatabaseService {
         try {
             // initSqlJs is provided globally by the script tag
             const SQL = await initSqlJs({
-                locateFile: filename => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${filename}`
+                locateFile: filename => `vendor/${filename}`
             });
 
             const arrayBuffer = await file.arrayBuffer();
@@ -63,7 +63,7 @@ class DatabaseService {
         }
         try {
             const SQL = await initSqlJs({
-                locateFile: filename => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${filename}`
+                locateFile: filename => `vendor/${filename}`
             });
             this.db = new SQL.Database();
             this.ensureSchema();

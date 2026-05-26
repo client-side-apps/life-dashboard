@@ -6,16 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Life Dashboard</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <link rel="stylesheet" href="vendor/leaflet.css" />
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
+    <script src="vendor/sql-wasm.js"></script>
     <script type="importmap">
     {
         "imports": {
-            "leaflet": "https://esm.sh/leaflet@1.9.4",
-            "chart.js": "https://esm.sh/chart.js@4.4.1/auto",
-            "jszip": "https://esm.sh/jszip@3.10.1"
+            "leaflet": "./vendor/leaflet.js",
+            "chart.js": "./vendor/chart.js",
+            "jszip": "./vendor/jszip.js"
         }
     }
     </script>
