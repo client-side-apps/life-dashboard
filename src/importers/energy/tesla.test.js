@@ -23,9 +23,9 @@ test('TeslaImporter with Real Data', async (t) => {
 
         const expectedTimestamp = new Date('2025-11-01T07:00:00.000-08:00').getTime();
 
-        assert.strictEqual(mapped.table, 'electricity_solar_hourly');
+        assert.strictEqual(mapped.table, 'electricity_hourly');
         assert.strictEqual(mapped.data.timestamp, expectedTimestamp);
-        assert.strictEqual(mapped.data.consumption_kwh, 26.8);
+        assert.strictEqual(mapped.data.home_consumption_kwh, 26.8);
         assert.strictEqual(mapped.data.solar_kwh, 36.8);
     });
 });

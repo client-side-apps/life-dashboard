@@ -67,18 +67,23 @@ test('WithingsImporter', async (t) => {
         });
 
         await t.test('maps activities row correctly', () => {
-            // 2025-01-01,Walking,"{""steps"":11906,""distance"":9.52,""calories"":476}",2025-01-01T08:00:00.000Z,...
+            // 2025-01-07T08:28:43-08:00,Walking,...
             const row = rows[0];
             const result = WithingsImporter.mapRow(row);
 
-            assert.strictEqual(result.table, 'steps');
-            assert.strictEqual(result.data.count, 11906);
+            assert.strictEqual(result.table, 'activities');
+            assert.strictEqual(result.data.steps, 318);
             assert.strictEqual(result.data.type, 'Walking');
-            assert.strictEqual(result.data.distance, 9.52);
-            assert.strictEqual(result.data.calories, 476);
+            assert.strictEqual(result.data.distance, 277);
+            assert.strictEqual(result.data.calories, 18);
+            assert.strictEqual(result.data.elevation, 5);
+            assert.strictEqual(result.data.hr_average, 0);
 
-            const expectedTime = new Date("2025-01-01T08:00:00.000Z").getTime();
+            const expectedTime = new Date("2025-01-07T08:28:43-08:00").getTime();
             assert.strictEqual(result.data.timestamp, expectedTime);
+
+            const expectedEndTime = new Date("2025-01-07T08:33:00-08:00").getTime();
+            assert.strictEqual(result.data.end_timestamp, expectedEndTime);
         });
     });
 

@@ -24,8 +24,8 @@ test('PgeImporter with Real Data', async (t) => {
         assert.ok(firstRow, 'Should find electricity row');
 
         const mapped = PgeImporter.mapRow(firstRow);
-        assert.strictEqual(mapped.table, 'electricity_grid_hourly');
-        assert.strictEqual(mapped.data.import_kwh, 0.36);
+        assert.strictEqual(mapped.table, 'electricity_hourly');
+        assert.strictEqual(mapped.data.grid_import_kwh, 0.36);
     });
 
     await t.test('detects and maps Gas data', () => {
