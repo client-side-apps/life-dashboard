@@ -22,6 +22,11 @@
     --chart-magenta: #ff00ff;
     --chart-yellow: #ffff00;
     --chart-orange: #ff9800;
+    
+    --note-color: #D97706;
+    --note-bg: #FEF3C7;
+    --note-text: #78350F;
+    --note-inline-color: #b45309;
 
     --header-height: 48px;
     --spacing-unit: 8px;
@@ -95,6 +100,11 @@ select {
     --chart-magenta: #ff00ff;
     --chart-yellow: #ffff00;
     --chart-orange: #ff9800;
+
+    --note-color: #F59E0B;
+    --note-bg: #78350F;
+    --note-text: #FDE68A;
+    --note-inline-color: #f59e0b;
 }
 
 * {
@@ -756,4 +766,66 @@ chart-card canvas {
     display: none; /* Hidden by default */
     white-space: nowrap;
     box-shadow: 4px 4px 0 rgba(0,0,0,0.2);
+}
+
+/* Note Component Styles */
+.day-notes-section {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    border: 1px dashed var(--border-color);
+    background: var(--nav-bg);
+}
+.day-notes-header {
+    font-weight: bold;
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+}
+.day-notes-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.day-notes-list li {
+    font-size: 0.85rem;
+    padding: 0.2rem 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+[data-theme="dark"] .day-notes-list li {
+    border-bottom-color: rgba(255, 255, 255, 0.05);
+}
+.day-notes-list li:last-child {
+    border-bottom: none;
+}
+.day-note-type {
+    font-weight: bold;
+    color: var(--secondary-color);
+}
+.day-note-content {
+    font-style: italic;
+}
+.timeline-inline-note {
+    font-style: italic;
+    color: var(--note-inline-color);
+}
+
+/* Chart Note Hover Banner */
+chart-card .chart-container {
+    position: relative;
+}
+.chart-note-hover {
+    position: absolute;
+    top: 35px;
+    right: 10px;
+    background: var(--note-bg);
+    border: 2px solid var(--note-color);
+    color: var(--note-text);
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    z-index: 10;
+    max-width: 250px;
+    box-shadow: 4px 4px 0 rgba(0,0,0,0.15);
+    white-space: normal;
+    word-wrap: break-word;
 }

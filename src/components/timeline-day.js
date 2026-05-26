@@ -63,6 +63,7 @@ export class TimelineDay extends HTMLElement {
         // Steps
         let totalSteps = 0;
         let totalDist = 0;
+        const stepNotes = [];
         activityEvents.forEach(e => {
             const steps = parseInt(e.details.match(/(\d+) steps/)?.[1] || 0);
             totalSteps += steps;
@@ -72,6 +73,9 @@ export class TimelineDay extends HTMLElement {
             if (distMatch) {
                 totalDist += parseFloat(distMatch[1]);
             }
+            if (e.note) {
+                stepNotes.push(e.note);
+            }
         });
 
         if (totalSteps > 0) {
@@ -79,7 +83,8 @@ export class TimelineDay extends HTMLElement {
                 icon: '👟',
                 label: 'Steps',
                 value: totalSteps.toLocaleString(),
-                sub: totalDist > 0 ? `${totalDist.toFixed(1)} km` : null
+                sub: totalDist > 0 ? `${totalDist.toFixed(1)} km` : null,
+                note: stepNotes.length > 0 ? stepNotes.join('; ') : null
             });
         }
 
@@ -116,6 +121,7 @@ export class TimelineDay extends HTMLElement {
                 label: 'Sleep',
                 value: `${sleepDuration.toFixed(1)}h`,
                 sub: sleepRange,
+                note: bestSleep.note || null,
                 linkId: `sleep-toggle-${date}`,
                 expandHtml: `<div class="stat-details-collapsible" id="sleep-toggle-${date}" hidden>
                     <ul class="sleep-phases">
@@ -176,8 +182,8 @@ export class TimelineDay extends HTMLElement {
                         <div class="nutrition-meal">
                             <strong>${meal.meal_group} (${meal.calories} kcal)</strong>
                             <ul class="nutrition-foods">${meal.foods.map(f =>
-                    `<li>${f.name} (${formatAmount(f.amount)})</li>`
-                ).join('')}</ul>
+                                `<li>${f.name} (${formatAmount(f.amount)})${f.note ? ` — 📝 <span class="timeline-inline-note">${f.note}</span>` : ''}</li>`
+                            ).join('')}</ul>
                         </div>
                     `).join('')}
                 </div>`
@@ -186,24 +192,21 @@ export class TimelineDay extends HTMLElement {
 
         // Weight (Take the last measurement of the day)
         if (weightEvents.length > 0) {
-            const lastWeight = weightEvents[0].details; // Sorted DESC, so first is latest? No, events sorted DESC.
-            // Wait, usually we want the morning weight? 
-            // If sorted DESC (latest first), then index 0 is evening. 
-            // Let's just take the first one available in the list.
+            const lastWeight = weightEvents[0].details;
             stats.push({
                 icon: '⚖️',
                 label: 'Weight',
-                value: lastWeight
+                value: lastWeight,
+                note: weightEvents[0].note || null
             });
+        }
+
+        // Music (Spotify tracks play log)
+        if (musicEvents.length > 0) {
+            const totalDurationMs = musicEvents.reduce((acc, e) => acc + (e.duration_ms || 0), 0);
             const hours = Math.floor(totalDurationMs / 3600000);
             const minutes = Math.floor((totalDurationMs % 3600000) / 60000);
             const timeStr = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
-
-            // Group by track to dedupe? Or show all plays? User said "show all tracks".
-            // Let's list them.
-            // Sort by time? Events are already sorted DESC from TimelineView? 
-            // TimelineView: "events.sort((a, b) => b.timestamp - a.timestamp);"
-            // So musicEvents are newest first.
 
             stats.push({
                 icon: '🎵',
@@ -214,13 +217,39 @@ export class TimelineDay extends HTMLElement {
                 expandHtml: `<div class="stat-details-collapsible" id="music-toggle-${date}" hidden>
                     <ul class="music-tracks">
                         ${musicEvents.map(t => {
-                    const time = new Date(t.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    return `<li><span class="track-time">${time}</span> <strong>${t.track_name}</strong> <span class="track-artist">by ${t.artist_name}</span></li>`;
-                }).join('')}
+                            const time = new Date(t.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                            return `<li><span class="track-time">${time}</span> <strong>${t.track_name}</strong> <span class="track-artist">by ${t.artist_name}</span>${t.note ? ` — 📝 <span class="timeline-inline-note">${t.note}</span>` : ''}</li>`;
+                        }).join('')}
                     </ul>
                 </div>`
             });
         }
+
+        // Consolidated Daily Notes
+        const dailyNotesList = [];
+        if (weightEvents.length > 0 && weightEvents[0].note) {
+            dailyNotesList.push({ type: 'Weight', note: weightEvents[0].note });
+        }
+        sleepEvents.forEach(e => { if (e.note) dailyNotesList.push({ type: 'Sleep', note: e.note }); });
+        activityEvents.forEach(e => { if (e.note) dailyNotesList.push({ type: 'Activity', note: e.note }); });
+        nutritionEvents.forEach(e => {
+            e.foods.forEach(f => {
+                if (f.note) dailyNotesList.push({ type: `Food (${e.meal_group})`, note: `${f.name}: ${f.note}` });
+            });
+        });
+        musicEvents.forEach(e => { if (e.note) dailyNotesList.push({ type: 'Music', note: `${e.track_name} by ${e.artist_name}: ${e.note}` }); });
+        locationEvents.forEach(e => { if (e.note) dailyNotesList.push({ type: 'Location', note: e.note }); });
+
+        const dailyNotesHtml = dailyNotesList.length > 0 ? `
+            <div class="day-notes-section">
+                <div class="day-notes-header">📝 Daily Notes</div>
+                <ul class="day-notes-list">
+                    ${dailyNotesList.map(n => `
+                        <li><span class="day-note-type">${n.type}:</span> <span class="day-note-content">${n.note}</span></li>
+                    `).join('')}
+                </ul>
+            </div>
+        ` : '';
 
         this.innerHTML = `
             <div class="day-card">
@@ -238,17 +267,18 @@ export class TimelineDay extends HTMLElement {
                                 <div class="stat-item">
                                     <span class="stat-icon">${s.icon}</span>
                                     ${s.linkId
-                ? `<a href="#" class="stat-label stat-toggle" data-target="${s.linkId}">${s.label}:</a>`
-                : `<span class="stat-label">${s.label}:</span>`
-            }
+                                        ? `<a href="#" class="stat-label stat-toggle" data-target="${s.linkId}">${s.label}:</a>`
+                                        : `<span class="stat-label">${s.label}:</span>`
+                                    }
                                     <span class="stat-value">${s.value}</span>
                                     ${s.sub ? `<span class="stat-sub">(${s.sub})</span>` : ''}
+                                    ${s.note ? `<span class="timeline-inline-note"> — 📝 ${s.note}</span>` : ''}
                                 </div>
                                 ${s.expandHtml || ''}
                             `).join('')}
                         </div>
                      ` : '<div class="day-empty">No activity data recorded</div>'}
-
+                     ${dailyNotesHtml}
                 </div>
                 </div>
             </div>
@@ -321,6 +351,26 @@ export class TimelineDay extends HTMLElement {
         L.circleMarker(latLngs[0], { radius: 4, color: getChartColor(ChartColors.Green), fillOpacity: 1, stroke: true, weight: 1, fillColor: getChartColor(ChartColors.PrimaryText) }).addTo(map);
         // End (Red -> High Contrast geometric)
         L.circleMarker(latLngs[latLngs.length - 1], { radius: 4, color: getChartColor(ChartColors.Red), fillOpacity: 1, stroke: true, weight: 1, fillColor: getChartColor(ChartColors.PrimaryText) }).addTo(map);
+
+        // Add custom markers with popups for locations with notes
+        const noteColor = getComputedStyle(document.body).getPropertyValue('--note-color').trim() || '#D97706';
+        const noteBg = getComputedStyle(document.body).getPropertyValue('--note-bg').trim() || '#FEF3C7';
+
+        locations.forEach(l => {
+            if (l.note) {
+                const parts = l.details.split(',').map(s => parseFloat(s.trim()));
+                if (!isNaN(parts[0]) && !isNaN(parts[1])) {
+                    const marker = L.circleMarker(parts, {
+                        radius: 6,
+                        color: noteColor,
+                        fillColor: noteBg,
+                        fillOpacity: 1,
+                        weight: 2
+                    }).addTo(map);
+                    marker.bindPopup(`<strong>Note:</strong><br>${l.note}`);
+                }
+            }
+        });
 
         map.fitBounds(polyline.getBounds(), { padding: [20, 20] });
 

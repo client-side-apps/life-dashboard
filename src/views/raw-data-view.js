@@ -80,6 +80,45 @@ export class RawDataView extends DataView {
             import-view .file-input-wrapper {
                 display: inline-block;
             }
+            .note-cell-container {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 0.5rem;
+                width: 100%;
+                min-width: 150px;
+            }
+            .note-text {
+                flex: 1;
+                white-space: normal;
+                word-break: break-word;
+            }
+            .placeholder-note {
+                color: #888;
+                font-style: italic;
+                cursor: pointer;
+            }
+            .edit-note-btn {
+                background: none;
+                border: none;
+                cursor: pointer;
+                font-size: 0.85rem;
+                padding: 2px 4px;
+                opacity: 0.5;
+                transition: opacity 0.2s;
+            }
+            .note-cell-container:hover .edit-note-btn {
+                opacity: 1;
+            }
+            .note-edit-input {
+                width: 100%;
+                padding: 4px;
+                font-family: inherit;
+                font-size: inherit;
+                border: 1px solid var(--border-color);
+                background: var(--bg-color);
+                color: var(--text-color);
+            }
         `;
         this.appendChild(style);
 
@@ -261,8 +300,65 @@ export class RawDataView extends DataView {
                 const tr = document.createElement('tr');
                 columns.forEach(col => {
                     const td = document.createElement('td');
-                    // Format timestamp if it's the probable date column and is a number
-                    if (col === dateColumn && typeof row[col] === 'number') {
+                    if (col === 'note') {
+                        let noteVal = row[col] || '';
+                        const renderStatic = () => {
+                            td.innerHTML = `
+                                <div class="note-cell-container ${!noteVal ? 'empty' : ''}">
+                                    <span class="note-text ${!noteVal ? 'placeholder-note' : ''}">${noteVal || 'Add note...'}</span>
+                                    <button class="edit-note-btn" aria-label="Edit note">✏️</button>
+                                </div>
+                            `;
+                            
+                            const editBtn = td.querySelector('.edit-note-btn');
+                            const noteText = td.querySelector('.note-text');
+                            
+                            const startEdit = (e) => {
+                                e.stopPropagation();
+                                const input = document.createElement('input');
+                                input.type = 'text';
+                                input.value = noteVal;
+                                input.className = 'note-edit-input';
+                                td.innerHTML = '';
+                                td.appendChild(input);
+                                input.focus();
+                                
+                                let saved = false;
+                                const saveNote = async () => {
+                                    if (saved) return;
+                                    saved = true;
+                                    const newVal = input.value.trim();
+                                    try {
+                                        dataRepository.executeQuery(
+                                            `UPDATE "${this.currentTable}" SET note = ? WHERE id = ?`,
+                                            [newVal || null, row.id]
+                                        );
+                                        await dataRepository.saveDatabase();
+                                        row[col] = newVal;
+                                        noteVal = newVal;
+                                        renderStatic();
+                                    } catch (err) {
+                                        console.error('Failed to save note:', err);
+                                        renderStatic();
+                                    }
+                                };
+                                
+                                input.addEventListener('blur', saveNote);
+                                input.addEventListener('keydown', (e) => {
+                                    if (e.key === 'Enter') {
+                                        saveNote();
+                                    } else if (e.key === 'Escape') {
+                                        saved = true;
+                                        renderStatic();
+                                    }
+                                });
+                            };
+                            
+                            editBtn.addEventListener('click', startEdit);
+                            noteText.addEventListener('click', startEdit);
+                        };
+                        renderStatic();
+                    } else if (col === dateColumn && typeof row[col] === 'number') {
                         td.textContent = new Date(row[col]).toLocaleString();
                     } else {
                         td.textContent = row[col];

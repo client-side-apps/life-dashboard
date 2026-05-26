@@ -72,7 +72,8 @@ export class TimelineView extends DataView {
                         timestamp: row.timestamp,
                         type: 'location',
                         title: 'Location Update',
-                        details: `${row.lat.toFixed(4)}, ${row.lng.toFixed(4)}`
+                        details: `${row.lat.toFixed(4)}, ${row.lng.toFixed(4)}`,
+                        note: row.note
                     });
                 });
             } catch (e) { console.warn('Location fetch failed', e); }
@@ -87,7 +88,8 @@ export class TimelineView extends DataView {
                             timestamp: row.timestamp,
                             type: 'activity',
                             title: type,
-                            details: `${row.count} steps` + (row.distance ? `, ${(row.distance / 1000).toFixed(2)}km` : '')
+                            details: `${row.count} steps` + (row.distance ? `, ${(row.distance / 1000).toFixed(2)}km` : ''),
+                            note: row.note
                         });
                     }
                 });
@@ -101,7 +103,8 @@ export class TimelineView extends DataView {
                         timestamp: row.timestamp,
                         type: 'weight',
                         title: 'Weight Measurement',
-                        details: `${row.weight_kg} kg`
+                        details: `${row.weight_kg} kg`,
+                        note: row.note
                     });
                 });
             } catch (e) { console.warn('Weight fetch failed', e); }
@@ -118,7 +121,8 @@ export class TimelineView extends DataView {
                         deep_seconds: row.deep_seconds,
                         light_seconds: row.light_seconds,
                         rem_seconds: row.rem_seconds,
-                        awake_seconds: row.awake_seconds
+                        awake_seconds: row.awake_seconds,
+                        note: row.note
                     });
                 });
             } catch (e) { console.warn('Sleep fetch failed', e); }
@@ -143,7 +147,7 @@ export class TimelineView extends DataView {
                         };
                     }
                     const item = mealsByDayAndGroup[key];
-                    item.foods.push({ name: row.food_name, amount: row.amount });
+                    item.foods.push({ name: row.food_name, amount: row.amount, note: row.note });
                     item.calories += row.energy_kcal;
                     item.fat_g += row.fat_g || 0;
                     item.carbs_g += row.carbs_g || 0;
@@ -167,15 +171,14 @@ export class TimelineView extends DataView {
             try {
                 const musicData = dataRepository.getTimeSeriesData('music', startDate, endDate);
                 musicData.forEach(row => {
-                    musicData.forEach(row => {
-                        events.push({
-                            timestamp: row.timestamp,
-                            type: 'music',
-                            track_name: row.track_name,
-                            artist_name: row.artist_name,
-                            duration_ms: row.duration_ms,
-                            platform: row.platform
-                        });
+                    events.push({
+                        timestamp: row.timestamp,
+                        type: 'music',
+                        track_name: row.track_name,
+                        artist_name: row.artist_name,
+                        duration_ms: row.duration_ms,
+                        platform: row.platform,
+                        note: row.note
                     });
                 });
             } catch (e) { console.warn('Music fetch failed', e); }
