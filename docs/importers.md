@@ -76,7 +76,7 @@ The application supports importing data from various CSV/JSON sources. Below is 
 ## Location
 
 ### Google Timeline
-*   **File Type**: JSON (`Records.json` or `timeline.json`)
+*   **File Type**: JSON (monthly semantic segment exports, e.g. `timeline.json`)
 *   **Detection**: Checks for `semanticSegments` or `timelineObjects` properties.
 *   **Data Processed**:
     *   Imports into `location` table.

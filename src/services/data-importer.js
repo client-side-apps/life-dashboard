@@ -188,14 +188,14 @@ export class DataImporter {
     }
 
     static async findExistingBatch(table, minTime, maxTime) {
-        if (['location', 'electricity_grid_hourly', 'electricity_solar_hourly', 'electricity_grid_daily', 'gas_daily', 'steps', 'weight', 'height', 'body_temperature', 'sleep', 'blood_pressure', 'water_daily', 'nutrition_daily', 'nutrition_servings', 'activities'].includes(table)) {
+        if (['location', 'electricity_hourly', 'electricity_grid_daily', 'gas_daily', 'steps', 'weight', 'height', 'body_temperature', 'sleep', 'blood_pressure', 'water_daily', 'nutrition_daily', 'nutrition_servings', 'activities', 'music'].includes(table)) {
             return dbService.query(`SELECT id, timestamp FROM "${table}" WHERE timestamp >= ? AND timestamp <= ?`, [minTime, maxTime]);
         }
         return [];
     }
 
     static async findExisting(table, data) {
-        if (['location', 'electricity_grid_hourly', 'electricity_solar_hourly', 'electricity_grid_daily', 'gas_daily', 'steps', 'weight', 'height', 'body_temperature', 'sleep', 'blood_pressure', 'water_daily', 'nutrition_daily', 'nutrition_servings', 'activities'].includes(table)) {
+        if (['location', 'electricity_hourly', 'electricity_grid_daily', 'gas_daily', 'steps', 'weight', 'height', 'body_temperature', 'sleep', 'blood_pressure', 'water_daily', 'nutrition_daily', 'nutrition_servings', 'activities', 'music'].includes(table)) {
             // Unique key: timestamp
             const result = dbService.query(`SELECT id FROM "${table}" WHERE timestamp = ?`, [data.timestamp]);
             return result.length > 0 ? result[0].id : null;
@@ -226,70 +226,103 @@ export class DataImporter {
     }
 
     static async insert(table, data) {
-        if (table === 'electricity_grid_hourly') {
+        if (table === 'electricity_hourly') {
             dbService.query(
-                'INSERT INTO electricity_grid_hourly (timestamp, import_kwh, source) VALUES (?, ?, ?)',
-                [data.timestamp, data.import_kwh || 0, data.source]
-            );
-        } else if (table === 'electricity_solar_hourly') {
-            dbService.query(
-                'INSERT INTO electricity_solar_hourly (timestamp, solar_kwh, consumption_kwh, source) VALUES (?, ?, ?, ?)',
-                [data.timestamp, data.solar_kwh || 0, data.consumption_kwh || 0, data.source]
+                'INSERT INTO electricity_hourly (timestamp, grid_import_kwh, grid_export_kwh, solar_kwh, home_consumption_kwh, vehicle_kwh, battery_kwh, cost, source, note) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                [
+                    data.timestamp,
+                    data.grid_import_kwh || 0,
+                    data.grid_export_kwh || 0,
+                    data.solar_kwh || 0,
+                    data.home_consumption_kwh || 0,
+                    data.vehicle_kwh || 0,
+                    data.battery_kwh || 0,
+                    data.cost || 0,
+                    data.source,
+                    data.note || null
+                ]
             );
         } else if (table === 'electricity_grid_daily') {
             dbService.query(
-                'INSERT INTO electricity_grid_daily (timestamp, import_kwh, source) VALUES (?, ?, ?)',
-                [data.timestamp, data.import_kwh || 0, data.source]
+                'INSERT INTO electricity_grid_daily (timestamp, import_kwh, cost, source, note) VALUES (?, ?, ?, ?, ?)',
+                [data.timestamp, data.import_kwh || 0, data.cost || 0, data.source, data.note || null]
             );
         } else if (table === 'gas_daily') {
             dbService.query(
-                'INSERT INTO gas_daily (timestamp, usage_therms, source) VALUES (?, ?, ?)',
-                [data.timestamp, data.usage_therms || 0, data.source]
+                'INSERT INTO gas_daily (timestamp, usage_therms, cost, source, note) VALUES (?, ?, ?, ?, ?)',
+                [data.timestamp, data.usage_therms || 0, data.cost || 0, data.source, data.note || null]
             );
         } else if (table === 'transactions') {
             dbService.query(
-                'INSERT INTO transactions (timestamp, description, amount, account_id, source) VALUES (?, ?, ?, ?, ?)',
-                [data.timestamp, data.description, data.amount, data.account_id, data.source]
+                'INSERT INTO transactions (timestamp, description, amount, account_id, source, note) VALUES (?, ?, ?, ?, ?, ?)',
+                [data.timestamp, data.description, data.amount, data.account_id, data.source, data.note || null]
             );
         } else if (table === 'steps') {
             dbService.query(
-                'INSERT INTO steps (timestamp, count, type, distance, calories, source) VALUES (?, ?, ?, ?, ?, ?)',
-                [data.timestamp, data.count, data.type, data.distance || null, data.calories || null, data.source]
+                'INSERT INTO steps (timestamp, count, type, distance, calories, source, note) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                [data.timestamp, data.count, data.type, data.distance || null, data.calories || null, data.source, data.note || null]
             );
         } else if (table === 'weight') {
             dbService.query(
-                'INSERT INTO weight (timestamp, weight_kg, source) VALUES (?, ?, ?)',
-                [data.timestamp, data.weight_kg, data.source]
+                'INSERT INTO weight (timestamp, weight_kg, fat_mass_kg, bone_mass_kg, muscle_mass_kg, hydration_kg, source, note) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                [
+                    data.timestamp,
+                    data.weight_kg,
+                    data.fat_mass_kg || null,
+                    data.bone_mass_kg || null,
+                    data.muscle_mass_kg || null,
+                    data.hydration_kg || null,
+                    data.source,
+                    data.note || null
+                ]
             );
         } else if (table === 'height') {
             dbService.query(
-                'INSERT INTO height (timestamp, height_m, source) VALUES (?, ?, ?)',
-                [data.timestamp, data.height_m, data.source]
+                'INSERT INTO height (timestamp, height_m, source, note) VALUES (?, ?, ?, ?)',
+                [data.timestamp, data.height_m, data.source, data.note || null]
             );
         } else if (table === 'body_temperature') {
             dbService.query(
-                'INSERT INTO body_temperature (timestamp, temperature_c, source) VALUES (?, ?, ?)',
-                [data.timestamp, data.temperature_c, data.source]
+                'INSERT INTO body_temperature (timestamp, temperature_c, source, note) VALUES (?, ?, ?, ?)',
+                [data.timestamp, data.temperature_c, data.source, data.note || null]
             );
         } else if (table === 'sleep') {
             dbService.query(
-                'INSERT INTO sleep (timestamp, duration_hours, light_seconds, deep_seconds, rem_seconds, awake_seconds, source) VALUES (?, ?, ?, ?, ?, ?, ?)',
-                [data.timestamp, data.duration_hours, data.light_seconds, data.deep_seconds, data.rem_seconds, data.awake_seconds, data.source]
+                'INSERT INTO sleep (timestamp, start_timestamp, duration_hours, light_seconds, deep_seconds, rem_seconds, awake_seconds, wake_up_seconds, duration_to_sleep_seconds, duration_to_wake_up_seconds, snoring_seconds, snoring_episodes, average_heart_rate, heart_rate_min, heart_rate_max, source, note) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                [
+                    data.timestamp,
+                    data.start_timestamp || null,
+                    data.duration_hours,
+                    data.light_seconds || 0,
+                    data.deep_seconds || 0,
+                    data.rem_seconds || 0,
+                    data.awake_seconds || 0,
+                    data.wake_up_seconds || 0,
+                    data.duration_to_sleep_seconds || 0,
+                    data.duration_to_wake_up_seconds || 0,
+                    data.snoring_seconds || 0,
+                    data.snoring_episodes || 0,
+                    data.average_heart_rate || null,
+                    data.heart_rate_min || null,
+                    data.heart_rate_max || null,
+                    data.source,
+                    data.note || null
+                ]
             );
         } else if (table === 'blood_pressure') {
             dbService.query(
-                'INSERT INTO blood_pressure (timestamp, systolic_mmhg, diastolic_mmhg, heart_rate_bpm, source) VALUES (?, ?, ?, ?, ?)',
-                [data.timestamp, data.systolic_mmhg, data.diastolic_mmhg, data.heart_rate_bpm, data.source]
+                'INSERT INTO blood_pressure (timestamp, systolic_mmhg, diastolic_mmhg, heart_rate_bpm, source, note) VALUES (?, ?, ?, ?, ?, ?)',
+                [data.timestamp, data.systolic_mmhg, data.diastolic_mmhg, data.heart_rate_bpm || null, data.source, data.note || null]
             );
         } else if (table === 'location') {
             dbService.query(
-                'INSERT INTO location (timestamp, lat, lng, source) VALUES (?, ?, ?, ?)',
-                [data.timestamp, data.lat, data.lng, data.source]
+                'INSERT INTO location (timestamp, lat, lng, source, note) VALUES (?, ?, ?, ?, ?)',
+                [data.timestamp, data.lat, data.lng, data.source, data.note || null]
             );
         } else if (table === 'water_daily') {
             dbService.query(
-                'INSERT INTO water_daily (timestamp, usage_liters, source) VALUES (?, ?, ?)',
-                [data.timestamp, data.usage_liters, data.source]
+                'INSERT INTO water_daily (timestamp, usage_liters, source, note) VALUES (?, ?, ?, ?)',
+                [data.timestamp, data.usage_liters, data.source, data.note || null]
             );
         } else if (table === 'nutrition_daily') {
             const keys = Object.keys(data).filter(k => k !== 'timestamp' && k !== 'source');
@@ -313,7 +346,7 @@ export class DataImporter {
             );
         } else if (table === 'activities') {
             dbService.query(
-                'INSERT INTO activities (timestamp, end_timestamp, type, calories, distance, steps, elevation, hr_average, source) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                'INSERT INTO activities (timestamp, end_timestamp, type, calories, distance, steps, elevation, hr_average, source, note) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                 [
                     data.timestamp,
                     data.end_timestamp || null,
@@ -323,13 +356,14 @@ export class DataImporter {
                     data.steps || 0,
                     data.elevation || 0,
                     data.hr_average || null,
-                    data.source
+                    data.source,
+                    data.note || null
                 ]
             );
         } else if (table === 'music') {
             dbService.query(
-                'INSERT INTO music (timestamp, track_name, artist_name, album_name, track_uri, duration_ms, source) VALUES (?, ?, ?, ?, ?, ?, ?)',
-                [data.timestamp, data.track_name, data.artist_name, data.album_name, data.track_uri, data.duration_ms, data.source]
+                'INSERT INTO music (timestamp, track_name, artist_name, album_name, track_uri, duration_ms, platform, source, note) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                [data.timestamp, data.track_name, data.artist_name, data.album_name, data.track_uri, data.duration_ms, data.platform || null, data.source, data.note || null]
             );
         }
     }

@@ -12,6 +12,7 @@ import { WithingsImporter } from '../src/importers/health/withings.js';
 import { CronometerImporter } from '../src/importers/health/cronometer.js';
 import { GoogleTimelineImporter } from '../src/importers/location/google-timeline.js';
 import { SpotifyImporter } from '../src/importers/music/spotify.js';
+import { FlumeImporter } from '../src/importers/water/flume.js';
 
 const require = createRequire(import.meta.url);
 const sqlite3 = require('sqlite3').verbose();
@@ -37,7 +38,7 @@ if (fs.existsSync(DB_PATH)) {
 
 const db = new sqlite3.Database(DB_PATH);
 
-const importers = [PgeImporter, TeslaImporter, SfcuImporter, WithingsImporter, CronometerImporter, GoogleTimelineImporter, SpotifyImporter];
+const importers = [PgeImporter, TeslaImporter, SfcuImporter, WithingsImporter, CronometerImporter, GoogleTimelineImporter, SpotifyImporter, FlumeImporter];
 
 async function run() {
     await new Promise((resolve) => {
@@ -454,7 +455,20 @@ function insertData(table, data) {
             (err) => { if (err) console.error(err.message); }
         );
     } else if (table === 'weight') {
-        db.run('INSERT INTO weight (timestamp, weight_kg, source, note) VALUES (?, ?, ?, ?)', [data.timestamp, data.weight_kg, source, note], (err) => { if (err) console.error(err.message); });
+        db.run(
+            'INSERT INTO weight (timestamp, weight_kg, fat_mass_kg, bone_mass_kg, muscle_mass_kg, hydration_kg, source, note) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            [
+                data.timestamp,
+                data.weight_kg,
+                data.fat_mass_kg || null,
+                data.bone_mass_kg || null,
+                data.muscle_mass_kg || null,
+                data.hydration_kg || null,
+                source,
+                note
+            ],
+            (err) => { if (err) console.error(err.message); }
+        );
     } else if (table === 'sleep') {
         db.run(
             'INSERT INTO sleep (timestamp, start_timestamp, duration_hours, light_seconds, deep_seconds, rem_seconds, awake_seconds, wake_up_seconds, duration_to_sleep_seconds, duration_to_wake_up_seconds, snoring_seconds, snoring_episodes, average_heart_rate, heart_rate_min, heart_rate_max, source, note) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
