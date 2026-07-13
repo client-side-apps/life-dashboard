@@ -1,5 +1,5 @@
 {
-  "name": "create_demo_db",
+  "name": "create-demo-db",
   "version": "1.0.0",
   "main": "index.js",
   "type": "module",
@@ -9,8 +9,5 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
-  "dependencies": {
-    "sqlite3": "^5.1.7"
-  }
+  "description": ""
 }

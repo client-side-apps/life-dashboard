@@ -87,6 +87,10 @@ export class DataImporter {
                     data.source = source;
                 }
 
+                if (options.demo) {
+                    applyDemoNotes(table, data);
+                }
+
                 if (table) {
                     processedItems.push({ table, data });
                 }
@@ -396,6 +400,42 @@ export class DataImporter {
                     data.note || null
                 ]
             );
+        }
+    }
+}
+
+function applyDemoNotes(table, data) {
+    if (!data || !data.timestamp) return;
+    const date = new Date(data.timestamp);
+    const day = date.getDate();
+    const month = date.getMonth();
+    const year = date.getFullYear();
+
+    if (year === 2025) {
+        if (table === 'weight' && day === 15) {
+            data.note = "Weight up slightly. Had a salty dinner last night.";
+        } else if (table === 'sleep' && day === 10) {
+            data.note = "Hard to fall asleep. Drank coffee too late in the afternoon.";
+        } else if (table === 'sleep' && day === 20) {
+            data.note = "Slept incredibly well. Did a 5k run in the evening.";
+        } else if (table === 'steps' && day === 5) {
+            data.note = "Walked to work and took the stairs all day.";
+        } else if (table === 'steps' && day === 22) {
+            data.note = "Long hiking trip in the state park!";
+        } else if (table === 'activities' && day === 12) {
+            data.note = "New personal best speed today!";
+        } else if (table === 'music' && day === 14 && month === 2) {
+            data.note = "Listen while coding the new life dashboard features!";
+        } else if (table === 'transactions' && data.amount < -100 && day === 1) {
+            data.note = "Monthly rent payment.";
+        } else if (table === 'transactions' && data.amount < -50 && day === 18) {
+            data.note = "Weekly grocery run at Whole Foods.";
+        } else if (table === 'location' && day === 20 && month === 5) {
+            data.note = "Had a great lunch meeting here.";
+        } else if (table === 'nutrition_servings' && data.food_name && data.food_name.toLowerCase().includes('coffee') && day === 7) {
+            data.note = "Extra strong espresso shot today.";
+        } else if (table === 'dives' && day === 18 && month === 7) {
+            data.note = "Amazing dive! Saw a turtle and several reef sharks.";
         }
     }
 }

@@ -56,6 +56,19 @@ class DatabaseService {
         }
     }
 
+    async connectNode(dbPath) {
+        try {
+            const { DatabaseSync } = await import('node:sqlite');
+            this.db = new DatabaseSync(dbPath);
+            this.isNode = true;
+            this.ensureSchema();
+            return true;
+        } catch (error) {
+            console.error('Database connection error (Node):', error);
+            throw error;
+        }
+    }
+
     async ensureInitialized() {
         if (this.db) {
             this.ensureSchema();
@@ -266,8 +279,8 @@ class DatabaseService {
             `CREATE INDEX IF NOT EXISTS idx_dives_timestamp ON dives (timestamp)`
         ];
 
-        schemas.forEach(sql => this.db.run(sql));
-        indexes.forEach(sql => this.db.run(sql));
+        schemas.forEach(sql => this.query(sql));
+        indexes.forEach(sql => this.query(sql));
 
         // Migration: Add 'source' and 'note' columns to existing tables if missing
         this.refreshTables(); // Ensure this.tables is populated
@@ -281,17 +294,17 @@ class DatabaseService {
             if (this.tables.includes(table)) {
                 try {
                     // Check if column exists
-                    const cols = this.db.exec(`PRAGMA table_info("${table}")`);
+                    const cols = this.query(`PRAGMA table_info("${table}")`);
                     if (cols.length > 0) {
-                        const hasSource = cols[0].values.some(row => row[1] === 'source');
+                        const hasSource = cols.some(row => row.name === 'source');
                         if (!hasSource) {
                             console.log(`Migrating table ${table}: adding source column`);
-                            this.db.run(`ALTER TABLE "${table}" ADD COLUMN source TEXT`);
+                            this.query(`ALTER TABLE "${table}" ADD COLUMN source TEXT`);
                         }
-                        const hasNote = cols[0].values.some(row => row[1] === 'note');
+                        const hasNote = cols.some(row => row.name === 'note');
                         if (!hasNote) {
                             console.log(`Migrating table ${table}: adding note column`);
-                            this.db.run(`ALTER TABLE "${table}" ADD COLUMN note TEXT`);
+                            this.query(`ALTER TABLE "${table}" ADD COLUMN note TEXT`);
                         }
                     }
                 } catch (e) {
@@ -320,6 +333,33 @@ class DatabaseService {
         }
 
         try {
+            if (this.isNode) {
+                if (params.length === 0) {
+                    if (upperSql.startsWith('SELECT') || upperSql.startsWith('PRAGMA')) {
+                        const results = this.db.prepare(sql).all();
+                        if (isSchemaChange) {
+                            this.refreshTables();
+                        }
+                        return results;
+                    } else {
+                        this.db.exec(sql);
+                        if (isSchemaChange) {
+                            this.refreshTables();
+                        }
+                        return [];
+                    }
+                } else {
+                    const stmt = this.db.prepare(sql);
+                    if (upperSql.startsWith('SELECT') || upperSql.startsWith('PRAGMA')) {
+                        const results = stmt.all(...params);
+                        return results;
+                    } else {
+                        stmt.run(...params);
+                        return [];
+                    }
+                }
+            }
+
             let results;
             if (params.length > 0) {
                 const stmt = this.db.prepare(sql);

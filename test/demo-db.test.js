@@ -2,10 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert';
 import fs from 'node:fs';
 import path from 'node:path';
-import { createRequire } from 'node:module';
-
-const require = createRequire(import.meta.url);
-const sqlite3 = require('sqlite3');
+import { DatabaseSync } from 'node:sqlite';
 
 test('Demo Database Schema Validation', async (t) => {
     // 1. Resolve paths
@@ -52,34 +49,22 @@ test('Demo Database Schema Validation', async (t) => {
     }
 
     // 3. Connect to demo.sqlite and verify the schemas
-    const db = new sqlite3.Database(dbPath, sqlite3.OPEN_READONLY);
+    const db = new DatabaseSync(dbPath);
 
-    const actualTables = await new Promise((resolve, reject) => {
-        db.all("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'", (err, rows) => {
-            if (err) reject(err);
-            else resolve(rows.map(row => row.name));
-        });
-    });
+    const actualTables = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'").all().map(row => row.name);
 
     // Run tests for each expected table
     for (const expectedTable of Object.keys(expected)) {
         await t.test(`table "${expectedTable}" should exist and match schema`, async () => {
             assert.ok(actualTables.includes(expectedTable), `Table "${expectedTable}" should exist in demo.sqlite`);
 
-            const actualCols = await new Promise((resolve, reject) => {
-                db.all(`PRAGMA table_info("${expectedTable}")`, (err, rows) => {
-                    if (err) reject(err);
-                    else {
-                        const cols = {};
-                        rows.forEach(row => {
-                            cols[row.name] = {
-                                type: row.type.toUpperCase(),
-                                pk: row.pk === 1
-                            };
-                        });
-                        resolve(cols);
-                    }
-                });
+            const rows = db.prepare(`PRAGMA table_info("${expectedTable}")`).all();
+            const actualCols = {};
+            rows.forEach(row => {
+                actualCols[row.name] = {
+                    type: row.type.toUpperCase(),
+                    pk: row.pk === 1
+                };
             });
 
             const expectedCols = expected[expectedTable];
@@ -102,10 +87,5 @@ test('Demo Database Schema Validation', async (t) => {
     }
 
     // Clean up
-    await new Promise((resolve, reject) => {
-        db.close((err) => {
-            if (err) reject(err);
-            else resolve();
-        });
-    });
+    db.close();
 });

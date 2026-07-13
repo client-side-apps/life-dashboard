@@ -31,6 +31,42 @@ Run tests locally using Node.js:
 node --test
 ```
 
+## CLI Tool
+
+The project includes a pure Node.js CLI tool (`cli.js`) to inspect the database and import data from various exporters without any external dependencies.
+
+### View Database Summary
+
+To see a summary of the tables and the number of rows contained in a database:
+
+```bash
+node cli.js summary <db_path>
+```
+
+Example:
+
+```bash
+node cli.js summary demo.sqlite
+```
+
+### Import Data
+
+To import a file or all files in a directory recursively:
+
+```bash
+node cli.js import <db_path> <file_or_dir_path> [options]
+```
+
+Options:
+- `--provider <name>`: Force a specific data importer (e.g., `pge`, `tesla`, `sfcu`, `withings`, `cronometer`, `google_timeline`, `spotify`, `flume`, `divelog`).
+- `--demo`: Seeds the `accounts` table with standard demo accounts and adds custom note annotations for 2025 records.
+
+Example:
+
+```bash
+node cli.js import demo.sqlite data-samples
+```
+
 ## Development
 
 ### Technology Stack

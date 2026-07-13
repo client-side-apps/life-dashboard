@@ -25,7 +25,7 @@ To add support for a new data source (e.g., a new health export, financial insti
 
 ### 3. Define Database Schema
 You need to define the SQLite table structure in two places:
-1.  **Demo Generation Script**: [create_demo_db/index.js](create_demo_db/index.js)
+1.  **Demo Generation Script**: [create-demo-db/index.js](create-demo-db/index.js)
     *   Add a `CREATE TABLE` statement in the `run()` function.
     *   Update the `insertData` function to handle inserts into this new table.
 2.  **Application Database Service**: [src/db.js](src/db.js)
@@ -59,7 +59,7 @@ Create a new importer class to parse your data file and a corresponding test.
 
 ### 5. Register the Importer
 You must register your new importer in two services:
-1.  **Demo Generator**: [create_demo_db/index.js](create_demo_db/index.js)
+1.  **Demo Generator**: [create-demo-db/index.js](create-demo-db/index.js)
     *   Import your class.
     *   Add it to the `importers` array.
 2.  **App Data Importer**: [src/services/data-importer.js](src/services/data-importer.js)
@@ -70,7 +70,7 @@ You must register your new importer in two services:
 ### 6. Regenerate Demo Database
 Test your changes by regenerating the demo database with your new sample data.
 ```bash
-node create_demo_db/index.js
+node create-demo-db/index.js
 ```
 Verify that `demo.sqlite` is created and contains your data.
 
