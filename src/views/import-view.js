@@ -73,7 +73,8 @@ export class ImportView extends HTMLElement {
             ],
             health: [
                 { value: 'cronometer', label: 'Cronometer' },
-                { value: 'withings', label: 'Withings' }
+                { value: 'withings', label: 'Withings' },
+                { value: 'divelog', label: 'Dive Log' }
             ],
             location: [
                 { value: 'google-timeline', label: 'Google Timeline' }

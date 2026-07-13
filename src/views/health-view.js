@@ -5,6 +5,7 @@ import { DataView } from '../components/data-view/data-view.js';
 import './health/dashboard-view.js';
 import './health/heart-view.js';
 import './health/activity-view.js';
+import './health/dives-view.js';
 import './health/body-view.js';
 import './health/sleep-view.js';
 import './health/nutrition-view.js';
@@ -106,6 +107,9 @@ export class HealthView extends DataView {
                     break;
                 case 'activity':
                     viewElement = document.createElement('health-activity-view');
+                    break;
+                case 'dives':
+                    viewElement = document.createElement('health-dives-view');
                     break;
                 case 'nutrition':
                     viewElement = document.createElement('health-nutrition-view');

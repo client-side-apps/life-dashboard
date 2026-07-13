@@ -8,10 +8,11 @@ import { CronometerImporter } from '../importers/health/cronometer.js';
 import { GoogleTimelineImporter } from '../importers/location/google-timeline.js';
 import { FlumeImporter } from '../importers/water/flume.js';
 import { SpotifyImporter } from '../importers/music/spotify.js';
+import { DiveLogImporter } from '../importers/health/dive-logs.js';
 
 export class DataImporter {
 
-    static importers = [PgeImporter, TeslaImporter, SfcuImporter, WithingsImporter, CronometerImporter, GoogleTimelineImporter, FlumeImporter, SpotifyImporter];
+    static importers = [PgeImporter, TeslaImporter, SfcuImporter, WithingsImporter, CronometerImporter, GoogleTimelineImporter, FlumeImporter, SpotifyImporter, DiveLogImporter];
 
     static async import(filename, content, options = {}) {
         await dbService.ensureInitialized();
@@ -47,6 +48,7 @@ export class DataImporter {
             else if (options.provider === 'tesla') ImporterClass = TeslaImporter;
             else if (options.provider === 'sfcu') ImporterClass = SfcuImporter;
             else if (options.provider === 'google_timeline') ImporterClass = GoogleTimelineImporter;
+            else if (options.provider === 'divelog') ImporterClass = DiveLogImporter;
         } else {
             ImporterClass = this.importers.find(i => isJson ? i.detect(jsonData) : i.detect(rows));
         }
@@ -143,7 +145,7 @@ export class DataImporter {
                     try {
                         let existingId = null;
 
-                        if (table === 'transactions') {
+                        if (table === 'transactions' || table === 'dives') {
                             // Fallback to individual check for complex keys
                             existingId = await this.findExisting(table, data);
                         } else {
@@ -206,6 +208,14 @@ export class DataImporter {
                 [data.timestamp, data.description, data.amount]
             );
             return result.length > 0 ? result[0].id : null;
+        } else if (table === 'dives') {
+            if (data.dive_number) {
+                const result = dbService.query('SELECT id FROM dives WHERE dive_number = ?', [data.dive_number]);
+                return result.length > 0 ? result[0].id : null;
+            } else {
+                const result = dbService.query('SELECT id FROM dives WHERE timestamp = ? AND spot = ?', [data.timestamp, data.spot]);
+                return result.length > 0 ? result[0].id : null;
+            }
         }
         return null;
     }
@@ -364,6 +374,27 @@ export class DataImporter {
             dbService.query(
                 'INSERT INTO music (timestamp, track_name, artist_name, album_name, track_uri, duration_ms, platform, source, note) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
                 [data.timestamp, data.track_name, data.artist_name, data.album_name, data.track_uri, data.duration_ms, data.platform || null, data.source, data.note || null]
+            );
+        } else if (table === 'dives') {
+            dbService.query(
+                'INSERT INTO dives (timestamp, dive_number, spot, city, region, country, max_depth_meters, duration_minutes, water_temp_c, dive_type, center, divers, total_divers, source, note) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                [
+                    data.timestamp,
+                    data.dive_number,
+                    data.spot,
+                    data.city,
+                    data.region,
+                    data.country,
+                    data.max_depth_meters,
+                    data.duration_minutes,
+                    data.water_temp_c,
+                    data.dive_type,
+                    data.center,
+                    data.divers,
+                    data.total_divers,
+                    data.source,
+                    data.note || null
+                ]
             );
         }
     }

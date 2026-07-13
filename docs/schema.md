@@ -170,6 +170,28 @@ Stores streaming history.
 | `source` | TEXT | Source of the data |
 | `note` | TEXT | User-attached note |
 
+### `dives`
+Stores history of scuba diving logs.
+
+| Column | Type | Description |
+| :--- | :--- | :--- |
+| `id` | INTEGER | Primary Key |
+| `timestamp` | INTEGER | Start of the dive (Unix ms) |
+| `dive_number` | INTEGER | Sequence number of the dive |
+| `spot` | TEXT | Dive spot/site name |
+| `city` | TEXT | City where the dive was located |
+| `region` | TEXT | Region/state/province where the dive was located |
+| `country` | TEXT | Country where the dive was located |
+| `max_depth_meters` | REAL | Maximum depth reached (meters) |
+| `duration_minutes` | REAL | Duration of the dive (minutes) |
+| `water_temp_c` | REAL | Bottom or surface water temperature (°C) |
+| `dive_type` | TEXT | Type of dive (e.g. "Exploration", "Technique") |
+| `center` | TEXT | Diving center |
+| `divers` | TEXT | JSON array of divers |
+| `total_divers` | INTEGER | Total number of divers on the dive |
+| `source` | TEXT | Source of the data |
+| `note` | TEXT | Observations and notes |
+
 ## Finance
 
 ### `accounts`

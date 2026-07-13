@@ -58,6 +58,17 @@ The application supports importing data from various CSV/JSON sources. Below is 
     *   **Daily Summary**: Maps to `nutrition_daily` (energy, macros, vitamins, minerals).
     *   **Servings**: Maps to `nutrition_servings` (detailed per-food entries).
 
+### Dive Log
+*   **File Type**: CSV (scuba diving log exports)
+*   **Detection**: Checks for columns `Spot`, `Depth (m)`, and `Time (min)`.
+*   **Data Processed**:
+    *   Imports into `dives` table.
+    *   Parses `Date` (`DD/MM/YYYY`) into `timestamp`.
+    *   Maps `Spot`, `City`, `Region`, and `Country` as separate database fields.
+    *   Converts `Depth (m)` and `Time (min)` (with comma decimals) into `max_depth_meters` and `duration_minutes`.
+    *   Maps `Température fond` (or surface temp) into `water_temp_c`.
+    *   Maps `Observations` to `note`, `Type` to `dive_type`, `Center` to `center`, `Divers` to `buddy`, and `Number` to `dive_number`.
+
 ## Music
 
 ### Spotify

@@ -13,6 +13,7 @@ import { CronometerImporter } from '../src/importers/health/cronometer.js';
 import { GoogleTimelineImporter } from '../src/importers/location/google-timeline.js';
 import { SpotifyImporter } from '../src/importers/music/spotify.js';
 import { FlumeImporter } from '../src/importers/water/flume.js';
+import { DiveLogImporter } from '../src/importers/health/dive-logs.js';
 
 const require = createRequire(import.meta.url);
 const sqlite3 = require('sqlite3').verbose();
@@ -38,7 +39,7 @@ if (fs.existsSync(DB_PATH)) {
 
 const db = new sqlite3.Database(DB_PATH);
 
-const importers = [PgeImporter, TeslaImporter, SfcuImporter, WithingsImporter, CronometerImporter, GoogleTimelineImporter, SpotifyImporter, FlumeImporter];
+const importers = [PgeImporter, TeslaImporter, SfcuImporter, WithingsImporter, CronometerImporter, GoogleTimelineImporter, SpotifyImporter, FlumeImporter, DiveLogImporter];
 
 async function run() {
     await new Promise((resolve) => {
@@ -198,6 +199,24 @@ async function run() {
                 track_uri TEXT,
                 duration_ms INTEGER,
                 platform TEXT,
+                source TEXT,
+                note TEXT
+            )`);
+            db.run(`CREATE TABLE IF NOT EXISTS dives (
+                id INTEGER PRIMARY KEY,
+                timestamp INTEGER,
+                dive_number INTEGER,
+                spot TEXT,
+                city TEXT,
+                region TEXT,
+                country TEXT,
+                max_depth_meters REAL,
+                duration_minutes REAL,
+                water_temp_c REAL,
+                dive_type TEXT,
+                center TEXT,
+                divers TEXT,
+                total_divers INTEGER,
                 source TEXT,
                 note TEXT
             )`);
@@ -375,6 +394,8 @@ async function processFile(filePath) {
                         data.note = "Had a great lunch meeting here.";
                     } else if (table === 'nutrition_servings' && data.food_name && data.food_name.toLowerCase().includes('coffee') && day === 7) {
                         data.note = "Extra strong espresso shot today.";
+                    } else if (table === 'dives' && day === 18 && month === 7) {
+                        data.note = "Amazing dive! Saw a turtle and several reef sharks.";
                     }
                 }
             }
@@ -535,6 +556,28 @@ function insertData(table, data) {
         db.run(
             'INSERT INTO music (timestamp, track_name, artist_name, album_name, track_uri, duration_ms, platform, source, note) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
             [data.timestamp, data.track_name, data.artist_name, data.album_name, data.track_uri, data.duration_ms, data.platform, source, note],
+            (err) => { if (err) console.error(err.message); }
+        );
+    } else if (table === 'dives') {
+        db.run(
+            'INSERT INTO dives (timestamp, dive_number, spot, city, region, country, max_depth_meters, duration_minutes, water_temp_c, dive_type, center, divers, total_divers, source, note) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [
+                data.timestamp,
+                data.dive_number,
+                data.spot,
+                data.city,
+                data.region,
+                data.country,
+                data.max_depth_meters,
+                data.duration_minutes,
+                data.water_temp_c,
+                data.dive_type,
+                data.center,
+                data.divers,
+                data.total_divers,
+                source,
+                note
+            ],
             (err) => { if (err) console.error(err.message); }
         );
     }

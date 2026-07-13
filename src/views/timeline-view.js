@@ -183,6 +183,30 @@ export class TimelineView extends DataView {
                 });
             } catch (e) { console.warn('Music fetch failed', e); }
 
+            // 7. Fetch Dive Logs
+            try {
+                const diveData = dataRepository.getDateRangeData('dives', startDate, endDate);
+                diveData.forEach(row => {
+                    events.push({
+                        timestamp: row.timestamp,
+                        type: 'dive',
+                        dive_number: row.dive_number,
+                        spot: row.spot,
+                        city: row.city,
+                        region: row.region,
+                        country: row.country,
+                        max_depth_meters: row.max_depth_meters,
+                        duration_minutes: row.duration_minutes,
+                        water_temp_c: row.water_temp_c,
+                        dive_type: row.dive_type,
+                        center: row.center,
+                        divers: row.divers,
+                        total_divers: row.total_divers,
+                        note: row.note
+                    });
+                });
+            } catch (e) { console.warn('Dives fetch failed', e); }
+
             // Sort all events
             events.sort((a, b) => b.timestamp - a.timestamp);
 

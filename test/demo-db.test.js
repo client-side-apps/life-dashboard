@@ -5,7 +5,7 @@ import path from 'node:path';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
-const sqlite3 = require('../create_demo_db/node_modules/sqlite3');
+const sqlite3 = require('sqlite3');
 
 test('Demo Database Schema Validation', async (t) => {
     // 1. Resolve paths

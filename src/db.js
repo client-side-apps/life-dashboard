@@ -225,6 +225,24 @@ class DatabaseService {
                 platform TEXT,
                 source TEXT,
                 note TEXT
+            )`,
+            `CREATE TABLE IF NOT EXISTS dives (
+                id INTEGER PRIMARY KEY,
+                timestamp INTEGER,
+                dive_number INTEGER,
+                spot TEXT,
+                city TEXT,
+                region TEXT,
+                country TEXT,
+                max_depth_meters REAL,
+                duration_minutes REAL,
+                water_temp_c REAL,
+                dive_type TEXT,
+                center TEXT,
+                divers TEXT,
+                total_divers INTEGER,
+                source TEXT,
+                note TEXT
             )`
         ];
 
@@ -244,7 +262,8 @@ class DatabaseService {
             `CREATE INDEX IF NOT EXISTS idx_water_daily_timestamp ON water_daily (timestamp)`,
             `CREATE INDEX IF NOT EXISTS idx_nutrition_daily_timestamp ON nutrition_daily (timestamp)`,
             `CREATE INDEX IF NOT EXISTS idx_nutrition_servings_timestamp ON nutrition_servings (timestamp)`,
-            `CREATE INDEX IF NOT EXISTS idx_music_timestamp ON music (timestamp)`
+            `CREATE INDEX IF NOT EXISTS idx_music_timestamp ON music (timestamp)`,
+            `CREATE INDEX IF NOT EXISTS idx_dives_timestamp ON dives (timestamp)`
         ];
 
         schemas.forEach(sql => this.db.run(sql));
@@ -255,7 +274,7 @@ class DatabaseService {
         const tablesToMigrate = [
             'location', 'weight', 'sleep', 'steps', 'activities', 'accounts',
             'transactions', 'electricity_hourly', 'electricity_grid_daily', 'gas_daily', 'blood_pressure',
-            'body_temperature', 'height', 'water_daily', 'nutrition_daily', 'nutrition_servings', 'music'
+            'body_temperature', 'height', 'water_daily', 'nutrition_daily', 'nutrition_servings', 'music', 'dives'
         ];
 
         tablesToMigrate.forEach(table => {

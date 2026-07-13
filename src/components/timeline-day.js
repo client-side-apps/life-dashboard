@@ -56,6 +56,7 @@ export class TimelineDay extends HTMLElement {
         const sleepEvents = events.filter(e => e.type === 'sleep');
         const nutritionEvents = events.filter(e => e.type === 'nutrition');
         const musicEvents = events.filter(e => e.type === 'music');
+        const diveEvents = events.filter(e => e.type === 'dive');
 
         // Calculate Stats
         let stats = [];
@@ -225,6 +226,28 @@ export class TimelineDay extends HTMLElement {
             });
         }
 
+        // Scuba Diving Logs
+        if (diveEvents.length > 0) {
+            const totalDuration = diveEvents.reduce((acc, e) => acc + (e.duration_minutes || 0), 0);
+            const maxDepth = Math.max(...diveEvents.map(e => e.max_depth_meters || 0));
+
+            stats.push({
+                icon: '🤿',
+                label: 'Diving',
+                value: `${diveEvents.length} dive${diveEvents.length > 1 ? 's' : ''}`,
+                sub: `${maxDepth.toFixed(1)}m max depth · ${totalDuration} min`,
+                linkId: `dives-toggle-${date}`,
+                expandHtml: `<div class="stat-details-collapsible" id="dives-toggle-${date}" hidden>
+                    <ul class="dive-logs" style="margin: 0; padding-left: 1.25rem; list-style: disc; opacity: 0.8;">
+                        ${diveEvents.map(d => {
+                            const loc = [d.spot, d.city, d.country].filter(Boolean).join(', ');
+                            return `<li><strong>${loc || 'Unknown site'}</strong> (Depth: ${d.max_depth_meters}m, Dur: ${d.duration_minutes} min, Temp: ${d.water_temp_c || '--'}°C)${d.note ? ` — 📝 <span class="timeline-inline-note">${d.note}</span>` : ''}</li>`;
+                        }).join('')}
+                    </ul>
+                </div>`
+            });
+        }
+
         // Consolidated Daily Notes
         const dailyNotesList = [];
         if (weightEvents.length > 0 && weightEvents[0].note) {
@@ -239,6 +262,12 @@ export class TimelineDay extends HTMLElement {
         });
         musicEvents.forEach(e => { if (e.note) dailyNotesList.push({ type: 'Music', note: `${e.track_name} by ${e.artist_name}: ${e.note}` }); });
         locationEvents.forEach(e => { if (e.note) dailyNotesList.push({ type: 'Location', note: e.note }); });
+        diveEvents.forEach(e => {
+            if (e.note) {
+                const loc = [e.spot, e.city, e.country].filter(Boolean).join(', ');
+                dailyNotesList.push({ type: 'Dive', note: `${loc ? loc + ': ' : ''}${e.note}` });
+            }
+        });
 
         const dailyNotesHtml = dailyNotesList.length > 0 ? `
             <div class="day-notes-section">

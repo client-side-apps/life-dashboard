@@ -230,6 +230,32 @@ export function getSteps({ startDate, endDate, type } = {}) {
     return dbService.query(query, params);
 }
 
+export function getDiveLogs({ startDate, endDate } = {}) {
+    const tableName = 'dives';
+    const tables = getTables();
+    if (!tables.includes(tableName)) return [];
+
+    let query = `SELECT * FROM "${tableName}"`;
+    let params = [];
+    let whereClauses = [];
+
+    if (startDate && endDate) {
+        whereClauses.push(`timestamp >= ? AND timestamp <= ?`);
+        const startTs = new Date(startDate + 'T00:00:00').getTime();
+        const endTs = new Date(endDate + 'T23:59:59.999').getTime();
+        params.push(startTs);
+        params.push(endTs);
+    }
+
+    if (whereClauses.length > 0) {
+        query += ` WHERE ` + whereClauses.join(' AND ');
+    }
+
+    query += ` ORDER BY timestamp DESC`;
+
+    return dbService.query(query, params);
+}
+
 export function getLatestDataDate() {
     const tables = getTables();
     let maxTimestamp = 0;
