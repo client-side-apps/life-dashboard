@@ -82,16 +82,15 @@ export class CronometerImporter extends BaseImporter {
         const mapNutrients = (sourceRow) => {
             const data = {};
             for (const [csvHeader, dbCol] of Object.entries(nutrientMap)) {
-                if (csvHeader in sourceRow && sourceRow[csvHeader] !== '') {
-                    data[dbCol] = parseFloat(sourceRow[csvHeader]);
-                } else {
-                    data[dbCol] = 0; // Default to 0 if missing/empty? Or null? Database schema allows NULL but REAL implies numbers. 
-                    // Let's use 0 for nutritional values as missing often means 0 in these exports, 
-                    // or keep it null if we want to distinguish "no data".
-                    // Cronometer CSVs usually have empty string for 0 or missing.
-                    // Given the schema is REAL, null is valid. 
-                    // However, for charts, 0 is easier. Let's start with 0 if it parses to NaN.
-                }
+                // A column absent from the export means "not tracked", not zero.
+                // Omitting it stores NULL and, on merge re-imports, avoids
+                // overwriting real values from a fuller export with zeros.
+                if (!(csvHeader in sourceRow)) continue;
+
+                const value = sourceRow[csvHeader];
+                // Present but empty means the nutrient was tracked and is 0
+                data[dbCol] = value === '' ? 0 : parseFloat(value);
+                if (isNaN(data[dbCol])) data[dbCol] = 0;
             }
             return data;
         };

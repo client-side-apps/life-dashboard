@@ -119,9 +119,29 @@ export class DataImporter {
             itemsByTable = ImporterClass.postProcess(itemsByTable);
         }
 
+        // Items created by postProcess (e.g. daily aggregates) don't go through
+        // the mapping loop above, so stamp their source here. An undefined
+        // source cannot be bound as a SQL parameter and would make every
+        // insert of these rows fail silently.
+        for (const items of Object.values(itemsByTable)) {
+            for (const item of items) {
+                if (item && typeof item === 'object' && item.source === undefined) {
+                    item.source = source;
+                }
+            }
+        }
+
 
 
         dbService.query('BEGIN TRANSACTION');
+
+        // Tables where the timestamp alone is not a unique key: several rows can
+        // legitimately share a timestamp (e.g. two identical purchases the same
+        // day, two foods logged at the same time). For these, match existing
+        // records by a composite key and consume matches one-by-one, so that
+        // genuine duplicates are preserved rather than collapsed into one row.
+        const complexKeyTables = ['transactions', 'dives', 'nutrition_servings', 'music'];
+        const matchTracker = new Map(); // Map<compositeKey, {ids: number[], next: number}>
 
         try {
             for (const [table, items] of Object.entries(itemsByTable)) {
@@ -134,12 +154,12 @@ export class DataImporter {
                 const maxTime = timestamps.reduce((max, t) => t > max ? t : max, -Infinity);
 
                 // Fetch existing records in this range
-                // Note: For transactions, we need more than just timestamp, so this optimization 
-                // mainly targets the simple time-series tables.
+                // This optimization targets the simple time-series tables where
+                // timestamp is the unique key.
 
                 const existingMap = new Map(); // Map<timestamp, id>
 
-                if (table !== 'transactions') {
+                if (!complexKeyTables.includes(table)) {
                     const existingRecords = await this.findExistingBatch(table, minTime, maxTime);
                     existingRecords.forEach(r => existingMap.set(r.timestamp, r.id));
                 }
@@ -149,9 +169,18 @@ export class DataImporter {
                     try {
                         let existingId = null;
 
-                        if (table === 'transactions' || table === 'dives') {
-                            // Fallback to individual check for complex keys
-                            existingId = await this.findExisting(table, data);
+                        if (complexKeyTables.includes(table)) {
+                            const key = `${table}|${this.buildKey(table, data)}`;
+                            let tracker = matchTracker.get(key);
+                            if (!tracker) {
+                                tracker = { ids: await this.findExistingAll(table, data), next: 0 };
+                                matchTracker.set(key, tracker);
+                            }
+                            // Each occurrence in the file consumes one existing
+                            // record; extra occurrences are inserted as new rows.
+                            if (tracker.next < tracker.ids.length) {
+                                existingId = tracker.ids[tracker.next++];
+                            }
                         } else {
                             existingId = existingMap.get(data.timestamp);
                         }
@@ -161,14 +190,6 @@ export class DataImporter {
                             successCount++;
                         } else {
                             await this.insert(table, data);
-                            // Update our local map in case of duplicates within the same file?
-                            // Technically possible, but usually we just process them. 
-                            // If we have duplicates in the file, we might overwrite or insert twice.
-                            // The map check prevents inserting twice if we update the map, 
-                            // BUT we don't know the new ID without querying back.
-                            // Since we trust the file is sequential or distinct usually, 
-                            // we can perhaps skip updating the map for performance, 
-                            // OR we assume the user doesn't have duplicates in the same import file.
                             successCount++;
                         }
                     } catch (err) {
@@ -194,34 +215,68 @@ export class DataImporter {
     }
 
     static async findExistingBatch(table, minTime, maxTime) {
-        if (['location', 'electricity_hourly', 'electricity_grid_daily', 'gas_daily', 'steps', 'weight', 'height', 'body_temperature', 'sleep', 'blood_pressure', 'water_daily', 'nutrition_daily', 'nutrition_servings', 'activities', 'music'].includes(table)) {
+        if (['location', 'electricity_hourly', 'electricity_grid_daily', 'gas_daily', 'steps', 'weight', 'height', 'body_temperature', 'sleep', 'blood_pressure', 'water_daily', 'nutrition_daily', 'activities'].includes(table)) {
             return dbService.query(`SELECT id, timestamp FROM "${table}" WHERE timestamp >= ? AND timestamp <= ?`, [minTime, maxTime]);
         }
         return [];
     }
 
+    /**
+     * Composite key identifying "the same record" within a complex-key table.
+     * Rows sharing a key are matched positionally against existing records.
+     */
+    static buildKey(table, data) {
+        if (table === 'transactions') {
+            return `${data.timestamp}|${data.description}|${data.amount}`;
+        } else if (table === 'nutrition_servings') {
+            return `${data.timestamp}|${data.food_name ?? ''}`;
+        } else if (table === 'music') {
+            return `${data.timestamp}|${data.track_uri ?? ''}|${data.track_name ?? ''}`;
+        } else if (table === 'dives') {
+            return data.dive_number ? `n|${data.dive_number}` : `t|${data.timestamp}|${data.spot}`;
+        }
+        return `${data.timestamp}`;
+    }
+
+    /**
+     * Return ALL existing record ids matching the composite key, oldest first,
+     * so duplicates in the database can each be matched to a duplicate in the file.
+     */
+    static async findExistingAll(table, data) {
+        let result = [];
+        if (table === 'transactions') {
+            result = dbService.query(
+                'SELECT id FROM transactions WHERE timestamp = ? AND description = ? AND amount = ? ORDER BY id',
+                [data.timestamp, data.description, data.amount]
+            );
+        } else if (table === 'nutrition_servings') {
+            result = dbService.query(
+                'SELECT id FROM nutrition_servings WHERE timestamp = ? AND food_name IS ? ORDER BY id',
+                [data.timestamp, data.food_name ?? null]
+            );
+        } else if (table === 'music') {
+            result = dbService.query(
+                'SELECT id FROM music WHERE timestamp = ? AND track_uri IS ? AND track_name IS ? ORDER BY id',
+                [data.timestamp, data.track_uri ?? null, data.track_name ?? null]
+            );
+        } else if (table === 'dives') {
+            if (data.dive_number) {
+                result = dbService.query('SELECT id FROM dives WHERE dive_number = ? ORDER BY id', [data.dive_number]);
+            } else {
+                result = dbService.query('SELECT id FROM dives WHERE timestamp = ? AND spot = ? ORDER BY id', [data.timestamp, data.spot]);
+            }
+        }
+        return result.map(r => r.id);
+    }
+
     static async findExisting(table, data) {
-        if (['location', 'electricity_hourly', 'electricity_grid_daily', 'gas_daily', 'steps', 'weight', 'height', 'body_temperature', 'sleep', 'blood_pressure', 'water_daily', 'nutrition_daily', 'nutrition_servings', 'activities', 'music'].includes(table)) {
+        if (['location', 'electricity_hourly', 'electricity_grid_daily', 'gas_daily', 'steps', 'weight', 'height', 'body_temperature', 'sleep', 'blood_pressure', 'water_daily', 'nutrition_daily', 'activities'].includes(table)) {
             // Unique key: timestamp
             const result = dbService.query(`SELECT id FROM "${table}" WHERE timestamp = ?`, [data.timestamp]);
             return result.length > 0 ? result[0].id : null;
-        } else if (table === 'transactions') {
-            // Unique composite: timestamp, description, amount
-            const result = dbService.query(
-                'SELECT id FROM transactions WHERE timestamp = ? AND description = ? AND amount = ?',
-                [data.timestamp, data.description, data.amount]
-            );
-            return result.length > 0 ? result[0].id : null;
-        } else if (table === 'dives') {
-            if (data.dive_number) {
-                const result = dbService.query('SELECT id FROM dives WHERE dive_number = ?', [data.dive_number]);
-                return result.length > 0 ? result[0].id : null;
-            } else {
-                const result = dbService.query('SELECT id FROM dives WHERE timestamp = ? AND spot = ?', [data.timestamp, data.spot]);
-                return result.length > 0 ? result[0].id : null;
-            }
         }
-        return null;
+        const ids = await this.findExistingAll(table, data);
+        return ids.length > 0 ? ids[0] : null;
     }
 
     static async update(table, id, data) {
@@ -326,7 +381,7 @@ export class DataImporter {
         } else if (table === 'blood_pressure') {
             dbService.query(
                 'INSERT INTO blood_pressure (timestamp, systolic_mmhg, diastolic_mmhg, heart_rate_bpm, source, note) VALUES (?, ?, ?, ?, ?, ?)',
-                [data.timestamp, data.systolic_mmhg, data.diastolic_mmhg, data.heart_rate_bpm || null, data.source, data.note || null]
+                [data.timestamp, data.systolic_mmhg ?? null, data.diastolic_mmhg ?? null, data.heart_rate_bpm || null, data.source, data.note || null]
             );
         } else if (table === 'location') {
             dbService.query(

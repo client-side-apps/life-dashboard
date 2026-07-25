@@ -15,26 +15,98 @@ export class GoogleTimelineImporter extends BaseImporter {
     }
 
     static extractItems(data) {
+        if (Array.isArray(data.semanticSegments)) {
+            return this.extractSemanticSegments(data.semanticSegments);
+        }
+        if (Array.isArray(data.timelineObjects)) {
+            return this.extractTimelineObjects(data.timelineObjects);
+        }
+        return [];
+    }
+
+    /**
+     * Modern "semantic segments" export format.
+     */
+    static extractSemanticSegments(segments) {
         const items = [];
-        const segments = data.semanticSegments || data.timelineObjects || [];
 
         for (const segment of segments) {
-            // We want to extract high fidelity points from timelinePath if available
+            // High fidelity points from timelinePath if available
             if (segment.timelinePath && Array.isArray(segment.timelinePath)) {
                 items.push(...segment.timelinePath);
             }
-            // If no timelinePath, maybe we can use the start/end location if it's a visit?
-            // But timelinePath is the best source for "path" data.
-            // Visits usually have a 'placeLocation'
+            // Visits have a 'placeLocation'; the user was there for the whole
+            // start/end span, so record a point at both ends of the visit.
             else if (segment.visit && segment.visit.topCandidate && segment.visit.topCandidate.placeLocation) {
-                // Construct a point-like object for consistency
-                items.push({
-                    point: segment.visit.topCandidate.placeLocation.latLng,
-                    time: segment.startTime
-                });
+                const latLng = segment.visit.topCandidate.placeLocation.latLng;
+                if (segment.startTime) {
+                    items.push({ point: latLng, time: segment.startTime });
+                }
+                if (segment.endTime && segment.endTime !== segment.startTime) {
+                    items.push({ point: latLng, time: segment.endTime });
+                }
             }
-            // Activities might have start/end logic but timelinePath is usually present for activities too?
-            // Let's stick to simple extraction for now.
+            // Activities without a timelinePath still carry start/end coordinates
+            else if (segment.activity) {
+                if (segment.activity.start && segment.activity.start.latLng && segment.startTime) {
+                    items.push({ point: segment.activity.start.latLng, time: segment.startTime });
+                }
+                if (segment.activity.end && segment.activity.end.latLng && segment.endTime) {
+                    items.push({ point: segment.activity.end.latLng, time: segment.endTime });
+                }
+            }
+        }
+        return items;
+    }
+
+    /**
+     * Legacy "Semantic Location History" export format (timelineObjects with
+     * placeVisit / activitySegment and E7 integer coordinates).
+     */
+    static extractTimelineObjects(objects) {
+        const items = [];
+        const e7Point = (loc) => {
+            if (!loc || loc.latitudeE7 === undefined || loc.longitudeE7 === undefined) return null;
+            return `${loc.latitudeE7 / 1e7},${loc.longitudeE7 / 1e7}`;
+        };
+
+        for (const obj of objects) {
+            if (obj.placeVisit) {
+                const point = e7Point(obj.placeVisit.location);
+                const duration = obj.placeVisit.duration || {};
+                if (point) {
+                    if (duration.startTimestamp) {
+                        items.push({ point, time: duration.startTimestamp });
+                    }
+                    if (duration.endTimestamp && duration.endTimestamp !== duration.startTimestamp) {
+                        items.push({ point, time: duration.endTimestamp });
+                    }
+                }
+            } else if (obj.activitySegment) {
+                const segment = obj.activitySegment;
+                const duration = segment.duration || {};
+
+                // Prefer the raw path when present: it has per-point timestamps
+                const rawPoints = segment.simplifiedRawPath && Array.isArray(segment.simplifiedRawPath.points)
+                    ? segment.simplifiedRawPath.points
+                    : [];
+                for (const p of rawPoints) {
+                    const point = e7Point({ latitudeE7: p.latE7, longitudeE7: p.lngE7 });
+                    const time = p.timestamp || (p.timestampMs ? new Date(parseInt(p.timestampMs, 10)).toISOString() : null);
+                    if (point && time) {
+                        items.push({ point, time });
+                    }
+                }
+
+                const start = e7Point(segment.startLocation);
+                if (start && duration.startTimestamp) {
+                    items.push({ point: start, time: duration.startTimestamp });
+                }
+                const end = e7Point(segment.endLocation);
+                if (end && duration.endTimestamp) {
+                    items.push({ point: end, time: duration.endTimestamp });
+                }
+            }
         }
         return items;
     }

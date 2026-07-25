@@ -18,20 +18,53 @@ export class SpotifyImporter extends BaseImporter {
     }
 
     static mapRow(row) {
-        if (!row.ts || !row.master_metadata_track_name) return null;
+        if (!row.ts) return null;
 
         const timestamp = new Date(row.ts).getTime();
         if (isNaN(timestamp)) return null;
 
-        return {
-            timestamp: timestamp,
-            track_name: row.master_metadata_track_name,
-            artist_name: row.master_metadata_album_artist_name,
-            album_name: row.master_metadata_album_album_name,
-            track_uri: row.spotify_track_uri,
-            duration_ms: row.ms_played,
-            platform: row.platform,
-            source: 'spotify'
-        };
+        // Music track
+        if (row.master_metadata_track_name) {
+            return {
+                timestamp: timestamp,
+                track_name: row.master_metadata_track_name,
+                artist_name: row.master_metadata_album_artist_name,
+                album_name: row.master_metadata_album_album_name,
+                track_uri: row.spotify_track_uri,
+                duration_ms: row.ms_played,
+                platform: row.platform,
+                source: 'spotify'
+            };
+        }
+
+        // Podcast episode
+        if (row.episode_name) {
+            return {
+                timestamp: timestamp,
+                track_name: row.episode_name,
+                artist_name: row.episode_show_name,
+                album_name: row.episode_show_name,
+                track_uri: row.spotify_episode_uri,
+                duration_ms: row.ms_played,
+                platform: row.platform,
+                source: 'spotify'
+            };
+        }
+
+        // Audiobook chapter
+        if (row.audiobook_title) {
+            return {
+                timestamp: timestamp,
+                track_name: row.audiobook_chapter_title || row.audiobook_title,
+                artist_name: row.audiobook_title,
+                album_name: row.audiobook_title,
+                track_uri: row.audiobook_chapter_uri || row.audiobook_uri,
+                duration_ms: row.ms_played,
+                platform: row.platform,
+                source: 'spotify'
+            };
+        }
+
+        return null;
     }
 }

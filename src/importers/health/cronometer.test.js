@@ -40,6 +40,18 @@ describe('CronometerImporter', () => {
         assert.strictEqual(first.data.energy_kcal, 150.0);
     });
 
+    it('should not fabricate zeros for nutrient columns absent from the export', () => {
+        const row = { 'Date': '2026-01-01', 'Completed': 'true', 'Energy (kcal)': '2000', 'Protein (g)': '' };
+        const mapped = CronometerImporter.mapRow(row);
+
+        assert.strictEqual(mapped.data.energy_kcal, 2000);
+        // Present-but-empty column is a tracked zero
+        assert.strictEqual(mapped.data.protein_g, 0);
+        // Absent column stays absent (NULL in DB) so a merge re-import
+        // cannot overwrite real values with zeros
+        assert.ok(!('carbs_g' in mapped.data), 'Absent nutrient should be omitted, not set to 0');
+    });
+
     it('should handle BOM in CSVParser (Integration check)', () => {
         const content = '\uFEFFDate,Energy (kcal),Completed\n2026-01-01,2000,true';
         const rows = CSVParser.parse(content);

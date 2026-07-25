@@ -34,7 +34,8 @@ The application supports importing data from various CSV/JSON sources. Below is 
     *   Imports into `transactions` table.
     *   Maps `Post Date` to `timestamp`.
     *   Maps `Description` to `description`.
-    *   Parses `Debit` and `Credit` columns to `amount`.
+    *   Parses `Debit` and `Credit` columns to `amount` (currency symbols and thousands separators are stripped, e.g. `$1,234.56`).
+    *   Identical transactions on the same day (same date, description, and amount) are all preserved; re-imports match them one-to-one instead of collapsing them.
     *   *Note*: Currently defaults `account_id` to 1.
 
 ## Health
@@ -46,8 +47,9 @@ The application supports importing data from various CSV/JSON sources. Below is 
     *   **Activities**: Maps all records from `activities.csv` to the `activities` table (Running, Cycling, Hiking, Walking sessions, etc.).
     *   **Steps**: Maps daily aggregates from `aggregates_steps.csv` to the `steps` table.
     *   **Weight**: Maps to `weight` table (`weight_kg`, `fat_mass_kg`, `bone_mass_kg`, `muscle_mass_kg`, `hydration_kg`).
-    *   **Sleep**: Maps to `sleep` table (duration, stages, heart rate, snoring).
-    *   **Blood Pressure**: Maps to `blood_pressure` table (systolic, diastolic, heart rate).
+    *   **Sleep**: Maps to `sleep` table (duration, stages, heart rate, snoring). Manually logged sleep without stage breakdown falls back to the `from`/`to` interval for duration.
+    *   **Blood Pressure**: Maps to `blood_pressure` table (systolic, diastolic, heart rate). Heart-rate-only measurements (empty systolic/diastolic) are kept with `NULL` blood pressure values.
+    *   The `Comments` column (weight, height, blood pressure exports) is preserved in the `note` column.
     *   **Height**: Maps to `height` table (`height_m`).
     *   **Temperature**: Maps to `body_temperature` table (`temperature_c`).
 
@@ -56,7 +58,8 @@ The application supports importing data from various CSV/JSON sources. Below is 
 *   **Detection**: Checks for `Energy (kcal)` and `Completed` (Daily Summary) or `Food Name` (Servings).
 *   **Data Processed**:
     *   **Daily Summary**: Maps to `nutrition_daily` (energy, macros, vitamins, minerals).
-    *   **Servings**: Maps to `nutrition_servings` (detailed per-food entries).
+    *   **Servings**: Maps to `nutrition_servings` (detailed per-food entries). Multiple foods logged at the same time are all preserved (matched by timestamp + food name on re-import).
+    *   Nutrient columns absent from an export are stored as `NULL` (not `0`), so merging a partial export never overwrites real values with zeros. Present-but-empty values are stored as `0`.
 
 ### Dive Log
 *   **File Type**: CSV (scuba diving log exports)
@@ -83,15 +86,17 @@ The application supports importing data from various CSV/JSON sources. Below is 
     *   `spotify_track_uri` -> `track_uri`
     *   `ms_played` -> `duration_ms`
     *   `platform` -> `platform`
+    *   Podcast episodes (`episode_name` / `episode_show_name` / `spotify_episode_uri`) and audiobook chapters (`audiobook_*`) are imported too, mapped onto the same columns.
 
 ## Location
 
 ### Google Timeline
-*   **File Type**: JSON (monthly semantic segment exports, e.g. `timeline.json`)
+*   **File Type**: JSON (monthly semantic segment exports, e.g. `timeline.json`, or the legacy Semantic Location History export)
 *   **Detection**: Checks for `semanticSegments` or `timelineObjects` properties.
 *   **Data Processed**:
     *   Imports into `location` table.
-    *   Extracts coordinates from `timelinePath` points and visits.
+    *   **Semantic segments format**: extracts `timelinePath` points, visit locations (a point at both the start and end of each visit), and activity start/end coordinates when no path is present.
+    *   **Legacy `timelineObjects` format**: extracts `placeVisit` locations (start and end of the visit), `activitySegment` start/end locations, and `simplifiedRawPath` points (E7 integer coordinates are converted to degrees).
 
 ## Water
 
