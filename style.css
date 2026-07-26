@@ -527,6 +527,58 @@ map-view {
     gap: 0.5rem;
 }
 
+/* Pixel icons from icons/*.svg. The artwork is black; the dark theme
+   inverts it to stay legible on a dark background. */
+.icon {
+    display: inline-block;
+    width: 1.1em;
+    height: 1.1em;
+    vertical-align: -0.2em;
+    background-position: center;
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+
+.icon-steps { background-image: url('icons/steps.svg'); }
+.icon-sleep { background-image: url('icons/sleep.svg'); }
+.icon-nutrition { background-image: url('icons/nutrition.svg'); }
+.icon-weight { background-image: url('icons/weight.svg'); }
+.icon-music { background-image: url('icons/music.svg'); }
+.icon-dive { background-image: url('icons/dive.svg'); }
+.icon-running { background-image: url('icons/running.svg'); }
+.icon-cycling { background-image: url('icons/cycling.svg'); }
+.icon-swimming { background-image: url('icons/swimming.svg'); }
+.icon-hiking { background-image: url('icons/hiking.svg'); }
+.icon-ski { background-image: url('icons/ski.svg'); }
+.icon-multisport { background-image: url('icons/multisport.svg'); }
+.icon-workout { background-image: url('icons/workout.svg'); }
+.icon-calendar { background-image: url('icons/calendar.svg'); }
+.icon-post { background-image: url('icons/post.svg'); }
+
+/* Note marker: decorative, always precedes note text. */
+.day-notes-header::before,
+.timeline-inline-note::before {
+    content: '';
+    display: inline-block;
+    width: 1.1em;
+    height: 1.1em;
+    vertical-align: -0.2em;
+    margin-right: 0.25em;
+    background: url('icons/note.svg') center / contain no-repeat;
+}
+
+[data-theme="dark"] .icon,
+[data-theme="dark"] .day-notes-header::before,
+[data-theme="dark"] .timeline-inline-note::before {
+    filter: invert(1);
+}
+
+.stat-icon {
+    display: inline-flex;
+    align-items: center;
+    color: var(--text-color);
+}
+
 .stat-value {
     font-weight: 900;
 }
