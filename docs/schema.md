@@ -192,6 +192,24 @@ Stores history of scuba diving logs.
 | `source` | TEXT | Source of the data |
 | `note` | TEXT | Observations and notes |
 
+## Calendar
+
+### `calendar_events`
+Stores calendar events (meetings, trips, appointments).
+
+| Column | Type | Description |
+| :--- | :--- | :--- |
+| `id` | INTEGER | Primary Key |
+| `timestamp` | INTEGER | Start of the event (Unix ms) |
+| `end_timestamp` | INTEGER | End of the event (Unix ms) |
+| `title` | TEXT | Event title |
+| `description` | TEXT | Event description |
+| `location` | TEXT | Event location |
+| `all_day` | INTEGER | 1 for all-day events, 0 for timed events |
+| `status` | TEXT | Event status (e.g. "CONFIRMED", "CANCELLED") |
+| `source` | TEXT | Source of the data |
+| `note` | TEXT | User-attached note |
+
 ## Finance
 
 ### `accounts`

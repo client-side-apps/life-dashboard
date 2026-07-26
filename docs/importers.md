@@ -88,6 +88,20 @@ The application supports importing data from various CSV/JSON sources. Below is 
     *   `platform` -> `platform`
     *   Podcast episodes (`episode_name` / `episode_show_name` / `spotify_episode_uri`) and audiobook chapters (`audiobook_*`) are imported too, mapped onto the same columns.
 
+## Calendar
+
+### Google Calendar
+*   **File Type**: ICS (iCalendar export from Google Takeout or a calendar's "Export" option)
+*   **Detection**: `.ics` files (or content starting with `BEGIN:VCALENDAR`) whose events hold `DTSTART` and `SUMMARY` properties.
+*   **Data Processed**:
+    *   Imports each `VEVENT` into the `calendar_events` table.
+    *   `DTSTART` -> `timestamp`, `DTEND` -> `end_timestamp`. Date-only values are flagged with `all_day = 1` (an all-day `DTEND` is exclusive, per the iCalendar spec).
+    *   Times with a `Z` suffix are treated as UTC; times with a `TZID` (or floating times) are interpreted in the local timezone.
+    *   `SUMMARY` -> `title`, `DESCRIPTION` -> `description`, `LOCATION` -> `location`, `STATUS` -> `status`.
+    *   Folded lines and escaped text (`\n`, `\,`, `\;`) are handled.
+    *   Recurring events (`RRULE`) are imported as a single event at their first occurrence.
+    *   Re-imports match existing events by start time and title.
+
 ## Location
 
 ### Google Timeline
