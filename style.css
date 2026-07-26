@@ -876,3 +876,20 @@ chart-card .chart-container {
     white-space: normal;
     word-wrap: break-word;
 }
+/* Manual Entry Form (Import view) */
+.manual-entry-form {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 320px);
+    gap: 0.5rem 1rem;
+    align-items: center;
+    margin-top: 1rem;
+}
+
+.manual-entry-form label {
+    font-weight: bold;
+    font-size: 0.85rem;
+}
+
+.manual-entry-form button {
+    justify-self: start;
+}
