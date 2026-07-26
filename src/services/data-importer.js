@@ -9,23 +9,29 @@ import { GoogleTimelineImporter } from '../importers/location/google-timeline.js
 import { FlumeImporter } from '../importers/water/flume.js';
 import { SpotifyImporter } from '../importers/music/spotify.js';
 import { DiveLogImporter } from '../importers/health/dive-logs.js';
+import { TwitterImporter } from '../importers/social/twitter.js';
 import { GoogleCalendarImporter } from '../importers/calendar/google-calendar.js';
 import { ICSParser } from '../utils/ics-parser.js';
 
 export class DataImporter {
 
-    static importers = [PgeImporter, TeslaImporter, SfcuImporter, WithingsImporter, CronometerImporter, GoogleTimelineImporter, FlumeImporter, SpotifyImporter, DiveLogImporter, GoogleCalendarImporter];
+    static importers = [PgeImporter, TeslaImporter, SfcuImporter, WithingsImporter, CronometerImporter, GoogleTimelineImporter, FlumeImporter, SpotifyImporter, DiveLogImporter, GoogleCalendarImporter, TwitterImporter];
 
     static async import(filename, content, options = {}) {
         await dbService.ensureInitialized();
 
         let rows;
         let jsonData;
-        const isJson = filename.toLowerCase().endsWith('.json');
+        // Twitter/X archives ship data as JavaScript assignments
+        // (e.g. `window.YTD.tweets.part0 = [...]`); strip the prefix to get JSON.
+        const isArchiveJs = filename.toLowerCase().endsWith('.js') && content.trimStart().startsWith('window.YTD.');
+        const isJson = filename.toLowerCase().endsWith('.json') || isArchiveJs;
         const isIcs = filename.toLowerCase().endsWith('.ics') || content.trimStart().startsWith('BEGIN:VCALENDAR');
 
         try {
-            if (isJson) {
+            if (isArchiveJs) {
+                jsonData = JSON.parse(content.slice(content.indexOf('=') + 1));
+            } else if (isJson) {
                 jsonData = JSON.parse(content);
             } else if (isIcs) {
                 rows = ICSParser.parse(content);
@@ -55,6 +61,7 @@ export class DataImporter {
             else if (options.provider === 'google_timeline') ImporterClass = GoogleTimelineImporter;
             else if (options.provider === 'divelog') ImporterClass = DiveLogImporter;
             else if (options.provider === 'google_calendar') ImporterClass = GoogleCalendarImporter;
+            else if (options.provider === 'twitter') ImporterClass = TwitterImporter;
         } else {
             ImporterClass = this.importers.find(i => isJson ? i.detect(jsonData) : i.detect(rows));
         }
@@ -146,7 +153,7 @@ export class DataImporter {
         // day, two foods logged at the same time). For these, match existing
         // records by a composite key and consume matches one-by-one, so that
         // genuine duplicates are preserved rather than collapsed into one row.
-        const complexKeyTables = ['transactions', 'dives', 'nutrition_servings', 'music', 'calendar_events'];
+        const complexKeyTables = ['transactions', 'dives', 'nutrition_servings', 'music', 'calendar_events', 'posts'];
         const matchTracker = new Map(); // Map<compositeKey, {ids: number[], next: number}>
 
         try {
@@ -240,6 +247,8 @@ export class DataImporter {
             return `${data.timestamp}|${data.track_uri ?? ''}|${data.track_name ?? ''}`;
         } else if (table === 'dives') {
             return data.dive_number ? `n|${data.dive_number}` : `t|${data.timestamp}|${data.spot}`;
+        } else if (table === 'posts') {
+            return data.post_id ? `p|${data.post_id}` : `t|${data.timestamp}|${data.text}`;
         } else if (table === 'calendar_events') {
             return `${data.timestamp}|${data.title ?? ''}`;
         }
@@ -272,6 +281,12 @@ export class DataImporter {
                 result = dbService.query('SELECT id FROM dives WHERE dive_number = ? ORDER BY id', [data.dive_number]);
             } else {
                 result = dbService.query('SELECT id FROM dives WHERE timestamp = ? AND spot = ? ORDER BY id', [data.timestamp, data.spot]);
+            }
+        } else if (table === 'posts') {
+            if (data.post_id) {
+                result = dbService.query('SELECT id FROM posts WHERE post_id = ? ORDER BY id', [data.post_id]);
+            } else {
+                result = dbService.query('SELECT id FROM posts WHERE timestamp = ? AND text IS ? ORDER BY id', [data.timestamp, data.text ?? null]);
             }
         } else if (table === 'calendar_events') {
             result = dbService.query(
@@ -446,6 +461,21 @@ export class DataImporter {
             dbService.query(
                 'INSERT INTO music (timestamp, track_name, artist_name, album_name, track_uri, duration_ms, platform, source, note) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
                 [data.timestamp, data.track_name, data.artist_name, data.album_name, data.track_uri, data.duration_ms, data.platform || null, data.source, data.note || null]
+            );
+        } else if (table === 'posts') {
+            dbService.query(
+                'INSERT INTO posts (timestamp, text, post_id, likes, reposts, reply_to, lang, source, note) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                [
+                    data.timestamp,
+                    data.text,
+                    data.post_id || null,
+                    data.likes ?? null,
+                    data.reposts ?? null,
+                    data.reply_to || null,
+                    data.lang || null,
+                    data.source,
+                    data.note || null
+                ]
             );
         } else if (table === 'calendar_events') {
             dbService.query(

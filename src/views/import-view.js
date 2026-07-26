@@ -31,6 +31,7 @@ export class ImportView extends HTMLElement {
                             <option value="health">Health</option>
                             <option value="calendar">Calendar</option>
                             <option value="location">Location</option>
+                            <option value="social">Social</option>
                             <option value="water">Water</option>
                         </select>
                         
@@ -82,6 +83,9 @@ export class ImportView extends HTMLElement {
             ],
             calendar: [
                 { value: 'google_calendar', label: 'Google Calendar' }
+            ],
+            social: [
+                { value: 'twitter', label: 'Twitter / X' }
             ],
             water: [
                 { value: 'flume', label: 'Flume' }

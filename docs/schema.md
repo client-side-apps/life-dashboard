@@ -210,6 +210,24 @@ Stores calendar events (meetings, trips, appointments).
 | `source` | TEXT | Source of the data |
 | `note` | TEXT | User-attached note |
 
+## Social
+
+### `posts`
+Stores social media posts (e.g. tweets from a Twitter/X archive).
+
+| Column | Type | Description |
+| :--- | :--- | :--- |
+| `id` | INTEGER | Primary Key |
+| `timestamp` | INTEGER | Time of posting (Unix ms) |
+| `text` | TEXT | Full text of the post |
+| `post_id` | TEXT | Platform's post identifier |
+| `likes` | INTEGER | Number of likes/favorites |
+| `reposts` | INTEGER | Number of reposts/retweets |
+| `reply_to` | TEXT | Screen name the post replies to |
+| `lang` | TEXT | Language code |
+| `source` | TEXT | Source of the data |
+| `note` | TEXT | User-attached note |
+
 ## Finance
 
 ### `accounts`
