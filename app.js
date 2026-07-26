@@ -6,6 +6,7 @@ import { TimelineView } from './src/views/timeline-view.js';
 import { HealthView } from './src/views/health-view.js';
 import { FinanceView } from './src/views/finance-view.js';
 import { EnergyView } from './src/views/energy-view.js';
+import { CarbonView } from './src/views/carbon-view.js';
 import { MusicView } from './src/views/music-view.js';
 
 import { RawDataView } from './src/views/raw-data-view.js';
@@ -441,6 +442,9 @@ async function renderView(viewName) {
             break;
         case 'energy':
             tagName = 'energy-view';
+            break;
+        case 'carbon':
+            tagName = 'carbon-view';
             break;
         case 'music':
             tagName = 'music-view';
