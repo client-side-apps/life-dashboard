@@ -310,7 +310,7 @@ export class TimelineDay extends HTMLElement {
             if (p.reposts) counts.push(`${p.reposts} ↻`);
 
             stats.push({
-                icon: '🐦',
+                icon: icon('post'),
                 label: time,
                 value: p.text,
                 sub: counts.length > 0 ? counts.join(' · ') : null,
