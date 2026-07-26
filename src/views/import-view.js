@@ -52,8 +52,23 @@ export class ImportView extends HTMLElement {
 
                     <div id="status-area" class="import-status-area"></div>
                 </div>
+
+                <div class="card">
+                    <h2>Manual Entry</h2>
+                    <p>Add a single record by hand to any table.</p>
+
+                    <div class="import-filter-container">
+                        <label for="manual-table-select">Table:</label>
+                        <select id="manual-table-select" class="select-input">
+                            <option value="">(Select a table)</option>
+                        </select>
+                    </div>
+
+                    <form id="manual-entry-form" class="manual-entry-form" hidden></form>
+                    <div id="manual-entry-status" class="import-status-area"></div>
+                </div>
             </div>
-            
+
         `;
 
         const input = this.querySelector('#csv-input');
@@ -118,6 +133,111 @@ export class ImportView extends HTMLElement {
 
         if (folderBtn) {
             folderBtn.addEventListener('click', () => this.handleFolderSelection());
+        }
+
+        this.setupManualEntry();
+    }
+
+    setupManualEntry() {
+        const tableSelect = this.querySelector('#manual-table-select');
+        const form = this.querySelector('#manual-entry-form');
+        if (!tableSelect || !form) return;
+
+        dataRepository.getTables().forEach(table => {
+            const option = document.createElement('option');
+            option.value = table;
+            option.textContent = table;
+            tableSelect.appendChild(option);
+        });
+
+        tableSelect.addEventListener('change', () => this.renderManualEntryForm(tableSelect.value));
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.submitManualEntry(tableSelect.value);
+        });
+    }
+
+    renderManualEntryForm(tableName) {
+        const form = this.querySelector('#manual-entry-form');
+        const status = this.querySelector('#manual-entry-status');
+        if (!form) return;
+
+        status.innerHTML = '';
+        form.innerHTML = '';
+
+        if (!tableName) {
+            form.hidden = true;
+            return;
+        }
+
+        // 'id' is auto-assigned and 'source' is stamped as 'manual'.
+        const columns = dataRepository.getTableColumns(tableName)
+            .filter(col => col.name !== 'id' && col.name !== 'source');
+
+        form.innerHTML = columns.map(col => {
+            const isNumeric = ['INTEGER', 'REAL', 'NUMERIC'].includes((col.type || '').toUpperCase());
+            const isTimestamp = col.name === 'timestamp' || col.name.endsWith('_timestamp');
+
+            let input;
+            if (isTimestamp) {
+                input = `<input type="datetime-local" id="manual-field-${col.name}" name="${col.name}">`;
+            } else if (isNumeric) {
+                input = `<input type="number" step="any" id="manual-field-${col.name}" name="${col.name}">`;
+            } else {
+                input = `<input type="text" id="manual-field-${col.name}" name="${col.name}">`;
+            }
+
+            return `
+                <label for="manual-field-${col.name}">${col.name}</label>
+                ${input}
+            `;
+        }).join('') + `
+            <span></span>
+            <button type="submit" class="primary-btn">Add Record</button>
+        `;
+
+        form.hidden = false;
+    }
+
+    async submitManualEntry(tableName) {
+        const form = this.querySelector('#manual-entry-form');
+        const status = this.querySelector('#manual-entry-status');
+        if (!form || !tableName) return;
+
+        const data = {};
+        for (const input of form.querySelectorAll('input')) {
+            const value = input.value.trim();
+            if (value === '') continue;
+
+            if (input.type === 'datetime-local') {
+                const ts = new Date(value).getTime();
+                if (isNaN(ts)) continue;
+                data[input.name] = ts;
+            } else if (input.type === 'number') {
+                data[input.name] = Number(value);
+            } else {
+                data[input.name] = value;
+            }
+        }
+
+        if (Object.keys(data).length === 0) {
+            status.innerHTML = '<div class="import-log-warning import-log-item">Fill in at least one field.</div>';
+            return;
+        }
+        data.source = 'manual';
+
+        try {
+            dataRepository.insertRecord(tableName, data);
+            status.innerHTML = `<div class="import-log-success import-log-item">Record added to ${tableName}.</div>`;
+            form.reset();
+
+            if (dataRepository.hasFileHandle()) {
+                await dataRepository.saveDatabase();
+                status.innerHTML += '<div class="import-log-success import-log-item">Changes saved to database file.</div>';
+            }
+        } catch (err) {
+            console.error('Manual entry failed', err);
+            status.innerHTML = `<div class="import-log-error import-log-item">Error: ${err.message}</div>`;
         }
     }
 
