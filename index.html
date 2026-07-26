@@ -33,7 +33,6 @@
             <a href="#/health" class="nav-btn">Health</a>
             <a href="#/finance" class="nav-btn">Finance</a>
             <a href="#/energy" class="nav-btn">Energy</a>
-            <a href="#/carbon" class="nav-btn">Carbon</a>
             <a href="#/music" class="nav-btn">Music</a>
             <a href="#/data" class="nav-btn">Data</a>
         </nav>
@@ -159,6 +158,31 @@
             <chart-card title="Gas Import" chart-id="gas-chart"></chart-card>
             <chart-card title="Water Usage" chart-id="water-chart"></chart-card>
         </div>
+        <section class="carbon-section" aria-label="Carbon footprint">
+            <h2>Carbon Footprint</h2>
+            <div class="finance-dashboard">
+                <div class="card">
+                    <h3>Total</h3>
+                    <p class="amount primary" id="carbon-total">--</p>
+                </div>
+                <div class="card">
+                    <h3>Electricity</h3>
+                    <p class="amount secondary" id="carbon-electricity">--</p>
+                </div>
+                <div class="card">
+                    <h3>Gas</h3>
+                    <p class="amount secondary" id="carbon-gas">--</p>
+                </div>
+                <div class="card">
+                    <h3>Travel</h3>
+                    <p class="amount accent" id="carbon-travel">--</p>
+                </div>
+            </div>
+            <div class="charts-grid">
+                <chart-card title="Daily Carbon Footprint (kg CO2e)" chart-id="carbon-daily-chart"></chart-card>
+            </div>
+            <p class="carbon-disclaimer" id="carbon-disclaimer"></p>
+        </section>
         </div>
     </template>
 
