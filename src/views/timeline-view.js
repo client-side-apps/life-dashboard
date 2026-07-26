@@ -11,7 +11,8 @@ const TIMELINE_SOURCES = [
     { table: 'sleep' },
     { table: 'nutrition_servings' },
     { table: 'music' },
-    { table: 'dives' }
+    { table: 'dives' },
+    { table: 'calendar_events' }
 ];
 
 // Days rendered per batch. Further batches load as the user scrolls down.
@@ -272,6 +273,23 @@ export class TimelineView extends DataView {
                 });
             });
         } catch (e) { console.warn('Dives fetch failed', e); }
+
+        // 8. Fetch Calendar Events
+        try {
+            read('calendar_events').forEach(row => {
+                events.push({
+                    timestamp: row.timestamp,
+                    type: 'calendar',
+                    title: row.title,
+                    description: row.description,
+                    location: row.location,
+                    end_timestamp: row.end_timestamp,
+                    all_day: row.all_day,
+                    status: row.status,
+                    note: row.note
+                });
+            });
+        } catch (e) { console.warn('Calendar fetch failed', e); }
 
         // Group by Day
         const groupedByDay = {};
