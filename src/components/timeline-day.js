@@ -57,6 +57,7 @@ export class TimelineDay extends HTMLElement {
         const nutritionEvents = events.filter(e => e.type === 'nutrition');
         const musicEvents = events.filter(e => e.type === 'music');
         const diveEvents = events.filter(e => e.type === 'dive');
+        const calendarEvents = events.filter(e => e.type === 'calendar');
 
         // Calculate Stats
         let stats = [];
@@ -248,6 +249,22 @@ export class TimelineDay extends HTMLElement {
             });
         }
 
+        // Calendar Events
+        [...calendarEvents].sort((a, b) => a.timestamp - b.timestamp).forEach(e => {
+            const formatTime = (ts) => new Date(ts).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+            const timeStr = e.all_day
+                ? 'All day'
+                : (e.end_timestamp ? `${formatTime(e.timestamp)} – ${formatTime(e.end_timestamp)}` : formatTime(e.timestamp));
+
+            stats.push({
+                icon: '📅',
+                label: e.title,
+                value: timeStr,
+                sub: e.location || null,
+                note: e.note || null
+            });
+        });
+
         // Consolidated Daily Notes
         const dailyNotesList = [];
         if (weightEvents.length > 0 && weightEvents[0].note) {
@@ -262,6 +279,7 @@ export class TimelineDay extends HTMLElement {
         });
         musicEvents.forEach(e => { if (e.note) dailyNotesList.push({ type: 'Music', note: `${e.track_name} by ${e.artist_name}: ${e.note}` }); });
         locationEvents.forEach(e => { if (e.note) dailyNotesList.push({ type: 'Location', note: e.note }); });
+        calendarEvents.forEach(e => { if (e.note) dailyNotesList.push({ type: 'Calendar', note: `${e.title}: ${e.note}` }); });
         diveEvents.forEach(e => {
             if (e.note) {
                 const loc = [e.spot, e.city, e.country].filter(Boolean).join(', ');
