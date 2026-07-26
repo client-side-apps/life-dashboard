@@ -24,6 +24,39 @@ export function hasFileHandle() {
     return !!dbService.fileHandle;
 }
 
+// --- Manual entry ---
+
+/**
+ * Lists the columns of a table as returned by PRAGMA table_info
+ * (objects with name, type, pk...).
+ */
+export function getTableColumns(tableName) {
+    const tables = getTables();
+    if (!tables.includes(tableName)) return [];
+    return dbService.query(`PRAGMA table_info("${tableName}")`);
+}
+
+/**
+ * Inserts a single record. Column names are validated against the table
+ * schema before being interpolated into the statement.
+ */
+export function insertRecord(tableName, data) {
+    const validColumns = new Set(getTableColumns(tableName).map(c => c.name));
+    if (validColumns.size === 0) throw new Error(`Unknown table: ${tableName}`);
+
+    const columns = Object.keys(data);
+    for (const col of columns) {
+        if (!validColumns.has(col)) throw new Error(`Unknown column: ${col}`);
+    }
+    if (columns.length === 0) throw new Error('No values to insert');
+
+    const placeholders = columns.map(() => '?').join(', ');
+    dbService.query(
+        `INSERT INTO "${tableName}" (${columns.map(c => `"${c}"`).join(', ')}) VALUES (${placeholders})`,
+        columns.map(c => data[c])
+    );
+}
+
 // --- Finance ---
 
 export function getAccounts() {

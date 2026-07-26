@@ -2,6 +2,16 @@ import { DataImporter } from '../services/data-importer.js';
 import JSZip from 'jszip';
 import * as dataRepository from '../services/data-repository.js';
 
+// Sanitized HTML injection for markup built from database values.
+// Falls back to innerHTML on browsers without the Sanitizer API.
+function setSafeHTML(element, html) {
+    if (element.setHTML) {
+        element.setHTML(html);
+    } else {
+        element.innerHTML = html;
+    }
+}
+
 export class ImportView extends HTMLElement {
     constructor() {
         super();
@@ -54,8 +64,23 @@ export class ImportView extends HTMLElement {
 
                     <div id="status-area" class="import-status-area"></div>
                 </div>
+
+                <div class="card">
+                    <h2>Manual Entry</h2>
+                    <p>Add a single record by hand to any table.</p>
+
+                    <div class="import-filter-container">
+                        <label for="manual-table-select">Table:</label>
+                        <select id="manual-table-select" class="select-input">
+                            <option value="">(Select a table)</option>
+                        </select>
+                    </div>
+
+                    <form id="manual-entry-form" class="manual-entry-form" hidden></form>
+                    <div id="manual-entry-status" class="import-status-area import-log-item" hidden></div>
+                </div>
             </div>
-            
+
         `;
 
         const input = this.querySelector('#csv-input');
@@ -127,6 +152,126 @@ export class ImportView extends HTMLElement {
         if (folderBtn) {
             folderBtn.addEventListener('click', () => this.handleFolderSelection());
         }
+
+        this.setupManualEntry();
+    }
+
+    setupManualEntry() {
+        const tableSelect = this.querySelector('#manual-table-select');
+        const form = this.querySelector('#manual-entry-form');
+        if (!tableSelect || !form) return;
+
+        dataRepository.getTables().forEach(table => {
+            const option = document.createElement('option');
+            option.value = table;
+            option.textContent = table;
+            tableSelect.appendChild(option);
+        });
+
+        tableSelect.addEventListener('change', () => this.renderManualEntryForm(tableSelect.value));
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.submitManualEntry(tableSelect.value);
+        });
+    }
+
+    renderManualEntryForm(tableName) {
+        const form = this.querySelector('#manual-entry-form');
+        const status = this.querySelector('#manual-entry-status');
+        if (!form) return;
+
+        status.hidden = true;
+        form.replaceChildren();
+
+        if (!tableName) {
+            form.hidden = true;
+            return;
+        }
+
+        // 'id' is auto-assigned and 'source' is stamped as 'manual'.
+        const columns = dataRepository.getTableColumns(tableName)
+            .filter(col => col.name !== 'id' && col.name !== 'source');
+
+        setSafeHTML(form, columns.map(col => {
+            const isNumeric = ['INTEGER', 'REAL', 'NUMERIC'].includes((col.type || '').toUpperCase());
+            const isTimestamp = col.name === 'timestamp' || col.name.endsWith('_timestamp');
+
+            let input;
+            if (isTimestamp) {
+                input = `<input type="datetime-local" id="manual-field-${col.name}" name="${col.name}">`;
+            } else if (isNumeric) {
+                input = `<input type="number" step="any" id="manual-field-${col.name}" name="${col.name}">`;
+            } else {
+                input = `<input type="text" id="manual-field-${col.name}" name="${col.name}">`;
+            }
+
+            return `
+                <label for="manual-field-${col.name}">${col.name}</label>
+                ${input}
+            `;
+        }).join('') + `
+            <span></span>
+            <button type="submit" class="primary-btn">Add Record</button>
+        `);
+
+        form.hidden = false;
+    }
+
+    async submitManualEntry(tableName) {
+        const form = this.querySelector('#manual-entry-form');
+        const status = this.querySelector('#manual-entry-status');
+        if (!form || !tableName) return;
+
+        const data = {};
+        for (const input of form.querySelectorAll('input')) {
+            const value = input.value.trim();
+            if (value === '') continue;
+
+            if (input.type === 'datetime-local') {
+                const ts = new Date(value).getTime();
+                if (isNaN(ts)) continue;
+                data[input.name] = ts;
+            } else if (input.type === 'number') {
+                data[input.name] = Number(value);
+            } else {
+                data[input.name] = value;
+            }
+        }
+
+        if (Object.keys(data).length === 0) {
+            this.setManualStatus('warning', 'Fill in at least one field.');
+            return;
+        }
+        data.source = 'manual';
+
+        try {
+            dataRepository.insertRecord(tableName, data);
+            let message = `Record added to ${tableName}.`;
+            form.reset();
+
+            if (dataRepository.hasFileHandle()) {
+                await dataRepository.saveDatabase();
+                message += ' Changes saved to database file.';
+            }
+            this.setManualStatus('success', message);
+        } catch (err) {
+            console.error('Manual entry failed', err);
+            this.setManualStatus('error', `Error: ${err.message}`);
+        }
+    }
+
+    /**
+     * Shows the manual entry status element with the given text.
+     * The element lives in the static markup; only its text and
+     * visibility change.
+     * @param {'success'|'warning'|'error'} kind
+     */
+    setManualStatus(kind, text) {
+        const status = this.querySelector('#manual-entry-status');
+        if (!status) return;
+        status.className = `import-status-area import-log-item import-log-${kind}`;
+        status.textContent = text;
+        status.hidden = false;
     }
 
     async handleFileSelection(fileList) {
