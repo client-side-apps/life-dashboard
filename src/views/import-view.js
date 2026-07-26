@@ -2,6 +2,16 @@ import { DataImporter } from '../services/data-importer.js';
 import JSZip from 'jszip';
 import * as dataRepository from '../services/data-repository.js';
 
+// Sanitized HTML injection for markup built from database values.
+// Falls back to innerHTML on browsers without the Sanitizer API.
+function setSafeHTML(element, html) {
+    if (element.setHTML) {
+        element.setHTML(html);
+    } else {
+        element.innerHTML = html;
+    }
+}
+
 export class ImportView extends HTMLElement {
     constructor() {
         super();
@@ -65,7 +75,7 @@ export class ImportView extends HTMLElement {
                     </div>
 
                     <form id="manual-entry-form" class="manual-entry-form" hidden></form>
-                    <div id="manual-entry-status" class="import-status-area"></div>
+                    <div id="manual-entry-status" class="import-status-area import-log-item" hidden></div>
                 </div>
             </div>
 
@@ -162,8 +172,8 @@ export class ImportView extends HTMLElement {
         const status = this.querySelector('#manual-entry-status');
         if (!form) return;
 
-        status.innerHTML = '';
-        form.innerHTML = '';
+        status.hidden = true;
+        form.replaceChildren();
 
         if (!tableName) {
             form.hidden = true;
@@ -174,7 +184,7 @@ export class ImportView extends HTMLElement {
         const columns = dataRepository.getTableColumns(tableName)
             .filter(col => col.name !== 'id' && col.name !== 'source');
 
-        form.innerHTML = columns.map(col => {
+        setSafeHTML(form, columns.map(col => {
             const isNumeric = ['INTEGER', 'REAL', 'NUMERIC'].includes((col.type || '').toUpperCase());
             const isTimestamp = col.name === 'timestamp' || col.name.endsWith('_timestamp');
 
@@ -194,7 +204,7 @@ export class ImportView extends HTMLElement {
         }).join('') + `
             <span></span>
             <button type="submit" class="primary-btn">Add Record</button>
-        `;
+        `);
 
         form.hidden = false;
     }
@@ -221,24 +231,39 @@ export class ImportView extends HTMLElement {
         }
 
         if (Object.keys(data).length === 0) {
-            status.innerHTML = '<div class="import-log-warning import-log-item">Fill in at least one field.</div>';
+            this.setManualStatus('warning', 'Fill in at least one field.');
             return;
         }
         data.source = 'manual';
 
         try {
             dataRepository.insertRecord(tableName, data);
-            status.innerHTML = `<div class="import-log-success import-log-item">Record added to ${tableName}.</div>`;
+            let message = `Record added to ${tableName}.`;
             form.reset();
 
             if (dataRepository.hasFileHandle()) {
                 await dataRepository.saveDatabase();
-                status.innerHTML += '<div class="import-log-success import-log-item">Changes saved to database file.</div>';
+                message += ' Changes saved to database file.';
             }
+            this.setManualStatus('success', message);
         } catch (err) {
             console.error('Manual entry failed', err);
-            status.innerHTML = `<div class="import-log-error import-log-item">Error: ${err.message}</div>`;
+            this.setManualStatus('error', `Error: ${err.message}`);
         }
+    }
+
+    /**
+     * Shows the manual entry status element with the given text.
+     * The element lives in the static markup; only its text and
+     * visibility change.
+     * @param {'success'|'warning'|'error'} kind
+     */
+    setManualStatus(kind, text) {
+        const status = this.querySelector('#manual-entry-status');
+        if (!status) return;
+        status.className = `import-status-area import-log-item import-log-${kind}`;
+        status.textContent = text;
+        status.hidden = false;
     }
 
     async handleFileSelection(fileList) {
