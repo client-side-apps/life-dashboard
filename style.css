@@ -458,6 +458,36 @@ map-view {
 }
 
 /* Timeline */
+.timeline-controls {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    min-height: 1.2rem;
+    margin-bottom: 0.5rem;
+    padding-right: 40px; /* Clear the timeline scale */
+}
+
+#timeline-stats {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    opacity: 0.7;
+}
+
+/* Marks the end of the loaded days: scrolling to it loads the next batch */
+.timeline-sentinel {
+    padding: 1rem;
+    text-align: center;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    opacity: 0.7;
+}
+
+.timeline-content .no-data {
+    border: 1px dashed var(--border-color);
+    padding: 1rem;
+    text-align: center;
+}
+
 .timeline-item {
     border-left: 2px solid var(--border-color);
     padding-left: 1rem;

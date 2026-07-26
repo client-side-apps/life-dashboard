@@ -88,16 +88,30 @@ export function getEnergyOldestDate() {
 }
 
 export function getTimeSeriesData(tableName, startDate, endDate, orderBy = 'ASC') {
+    let startTs = null;
+    let endTs = null;
+
+    if (startDate && endDate) {
+        startTs = new Date(startDate + 'T00:00:00').getTime();
+        endTs = new Date(endDate + 'T23:59:59.999').getTime();
+    }
+
+    return getTimestampRangeData(tableName, startTs, endTs, orderBy);
+}
+
+/**
+ * Same as getTimeSeriesData but takes Unix timestamps in milliseconds.
+ * Useful to fetch an exact slice of a range (e.g. paginated loading).
+ */
+export function getTimestampRangeData(tableName, startTs, endTs, orderBy = 'ASC') {
     const tables = getTables();
     if (!tables.includes(tableName)) return [];
 
     let query = `SELECT * FROM "${tableName}"`;
     let params = [];
 
-    if (startDate && endDate) {
+    if (startTs != null && endTs != null) {
         query += ` WHERE timestamp >= ? AND timestamp <= ?`;
-        const startTs = new Date(startDate + 'T00:00:00').getTime();
-        const endTs = new Date(endDate + 'T23:59:59.999').getTime();
         params.push(startTs);
         params.push(endTs);
     }
@@ -188,6 +202,38 @@ export function getSpatialData(tableName, startDate, endDate, limit = 2000) {
 
 export function getDateRangeData(tableName, startDate, endDate) {
     return getTimeSeriesData(tableName, startDate, endDate, 'DESC');
+}
+
+/**
+ * Lists the days (UTC, 'YYYY-MM-DD') holding at least one row in the given sources,
+ * most recent first. Lets a view know what to render before reading any row.
+ * @param {Array<string|{table: string, where?: string}>} sources tables to look at,
+ *   optionally with an extra SQL condition qualifying a row as data.
+ * @param {number} startTs Unix timestamp in milliseconds
+ * @param {number} endTs Unix timestamp in milliseconds
+ */
+export function getDaysWithData(sources, startTs, endTs) {
+    const tables = getTables();
+    const days = new Set();
+
+    for (const source of sources) {
+        const { table, where } = typeof source === 'string' ? { table: source } : source;
+        if (!tables.includes(table)) continue;
+
+        let query = `SELECT DISTINCT strftime('%Y-%m-%d', timestamp / 1000, 'unixepoch') AS day FROM "${table}"`;
+        query += ` WHERE timestamp >= ? AND timestamp <= ?`;
+        if (where) query += ` AND (${where})`;
+
+        try {
+            dbService.query(query, [startTs, endTs]).forEach(row => {
+                if (row.day) days.add(row.day);
+            });
+        } catch (e) {
+            console.warn(`Could not list days with data for table ${table}`, e);
+        }
+    }
+
+    return Array.from(days).sort().reverse();
 }
 
 // --- Health / Activities ---
