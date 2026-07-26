@@ -140,4 +140,80 @@ describe('GoogleTimelineImporter', () => {
         assert.strictEqual(row.lat, 37.7749);
         assert.strictEqual(row.lng, -122.4194);
     });
+
+    it('should detect the on-device Timeline export (top-level array)', () => {
+        const data = [
+            { startTime: "2025-01-01T08:00:00Z", endTime: "2025-01-01T09:00:00Z", visit: {} }
+        ];
+        assert.ok(GoogleTimelineImporter.detect(data));
+        assert.strictEqual(GoogleTimelineImporter.detect([{ foo: 'bar' }]), false);
+    });
+
+    it('should parse geo: URI coordinates', () => {
+        const row = GoogleTimelineImporter.mapRow({ point: "geo:37.7749,-122.4194", time: "2025-01-01T08:00:00Z" });
+        assert.strictEqual(row.lat, 37.7749);
+        assert.strictEqual(row.lng, -122.4194);
+    });
+
+    it('should reject out-of-range coordinates and invalid times', () => {
+        assert.strictEqual(GoogleTimelineImporter.mapRow({ point: "137.0,-122.0", time: "2025-01-01T08:00:00Z" }), null);
+        assert.strictEqual(GoogleTimelineImporter.mapRow({ point: "37.0,-222.0", time: "2025-01-01T08:00:00Z" }), null);
+        assert.strictEqual(GoogleTimelineImporter.mapRow({ point: "37.0,-122.0", time: "not a time" }), null);
+    });
+
+    it('should extract on-device segments with geo: strings and minute offsets', () => {
+        const data = [
+            {
+                startTime: "2025-01-01T08:00:00.000Z",
+                endTime: "2025-01-01T09:00:00.000Z",
+                timelinePath: [
+                    { point: "geo:37.7749,-122.4194", durationMinutesOffsetFromStartTime: "0" },
+                    { point: "geo:37.7849,-122.4094", durationMinutesOffsetFromStartTime: "30" }
+                ]
+            },
+            {
+                startTime: "2025-01-01T10:00:00.000Z",
+                endTime: "2025-01-01T11:00:00.000Z",
+                visit: { topCandidate: { placeLocation: "geo:37.7749,-122.4194" } }
+            },
+            {
+                startTime: "2025-01-01T12:00:00.000Z",
+                endTime: "2025-01-01T12:30:00.000Z",
+                activity: { start: "geo:37.7749,-122.4194", end: "geo:37.7849,-122.4094" }
+            }
+        ];
+
+        const items = GoogleTimelineImporter.extractItems(data);
+        assert.strictEqual(items.length, 6, 'two path points, visit start+end, activity start+end');
+
+        const second = GoogleTimelineImporter.mapRow(items[1]);
+        assert.strictEqual(second.timestamp, new Date("2025-01-01T08:30:00.000Z").getTime(), 'offset minutes are added to segment start');
+        assert.strictEqual(second.lat, 37.7849);
+
+        const visitStart = GoogleTimelineImporter.mapRow(items[2]);
+        assert.strictEqual(visitStart.lat, 37.7749);
+        assert.strictEqual(visitStart.timestamp, new Date("2025-01-01T10:00:00.000Z").getTime());
+    });
+
+    it('should extract the raw Records.json format', () => {
+        const data = {
+            locations: [
+                { latitudeE7: 377490000, longitudeE7: -1224194000, timestamp: "2025-01-01T08:00:00Z" },
+                { latitudeE7: 377500000, longitudeE7: -1224150000, timestampMs: "1735718400000" },
+                { latitudeE7: 377510000 } // no longitude/time: skipped
+            ]
+        };
+
+        assert.ok(GoogleTimelineImporter.detect(data));
+
+        const items = GoogleTimelineImporter.extractItems(data);
+        assert.strictEqual(items.length, 2);
+
+        const first = GoogleTimelineImporter.mapRow(items[0]);
+        assert.strictEqual(first.lat, 37.749);
+        assert.strictEqual(first.lng, -122.4194);
+
+        const second = GoogleTimelineImporter.mapRow(items[1]);
+        assert.strictEqual(second.timestamp, 1735718400000);
+    });
 });

@@ -91,12 +91,15 @@ The application supports importing data from various CSV/JSON sources. Below is 
 ## Location
 
 ### Google Timeline
-*   **File Type**: JSON (monthly semantic segment exports, e.g. `timeline.json`, or the legacy Semantic Location History export)
-*   **Detection**: Checks for `semanticSegments` or `timelineObjects` properties.
+*   **File Type**: JSON (monthly semantic segment exports, the on-device Timeline export from a phone, the raw `Records.json` from Takeout, or the legacy Semantic Location History export)
+*   **Detection**: Checks for `semanticSegments`, `timelineObjects` or `locations` properties, or a top-level array of segments with `startTime` and `visit`/`activity`/`timelinePath` (on-device export).
 *   **Data Processed**:
     *   Imports into `location` table.
     *   **Semantic segments format**: extracts `timelinePath` points, visit locations (a point at both the start and end of each visit), and activity start/end coordinates when no path is present.
+    *   **On-device Timeline export** (Android/iOS "Export Timeline data"): same segment shapes as above, with `geo:lat,lng` coordinate strings, and `timelinePath` points expressed as `durationMinutesOffsetFromStartTime` relative to the segment start.
+    *   **Raw `Records.json`**: extracts every record of the flat `locations` array (`latitudeE7`/`longitudeE7` with `timestamp` or legacy `timestampMs`).
     *   **Legacy `timelineObjects` format**: extracts `placeVisit` locations (start and end of the visit), `activitySegment` start/end locations, and `simplifiedRawPath` points (E7 integer coordinates are converted to degrees).
+    *   Coordinates are validated (latitude within ±90, longitude within ±180); invalid points and timestamps are skipped.
 
 ## Water
 
