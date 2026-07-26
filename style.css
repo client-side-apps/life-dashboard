@@ -527,6 +527,23 @@ map-view {
     gap: 0.5rem;
 }
 
+.pixel-icon {
+    width: 1em;
+    height: 1em;
+    vertical-align: -0.125em;
+}
+
+.stat-icon {
+    display: inline-flex;
+    align-items: center;
+    color: var(--text-color);
+}
+
+.stat-icon .pixel-icon {
+    width: 1.1em;
+    height: 1.1em;
+}
+
 .stat-value {
     font-weight: 900;
 }

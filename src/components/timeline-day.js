@@ -1,5 +1,6 @@
 import L from 'leaflet';
 import { getChartColor, ChartColors } from '../utils/style.js';
+import { icon } from '../utils/icons.js';
 
 export class TimelineDay extends HTMLElement {
     constructor() {
@@ -81,7 +82,7 @@ export class TimelineDay extends HTMLElement {
 
         if (totalSteps > 0) {
             stats.push({
-                icon: '👟',
+                icon: icon('steps'),
                 label: 'Steps',
                 value: totalSteps.toLocaleString(),
                 sub: totalDist > 0 ? `${totalDist.toFixed(1)} km` : null,
@@ -118,7 +119,7 @@ export class TimelineDay extends HTMLElement {
                 : null;
 
             stats.push({
-                icon: '😴',
+                icon: icon('sleep'),
                 label: 'Sleep',
                 value: `${sleepDuration.toFixed(1)}h`,
                 sub: sleepRange,
@@ -173,7 +174,7 @@ export class TimelineDay extends HTMLElement {
             };
 
             stats.push({
-                icon: '🥗',
+                icon: icon('nutrition'),
                 label: 'Nutrition',
                 value: `${Math.round(totalCals)} kcal`,
                 linkId: `nutrition-toggle-${date}`,
@@ -183,7 +184,7 @@ export class TimelineDay extends HTMLElement {
                         <div class="nutrition-meal">
                             <strong>${meal.meal_group} (${meal.calories} kcal)</strong>
                             <ul class="nutrition-foods">${meal.foods.map(f =>
-                                `<li>${f.name} (${formatAmount(f.amount)})${f.note ? ` — 📝 <span class="timeline-inline-note">${f.note}</span>` : ''}</li>`
+                                `<li>${f.name} (${formatAmount(f.amount)})${f.note ? ` — ${icon('note')} <span class="timeline-inline-note">${f.note}</span>` : ''}</li>`
                             ).join('')}</ul>
                         </div>
                     `).join('')}
@@ -195,7 +196,7 @@ export class TimelineDay extends HTMLElement {
         if (weightEvents.length > 0) {
             const lastWeight = weightEvents[0].details;
             stats.push({
-                icon: '⚖️',
+                icon: icon('weight'),
                 label: 'Weight',
                 value: lastWeight,
                 note: weightEvents[0].note || null
@@ -210,7 +211,7 @@ export class TimelineDay extends HTMLElement {
             const timeStr = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
 
             stats.push({
-                icon: '🎵',
+                icon: icon('music'),
                 label: 'Music',
                 value: `${musicEvents.length} tracks`,
                 sub: timeStr,
@@ -219,7 +220,7 @@ export class TimelineDay extends HTMLElement {
                     <ul class="music-tracks">
                         ${musicEvents.map(t => {
                             const time = new Date(t.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                            return `<li><span class="track-time">${time}</span> <strong>${t.track_name}</strong> <span class="track-artist">by ${t.artist_name}</span>${t.note ? ` — 📝 <span class="timeline-inline-note">${t.note}</span>` : ''}</li>`;
+                            return `<li><span class="track-time">${time}</span> <strong>${t.track_name}</strong> <span class="track-artist">by ${t.artist_name}</span>${t.note ? ` — ${icon('note')} <span class="timeline-inline-note">${t.note}</span>` : ''}</li>`;
                         }).join('')}
                     </ul>
                 </div>`
@@ -232,7 +233,7 @@ export class TimelineDay extends HTMLElement {
             const maxDepth = Math.max(...diveEvents.map(e => e.max_depth_meters || 0));
 
             stats.push({
-                icon: '🤿',
+                icon: icon('dive'),
                 label: 'Diving',
                 value: `${diveEvents.length} dive${diveEvents.length > 1 ? 's' : ''}`,
                 sub: `${maxDepth.toFixed(1)}m max depth · ${totalDuration} min`,
@@ -241,7 +242,7 @@ export class TimelineDay extends HTMLElement {
                     <ul class="dive-logs" style="margin: 0; padding-left: 1.25rem; list-style: disc; opacity: 0.8;">
                         ${diveEvents.map(d => {
                             const loc = [d.spot, d.city, d.country].filter(Boolean).join(', ');
-                            return `<li><strong>${loc || 'Unknown site'}</strong> (Depth: ${d.max_depth_meters}m, Dur: ${d.duration_minutes} min, Temp: ${d.water_temp_c || '--'}°C)${d.note ? ` — 📝 <span class="timeline-inline-note">${d.note}</span>` : ''}</li>`;
+                            return `<li><strong>${loc || 'Unknown site'}</strong> (Depth: ${d.max_depth_meters}m, Dur: ${d.duration_minutes} min, Temp: ${d.water_temp_c || '--'}°C)${d.note ? ` — ${icon('note')} <span class="timeline-inline-note">${d.note}</span>` : ''}</li>`;
                         }).join('')}
                     </ul>
                 </div>`
@@ -271,7 +272,7 @@ export class TimelineDay extends HTMLElement {
 
         const dailyNotesHtml = dailyNotesList.length > 0 ? `
             <div class="day-notes-section">
-                <div class="day-notes-header">📝 Daily Notes</div>
+                <div class="day-notes-header">${icon('note')} Daily Notes</div>
                 <ul class="day-notes-list">
                     ${dailyNotesList.map(n => `
                         <li><span class="day-note-type">${n.type}:</span> <span class="day-note-content">${n.note}</span></li>
@@ -301,7 +302,7 @@ export class TimelineDay extends HTMLElement {
                                     }
                                     <span class="stat-value">${s.value}</span>
                                     ${s.sub ? `<span class="stat-sub">(${s.sub})</span>` : ''}
-                                    ${s.note ? `<span class="timeline-inline-note"> — 📝 ${s.note}</span>` : ''}
+                                    ${s.note ? `<span class="timeline-inline-note"> — ${icon('note')} ${s.note}</span>` : ''}
                                 </div>
                                 ${s.expandHtml || ''}
                             `).join('')}
