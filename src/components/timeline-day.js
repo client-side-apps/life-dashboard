@@ -92,15 +92,10 @@ export class TimelineDay extends HTMLElement {
             });
         }
 
-        // Workouts (any activity that isn't walking)
-        const workoutIcons = {
-            'Running': 'running',
-            'Cycling': 'cycling',
-            'Swimming': 'swimming',
-            'Hiking': 'hiking',
-            'Ski': 'ski',
-            'Multi Sport': 'multisport'
-        };
+        // Workouts (any activity that isn't walking). The icon is named after
+        // the activity type, lowercased and without spaces ('Multi Sport' ->
+        // icons/multisport.svg); types without a file use the generic one.
+        const activityIcons = new Set(['running', 'cycling', 'swimming', 'hiking', 'ski', 'multisport']);
 
         [...workoutEvents].sort((a, b) => a.timestamp - b.timestamp).forEach(e => {
             const durationMinutes = e.end_timestamp
@@ -112,13 +107,15 @@ export class TimelineDay extends HTMLElement {
                     : `${durationMinutes}m`)
                 : null;
 
+            const activityIcon = (e.activity_type || '').toLowerCase().replace(/\s/g, '');
+
             const subParts = [];
             if (e.distance) subParts.push(`${(e.distance / 1000).toFixed(2)} km`);
             if (e.calories) subParts.push(`${Math.round(e.calories)} kcal`);
             if (e.hr_average) subParts.push(`${e.hr_average} bpm avg`);
 
             stats.push({
-                icon: workoutIcons[e.activity_type] || 'workout',
+                icon: activityIcons.has(activityIcon) ? activityIcon : 'workout',
                 label: e.activity_type,
                 value: durationStr || new Date(e.timestamp).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }),
                 sub: subParts.length > 0 ? subParts.join(' · ') : null,
