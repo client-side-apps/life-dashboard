@@ -53,6 +53,8 @@ export class EnergyView extends DataView {
             [{ label: 'Net Grid (Import-Export)', col: 'net_grid_kwh', color: getChartColor(ChartColors.Orange) }],
             startDate, endDate);
 
+        await this.renderDailyCostChart(startDate, endDate);
+
         await this.createSingleLineChart('gas-chart', 'Gas Import', 'gas_daily', 'usage_therms', getChartColor(ChartColors.Red), startDate, endDate);
 
         await this.createSingleLineChart('water-chart', 'Water Usage', 'water_daily', 'usage_liters', getChartColor(ChartColors.Blue), startDate, endDate);
@@ -102,6 +104,50 @@ export class EnergyView extends DataView {
                 { label: 'Electricity (kg)', key: 'electricity_kg', color: getChartColor(ChartColors.Yellow) },
                 { label: 'Gas (kg)', key: 'gas_kg', color: getChartColor(ChartColors.Red) },
                 { label: 'Travel (kg)', key: 'travel_kg', color: getChartColor(ChartColors.Blue) }
+            ],
+            startDate: startDate,
+            endDate: endDate,
+            interval: 'daily',
+            stacked: true,
+            fill: true
+        });
+    }
+
+    /**
+     * Stacked chart of the daily cost of electricity and gas.
+     * Merges electricity_grid_daily.cost and gas_daily.cost by day.
+     */
+    async renderDailyCostChart(startDate, endDate) {
+        const chartCard = this.querySelector('chart-card[chart-id="energy-cost-chart"]');
+        if (!chartCard) return;
+
+        const costByDay = new Map();
+        const addCosts = (rows, key) => {
+            rows.forEach(row => {
+                if (row.cost == null) return;
+                const dayTs = new Date(row.timestamp).setHours(0, 0, 0, 0);
+                const entry = costByDay.get(dayTs) || { timestamp: dayTs, electricity_cost: null, gas_cost: null };
+                entry[key] = (entry[key] || 0) + row.cost;
+                costByDay.set(dayTs, entry);
+            });
+        };
+
+        addCosts(dataRepository.getTimeSeriesData('electricity_grid_daily', startDate, endDate, 'ASC'), 'electricity_cost');
+        addCosts(dataRepository.getTimeSeriesData('gas_daily', startDate, endDate, 'ASC'), 'gas_cost');
+
+        const data = Array.from(costByDay.values())
+            .map(entry => ({
+                ...entry,
+                electricity_cost: entry.electricity_cost == null ? null : Math.round(entry.electricity_cost * 100) / 100,
+                gas_cost: entry.gas_cost == null ? null : Math.round(entry.gas_cost * 100) / 100
+            }))
+            .sort((a, b) => a.timestamp - b.timestamp);
+
+        chartCard.setDateRange(startDate, endDate);
+        chartCard.setTimeSeriesData(data, {
+            series: [
+                { label: 'Electricity ($)', key: 'electricity_cost', color: getChartColor(ChartColors.Orange) },
+                { label: 'Gas ($)', key: 'gas_cost', color: getChartColor(ChartColors.Red) }
             ],
             startDate: startDate,
             endDate: endDate,

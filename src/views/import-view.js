@@ -20,7 +20,7 @@ export class ImportView extends HTMLElement {
                 <h1>Import Data</h1>
                 <div class="card">
                     <h2>Import Data</h2>
-                    <p>Select CSV or JSON files or a folder to import data from.</p>
+                    <p>Select CSV, JSON or ICS files or a folder to import data from.</p>
                     
                     <div class="import-filter-container">
                         <label for="type-select">Type:</label>
@@ -29,6 +29,7 @@ export class ImportView extends HTMLElement {
                             <option value="energy">Energy</option>
                             <option value="finance">Finance</option>
                             <option value="health">Health</option>
+                            <option value="calendar">Calendar</option>
                             <option value="location">Location</option>
                             <option value="water">Water</option>
                         </select>
@@ -78,6 +79,9 @@ export class ImportView extends HTMLElement {
             ],
             location: [
                 { value: 'google-timeline', label: 'Google Timeline' }
+            ],
+            calendar: [
+                { value: 'google_calendar', label: 'Google Calendar' }
             ],
             water: [
                 { value: 'flume', label: 'Flume' }
