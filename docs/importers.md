@@ -125,6 +125,11 @@ The application supports importing data from various CSV/JSON sources. Below is 
     *   **Raw `Records.json`**: extracts every record of the flat `locations` array (`latitudeE7`/`longitudeE7` with `timestamp` or legacy `timestampMs`).
     *   **Legacy `timelineObjects` format**: extracts `placeVisit` locations (start and end of the visit), `activitySegment` start/end locations, and `simplifiedRawPath` points (E7 integer coordinates are converted to degrees).
     *   Coordinates are validated (latitude within ±90, longitude within ±180); invalid points and timestamps are skipped.
+*   **Getting the file**:
+    *   **Android**: system Settings app → *Location* → *Location services* → *Timeline* → *Export Timeline data*.
+    *   **iPhone/iPad**: Google Maps → profile picture → *Settings* → *Personal content* → *Export Timeline data* → *Save to Files*. Saved as `location-history.json`.
+    *   **Takeout** (full cloud-side history, where it still exists): [takeout.google.com](https://takeout.google.com), untick everything except *Location History (Timeline)*.
+    *   Note: an on-device export only holds the Timeline stored on *that* phone, not your whole history across devices.
 
 ## Water
 
