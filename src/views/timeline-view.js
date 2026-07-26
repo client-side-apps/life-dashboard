@@ -1,12 +1,33 @@
 import * as dataRepository from '../services/data-repository.js';
 import { DataView } from '../components/data-view/data-view.js';
 import '../components/timeline-day.js';
+import { getDaysWindow, toDayKey } from '../utils/day-range.js';
 
+// Tables feeding the timeline, with the condition qualifying a row as an event.
+const TIMELINE_SOURCES = [
+    { table: 'location' },
+    { table: 'steps', where: 'count > 0' },
+    { table: 'weight' },
+    { table: 'sleep' },
+    { table: 'nutrition_servings' },
+    { table: 'music' },
+    { table: 'dives' }
+];
+
+// Days rendered per batch. Further batches load as the user scrolls down.
+const DAYS_PER_CHUNK = 10;
+
+// How close to the end of the timeline the user must scroll to trigger the next batch.
+const LOAD_MORE_MARGIN_PX = 600;
 
 export class TimelineView extends DataView {
     constructor() {
         super();
-        this.currentTable = null; // Not used anymore
+        this.days = [];
+        this.loadedDays = 0;
+        this.isLoadingChunk = false;
+        this.sentinel = null;
+        this.sentinelObserver = null;
     }
 
     connectedCallback() {
@@ -14,15 +35,18 @@ export class TimelineView extends DataView {
         this.render();
     }
 
-
-
     onDateRangeChanged() {
         this.loadData();
     }
 
-    // loadTableOptions removed
+    getScrollContainer() {
+        return this.closest('.view-container') || document.getElementById('view-container');
+    }
 
-
+    /**
+     * Lists the days holding data for the selected range, then renders the first batch.
+     * Remaining days are rendered on demand by loadNextChunk() as the user scrolls.
+     */
     async loadData() {
         const content = this.querySelector('#timeline-content');
         if (!content) return;
@@ -30,224 +54,299 @@ export class TimelineView extends DataView {
         await this.showLoading();
 
         try {
+            this.teardownSentinel();
             content.innerHTML = '';
+            this.days = [];
+            this.loadedDays = 0;
 
             const startDate = this.startDate;
             const endDate = this.endDate;
 
             if (!startDate || !endDate) return;
 
-            // ... (Fetching logic same as before, no changes needed to fetching) ...
+            this.rangeStartTs = new Date(startDate + 'T00:00:00').getTime();
+            this.rangeEndTs = new Date(endDate + 'T23:59:59.999').getTime();
 
-            // Re-fetch logic to get events (I'll just duplicate the fetch logic briefly or assuming it's preserved by 'replace' if I matched carefully. 
-            // Wait, replace requires exact match. I cannot skip lines.
-            // I should use the original method content and add my calls at the end.
-            // But the original method is long.
-            // I will use a larger context for replacement to ensure safety, or just replace the END of loadData.
+            this.days = dataRepository.getDaysWithData(TIMELINE_SOURCES, this.rangeStartTs, this.rangeEndTs);
 
-            // Actually, I need to modify the loop where I create dayEl to add dataset.date.
-            // And then call updateScale().
-
-            // Let's look at the original code again.
-            // It has:
-            // sortedDays.forEach(dateStr => {
-            //     const dayEvents = groupedByDay[dateStr];
-            //     const dayEl = document.createElement('timeline-day');
-            //     dayEl.data = { date: dateStr, events: dayEvents };
-            //     content.appendChild(dayEl);
-            // });
-
-            // I need to change this loop.
-
-            const startTs = new Date(startDate + 'T00:00:00').getTime();
-            const endTs = new Date(endDate + 'T23:59:59.999').getTime();
-
-            const events = [];
-
-            // 1. Fetch Location
-            try {
-                const locData = dataRepository.getDateRangeData('location', startDate, endDate);
-                locData.forEach(row => {
-                    events.push({
-                        timestamp: row.timestamp,
-                        type: 'location',
-                        title: 'Location Update',
-                        details: `${row.lat.toFixed(4)}, ${row.lng.toFixed(4)}`,
-                        note: row.note
-                    });
-                });
-            } catch (e) { console.warn('Location fetch failed', e); }
-
-            // 2. Fetch Activities (Steps)
-            try {
-                const stepData = dataRepository.getDateRangeData('steps', startDate, endDate);
-                stepData.forEach(row => {
-                    const type = row.type || 'Activity';
-                    if (row.count > 0) {
-                        events.push({
-                            timestamp: row.timestamp,
-                            type: 'activity',
-                            title: type,
-                            details: `${row.count} steps` + (row.distance ? `, ${(row.distance / 1000).toFixed(2)}km` : ''),
-                            note: row.note
-                        });
-                    }
-                });
-            } catch (e) { console.warn('Steps fetch failed', e); }
-
-            // 3. Fetch Weight
-            try {
-                const weightData = dataRepository.getDateRangeData('weight', startDate, endDate);
-                weightData.forEach(row => {
-                    events.push({
-                        timestamp: row.timestamp,
-                        type: 'weight',
-                        title: 'Weight Measurement',
-                        details: `${row.weight_kg} kg`,
-                        note: row.note
-                    });
-                });
-            } catch (e) { console.warn('Weight fetch failed', e); }
-
-            // 4. Fetch Sleep
-            try {
-                const sleepData = dataRepository.getDateRangeData('sleep', startDate, endDate);
-                sleepData.forEach(row => {
-                    events.push({
-                        timestamp: row.timestamp,
-                        type: 'sleep',
-                        duration_hours: row.duration_hours,
-                        start_timestamp: row.start_timestamp,
-                        deep_seconds: row.deep_seconds,
-                        light_seconds: row.light_seconds,
-                        rem_seconds: row.rem_seconds,
-                        awake_seconds: row.awake_seconds,
-                        note: row.note
-                    });
-                });
-            } catch (e) { console.warn('Sleep fetch failed', e); }
-
-            // 5. Fetch Nutrition Servings
-            try {
-                const nutritionData = dataRepository.getDateRangeData('nutrition_servings', startDate, endDate);
-                const mealsByDayAndGroup = {};
-                nutritionData.forEach(row => {
-                    const dateStr = new Date(row.timestamp).toISOString().split('T')[0];
-                    const key = `${dateStr}_${row.meal_group}`;
-                    if (!mealsByDayAndGroup[key]) {
-                        mealsByDayAndGroup[key] = {
-                            timestamp: row.timestamp,
-                            type: 'nutrition',
-                            meal_group: row.meal_group,
-                            foods: [],
-                            calories: 0,
-                            fat_g: 0,
-                            carbs_g: 0,
-                            protein_g: 0
-                        };
-                    }
-                    const item = mealsByDayAndGroup[key];
-                    item.foods.push({ name: row.food_name, amount: row.amount, note: row.note });
-                    item.calories += row.energy_kcal;
-                    item.fat_g += row.fat_g || 0;
-                    item.carbs_g += row.carbs_g || 0;
-                    item.protein_g += row.protein_g || 0;
-                });
-                Object.values(mealsByDayAndGroup).forEach(meal => {
-                    events.push({
-                        timestamp: meal.timestamp,
-                        type: 'nutrition',
-                        meal_group: meal.meal_group,
-                        foods: meal.foods,
-                        calories: Math.round(meal.calories),
-                        fat_g: meal.fat_g,
-                        carbs_g: meal.carbs_g,
-                        protein_g: meal.protein_g
-                    });
-                });
-            } catch (e) { console.warn('Nutrition fetch failed', e); }
-
-            // 6. Fetch Music (Spotify)
-            try {
-                const musicData = dataRepository.getTimeSeriesData('music', startDate, endDate);
-                musicData.forEach(row => {
-                    events.push({
-                        timestamp: row.timestamp,
-                        type: 'music',
-                        track_name: row.track_name,
-                        artist_name: row.artist_name,
-                        duration_ms: row.duration_ms,
-                        platform: row.platform,
-                        note: row.note
-                    });
-                });
-            } catch (e) { console.warn('Music fetch failed', e); }
-
-            // 7. Fetch Dive Logs
-            try {
-                const diveData = dataRepository.getDateRangeData('dives', startDate, endDate);
-                diveData.forEach(row => {
-                    events.push({
-                        timestamp: row.timestamp,
-                        type: 'dive',
-                        dive_number: row.dive_number,
-                        spot: row.spot,
-                        city: row.city,
-                        region: row.region,
-                        country: row.country,
-                        max_depth_meters: row.max_depth_meters,
-                        duration_minutes: row.duration_minutes,
-                        water_temp_c: row.water_temp_c,
-                        dive_type: row.dive_type,
-                        center: row.center,
-                        divers: row.divers,
-                        total_divers: row.total_divers,
-                        note: row.note
-                    });
-                });
-            } catch (e) { console.warn('Dives fetch failed', e); }
-
-            // Sort all events
-            events.sort((a, b) => b.timestamp - a.timestamp);
-
-            if (events.length === 0) {
+            if (this.days.length === 0) {
                 content.innerHTML = '<div class="no-data">No events found for this period.</div>';
+                this.updateStats();
                 this.updateScale([]); // Clear scale
                 return;
             }
 
-            // Group by Day
-            const groupedByDay = {};
-            events.forEach(event => {
-                const dateStr = new Date(event.timestamp).toISOString().split('T')[0];
-                if (!groupedByDay[dateStr]) {
-                    groupedByDay[dateStr] = [];
-                }
-                groupedByDay[dateStr].push(event);
-            });
-
-            const sortedDays = Object.keys(groupedByDay).sort().reverse();
-
-            content.innerHTML = '';
-            sortedDays.forEach(dateStr => {
-                const dayEvents = groupedByDay[dateStr];
-                const dayEl = document.createElement('timeline-day');
-                dayEl.data = { date: dateStr, events: dayEvents };
-                dayEl.dataset.date = dateStr; // Set dataset for query
-                content.appendChild(dayEl);
-            });
-
-            // Update Scale after rendering
-            requestAnimationFrame(() => this.updateScale(sortedDays));
-
+            this.setupSentinel(content);
+            this.loadNextChunk();
         } finally {
             this.hideLoading();
         }
     }
 
+    /**
+     * Renders the next batch of days, reading only the events those days need.
+     */
+    loadNextChunk() {
+        if (this.isLoadingChunk || this.loadedDays >= this.days.length) return;
+
+        const content = this.querySelector('#timeline-content');
+        if (!content) return;
+
+        this.isLoadingChunk = true;
+        try {
+            const chunkDays = this.days.slice(this.loadedDays, this.loadedDays + DAYS_PER_CHUNK);
+            const eventsByDay = this.fetchEvents(chunkDays);
+
+            chunkDays.forEach(dateStr => {
+                const dayEvents = eventsByDay[dateStr];
+                if (!dayEvents || dayEvents.length === 0) return;
+
+                dayEvents.sort((a, b) => b.timestamp - a.timestamp);
+
+                const dayEl = document.createElement('timeline-day');
+                dayEl.dataset.date = dateStr; // Set dataset for query
+                dayEl.data = { date: dateStr, events: dayEvents };
+                content.insertBefore(dayEl, this.sentinel);
+            });
+
+            this.loadedDays += chunkDays.length;
+            this.updateStats();
+
+            if (this.loadedDays >= this.days.length) this.teardownSentinel();
+        } finally {
+            this.isLoadingChunk = false;
+        }
+
+        requestAnimationFrame(() => {
+            this.updateScale(this.days.slice(0, this.loadedDays));
+            // The batch may not fill the viewport: keep loading until it does.
+            this.loadMoreIfSentinelVisible();
+        });
+    }
+
+    /**
+     * Reads every event of the given days and groups them by day.
+     * @param {string[]} chunkDays days ('YYYY-MM-DD'), most recent first
+     * @returns {Object<string, Array>} events indexed by day
+     */
+    fetchEvents(chunkDays) {
+        // The day list is contiguous, so this window holds exactly these days' events.
+        const { startTs, endTs } = getDaysWindow(chunkDays, this.rangeStartTs, this.rangeEndTs);
+
+        const read = (table) => dataRepository.getTimestampRangeData(table, startTs, endTs, 'DESC');
+
+        const events = [];
+
+        // 1. Fetch Location
+        try {
+            read('location').forEach(row => {
+                events.push({
+                    timestamp: row.timestamp,
+                    type: 'location',
+                    title: 'Location Update',
+                    details: `${row.lat.toFixed(4)}, ${row.lng.toFixed(4)}`,
+                    note: row.note
+                });
+            });
+        } catch (e) { console.warn('Location fetch failed', e); }
+
+        // 2. Fetch Activities (Steps)
+        try {
+            read('steps').forEach(row => {
+                const type = row.type || 'Activity';
+                if (row.count > 0) {
+                    events.push({
+                        timestamp: row.timestamp,
+                        type: 'activity',
+                        title: type,
+                        details: `${row.count} steps` + (row.distance ? `, ${(row.distance / 1000).toFixed(2)}km` : ''),
+                        note: row.note
+                    });
+                }
+            });
+        } catch (e) { console.warn('Steps fetch failed', e); }
+
+        // 3. Fetch Weight
+        try {
+            read('weight').forEach(row => {
+                events.push({
+                    timestamp: row.timestamp,
+                    type: 'weight',
+                    title: 'Weight Measurement',
+                    details: `${row.weight_kg} kg`,
+                    note: row.note
+                });
+            });
+        } catch (e) { console.warn('Weight fetch failed', e); }
+
+        // 4. Fetch Sleep
+        try {
+            read('sleep').forEach(row => {
+                events.push({
+                    timestamp: row.timestamp,
+                    type: 'sleep',
+                    duration_hours: row.duration_hours,
+                    start_timestamp: row.start_timestamp,
+                    deep_seconds: row.deep_seconds,
+                    light_seconds: row.light_seconds,
+                    rem_seconds: row.rem_seconds,
+                    awake_seconds: row.awake_seconds,
+                    note: row.note
+                });
+            });
+        } catch (e) { console.warn('Sleep fetch failed', e); }
+
+        // 5. Fetch Nutrition Servings
+        try {
+            const mealsByDayAndGroup = {};
+            read('nutrition_servings').forEach(row => {
+                const dateStr = toDayKey(row.timestamp);
+                const key = `${dateStr}_${row.meal_group}`;
+                if (!mealsByDayAndGroup[key]) {
+                    mealsByDayAndGroup[key] = {
+                        timestamp: row.timestamp,
+                        type: 'nutrition',
+                        meal_group: row.meal_group,
+                        foods: [],
+                        calories: 0,
+                        fat_g: 0,
+                        carbs_g: 0,
+                        protein_g: 0
+                    };
+                }
+                const item = mealsByDayAndGroup[key];
+                item.foods.push({ name: row.food_name, amount: row.amount, note: row.note });
+                item.calories += row.energy_kcal;
+                item.fat_g += row.fat_g || 0;
+                item.carbs_g += row.carbs_g || 0;
+                item.protein_g += row.protein_g || 0;
+            });
+            Object.values(mealsByDayAndGroup).forEach(meal => {
+                events.push({
+                    timestamp: meal.timestamp,
+                    type: 'nutrition',
+                    meal_group: meal.meal_group,
+                    foods: meal.foods,
+                    calories: Math.round(meal.calories),
+                    fat_g: meal.fat_g,
+                    carbs_g: meal.carbs_g,
+                    protein_g: meal.protein_g
+                });
+            });
+        } catch (e) { console.warn('Nutrition fetch failed', e); }
+
+        // 6. Fetch Music (Spotify)
+        try {
+            read('music').forEach(row => {
+                events.push({
+                    timestamp: row.timestamp,
+                    type: 'music',
+                    track_name: row.track_name,
+                    artist_name: row.artist_name,
+                    duration_ms: row.duration_ms,
+                    platform: row.platform,
+                    note: row.note
+                });
+            });
+        } catch (e) { console.warn('Music fetch failed', e); }
+
+        // 7. Fetch Dive Logs
+        try {
+            read('dives').forEach(row => {
+                events.push({
+                    timestamp: row.timestamp,
+                    type: 'dive',
+                    dive_number: row.dive_number,
+                    spot: row.spot,
+                    city: row.city,
+                    region: row.region,
+                    country: row.country,
+                    max_depth_meters: row.max_depth_meters,
+                    duration_minutes: row.duration_minutes,
+                    water_temp_c: row.water_temp_c,
+                    dive_type: row.dive_type,
+                    center: row.center,
+                    divers: row.divers,
+                    total_divers: row.total_divers,
+                    note: row.note
+                });
+            });
+        } catch (e) { console.warn('Dives fetch failed', e); }
+
+        // Group by Day
+        const groupedByDay = {};
+        events.forEach(event => {
+            const dateStr = toDayKey(event.timestamp);
+            if (!groupedByDay[dateStr]) {
+                groupedByDay[dateStr] = [];
+            }
+            groupedByDay[dateStr].push(event);
+        });
+
+        return groupedByDay;
+    }
+
+    /**
+     * Appends the element observed to trigger loading of the next batch of days.
+     */
+    setupSentinel(content) {
+        this.sentinel = document.createElement('div');
+        this.sentinel.className = 'timeline-sentinel';
+        this.sentinel.textContent = 'Loading more…';
+        content.appendChild(this.sentinel);
+
+        this.sentinelObserver = new IntersectionObserver(entries => {
+            if (entries.some(entry => entry.isIntersecting)) this.loadNextChunk();
+        }, { root: this.getScrollContainer(), rootMargin: `${LOAD_MORE_MARGIN_PX}px 0px` });
+
+        this.sentinelObserver.observe(this.sentinel);
+    }
+
+    teardownSentinel() {
+        if (this.sentinelObserver) {
+            this.sentinelObserver.disconnect();
+            this.sentinelObserver = null;
+        }
+        if (this.sentinel) {
+            this.sentinel.remove();
+            this.sentinel = null;
+        }
+    }
+
+    /**
+     * The observer only reports changes, so a batch that leaves the sentinel on
+     * screen (short content, tall window) needs an explicit follow-up check.
+     */
+    loadMoreIfSentinelVisible() {
+        if (!this.sentinel) return;
+
+        const container = this.getScrollContainer();
+        if (!container) return;
+
+        const sentinelRect = this.sentinel.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
+
+        if (sentinelRect.top <= containerRect.bottom + LOAD_MORE_MARGIN_PX) {
+            this.loadNextChunk();
+        }
+    }
+
+    updateStats() {
+        const stats = this.querySelector('#timeline-stats');
+        if (!stats) return;
+
+        if (this.days.length === 0) {
+            stats.textContent = '';
+        } else if (this.loadedDays >= this.days.length) {
+            stats.textContent = `${this.days.length} day${this.days.length > 1 ? 's' : ''} with data`;
+        } else {
+            stats.textContent = `${this.loadedDays} of ${this.days.length} days`;
+        }
+    }
+
     updateScale(sortedDays) {
         const scaleEl = this.querySelector('#timeline-scale');
-        const container = this.closest('.view-container') || document.getElementById('view-container');
+        const container = this.getScrollContainer();
         const content = this.querySelector('#timeline-content');
 
         if (!scaleEl || !container || !content || !sortedDays || sortedDays.length === 0) return;
@@ -320,7 +419,7 @@ export class TimelineView extends DataView {
     }
 
     setupScrollListeners() {
-        const container = this.closest('.view-container') || document.getElementById('view-container');
+        const container = this.getScrollContainer();
         if (!container) return;
 
         if (this._scrollHandler) {
@@ -337,13 +436,14 @@ export class TimelineView extends DataView {
     }
 
     disconnectedCallback() {
-        const container = this.closest('.view-container') || document.getElementById('view-container');
+        const container = this.getScrollContainer();
         if (container && this._scrollHandler) {
             container.removeEventListener('scroll', this._scrollHandler);
         }
         if (this._mouseMoveHandler) {
             window.removeEventListener('pointermove', this._mouseMoveHandler, true);
         }
+        this.teardownSentinel();
         super.disconnectedCallback();
     }
 
@@ -377,7 +477,7 @@ export class TimelineView extends DataView {
     }
 
     updateIndicator() {
-        const container = this.closest('.view-container') || document.getElementById('view-container');
+        const container = this.getScrollContainer();
         if (!container) return;
 
         const indicator = this.querySelector('#timeline-date-indicator');
