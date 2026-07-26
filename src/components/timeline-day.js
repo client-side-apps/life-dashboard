@@ -94,12 +94,12 @@ export class TimelineDay extends HTMLElement {
 
         // Workouts (any activity that isn't walking)
         const workoutIcons = {
-            'Running': '🏃',
-            'Cycling': '🚴',
-            'Swimming': '🏊',
-            'Hiking': '🥾',
-            'Ski': '⛷️',
-            'Multi Sport': '🤸'
+            'Running': icon('running'),
+            'Cycling': icon('cycling'),
+            'Swimming': icon('swimming'),
+            'Hiking': icon('hiking'),
+            'Ski': icon('ski'),
+            'Multi Sport': icon('multisport')
         };
 
         [...workoutEvents].sort((a, b) => a.timestamp - b.timestamp).forEach(e => {
@@ -118,7 +118,7 @@ export class TimelineDay extends HTMLElement {
             if (e.hr_average) subParts.push(`${e.hr_average} bpm avg`);
 
             stats.push({
-                icon: workoutIcons[e.activity_type] || '🏋️',
+                icon: workoutIcons[e.activity_type] || icon('workout'),
                 label: e.activity_type,
                 value: durationStr || new Date(e.timestamp).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }),
                 sub: subParts.length > 0 ? subParts.join(' · ') : null,
@@ -293,7 +293,7 @@ export class TimelineDay extends HTMLElement {
                 : (e.end_timestamp ? `${formatTime(e.timestamp)} – ${formatTime(e.end_timestamp)}` : formatTime(e.timestamp));
 
             stats.push({
-                icon: '📅',
+                icon: icon('calendar'),
                 label: e.title,
                 value: timeStr,
                 sub: e.location || null,
