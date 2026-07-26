@@ -99,7 +99,7 @@ test('WithingsImporter', async (t) => {
             const row = rows[1]; // Second row has valid BP data
             const result = WithingsImporter.mapRow(row);
 
-            assert.strictEqual(result.table, 'blood_pressure');
+            assert.strictEqual(result.table, 'heart');
             assert.strictEqual(result.data.systolic_mmhg, 120);
             assert.strictEqual(result.data.diastolic_mmhg, 80);
             assert.strictEqual(result.data.heart_rate_bpm, 70);
@@ -157,7 +157,7 @@ test('WithingsImporter', async (t) => {
             const result = WithingsImporter.mapRow(hrOnlyRow);
 
             assert.ok(result, 'Heart-rate-only row should not be dropped');
-            assert.strictEqual(result.table, 'blood_pressure');
+            assert.strictEqual(result.table, 'heart');
             assert.strictEqual(result.data.systolic_mmhg, null);
             assert.strictEqual(result.data.diastolic_mmhg, null);
             assert.strictEqual(result.data.heart_rate_bpm, 65);

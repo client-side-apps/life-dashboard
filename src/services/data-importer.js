@@ -215,7 +215,7 @@ export class DataImporter {
     }
 
     static async findExistingBatch(table, minTime, maxTime) {
-        if (['location', 'electricity_hourly', 'electricity_grid_daily', 'gas_daily', 'steps', 'weight', 'height', 'body_temperature', 'sleep', 'blood_pressure', 'water_daily', 'nutrition_daily', 'activities'].includes(table)) {
+        if (['location', 'electricity_hourly', 'electricity_grid_daily', 'gas_daily', 'steps', 'weight', 'height', 'body_temperature', 'sleep', 'heart', 'water_daily', 'nutrition_daily', 'activities'].includes(table)) {
             return dbService.query(`SELECT id, timestamp FROM "${table}" WHERE timestamp >= ? AND timestamp <= ?`, [minTime, maxTime]);
         }
         return [];
@@ -270,7 +270,7 @@ export class DataImporter {
     }
 
     static async findExisting(table, data) {
-        if (['location', 'electricity_hourly', 'electricity_grid_daily', 'gas_daily', 'steps', 'weight', 'height', 'body_temperature', 'sleep', 'blood_pressure', 'water_daily', 'nutrition_daily', 'activities'].includes(table)) {
+        if (['location', 'electricity_hourly', 'electricity_grid_daily', 'gas_daily', 'steps', 'weight', 'height', 'body_temperature', 'sleep', 'heart', 'water_daily', 'nutrition_daily', 'activities'].includes(table)) {
             // Unique key: timestamp
             const result = dbService.query(`SELECT id FROM "${table}" WHERE timestamp = ?`, [data.timestamp]);
             return result.length > 0 ? result[0].id : null;
@@ -378,9 +378,9 @@ export class DataImporter {
                     data.note || null
                 ]
             );
-        } else if (table === 'blood_pressure') {
+        } else if (table === 'heart') {
             dbService.query(
-                'INSERT INTO blood_pressure (timestamp, systolic_mmhg, diastolic_mmhg, heart_rate_bpm, source, note) VALUES (?, ?, ?, ?, ?, ?)',
+                'INSERT INTO heart (timestamp, systolic_mmhg, diastolic_mmhg, heart_rate_bpm, source, note) VALUES (?, ?, ?, ?, ?, ?)',
                 [data.timestamp, data.systolic_mmhg ?? null, data.diastolic_mmhg ?? null, data.heart_rate_bpm || null, data.source, data.note || null]
             );
         } else if (table === 'location') {

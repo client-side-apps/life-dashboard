@@ -30,9 +30,9 @@ export class HealthHeartView extends DataView {
         this.createMultiSeriesChart('bp-chart', [
             { label: 'Systolic', key: 'systolic_mmhg', color: getChartColor(ChartColors.Red) },
             { label: 'Diastolic', key: 'diastolic_mmhg', color: getChartColor(ChartColors.Blue) }
-        ], 'blood_pressure', startDate, endDate);
+        ], 'heart', startDate, endDate);
 
-        this.createChart('hr-chart', 'Heart Rate', 'blood_pressure', 'heart_rate_bpm', getChartColor(ChartColors.Red), startDate, endDate);
+        this.createChart('hr-chart', 'Heart Rate', 'heart', 'heart_rate_bpm', getChartColor(ChartColors.Red), startDate, endDate);
     }
 
     async createChart(chartId, label, tableName, valueCol, color, startDate, endDate) {

@@ -48,7 +48,7 @@ The application supports importing data from various CSV/JSON sources. Below is 
     *   **Steps**: Maps daily aggregates from `aggregates_steps.csv` to the `steps` table.
     *   **Weight**: Maps to `weight` table (`weight_kg`, `fat_mass_kg`, `bone_mass_kg`, `muscle_mass_kg`, `hydration_kg`).
     *   **Sleep**: Maps to `sleep` table (duration, stages, heart rate, snoring). Manually logged sleep without stage breakdown falls back to the `from`/`to` interval for duration.
-    *   **Blood Pressure**: Maps to `blood_pressure` table (systolic, diastolic, heart rate). Heart-rate-only measurements (empty systolic/diastolic) are kept with `NULL` blood pressure values.
+    *   **Blood Pressure / Heart Rate**: Maps to `heart` table (systolic, diastolic, heart rate). Heart-rate-only measurements (empty systolic/diastolic) are kept with `NULL` blood pressure values.
     *   The `Comments` column (weight, height, blood pressure exports) is preserved in the `note` column.
     *   **Height**: Maps to `height` table (`height_m`).
     *   **Temperature**: Maps to `body_temperature` table (`temperature_c`).

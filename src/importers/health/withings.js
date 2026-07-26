@@ -69,7 +69,7 @@ export class WithingsImporter extends BaseImporter {
         // which the export stores in the same file with empty Systolic/Diastolic)
         if ('Systolic' in row && 'Diastolic' in row && (row.Systolic || row.Diastolic || row['Heart rate'])) {
             return {
-                table: 'blood_pressure',
+                table: 'heart',
                 data: {
                     timestamp: new Date(row.Date).getTime(),
                     systolic_mmhg: row.Systolic ? parseInt(row.Systolic, 10) : null,
