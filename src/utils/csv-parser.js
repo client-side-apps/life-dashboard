@@ -44,18 +44,29 @@ export class CSVParser {
     }
 
     /**
-     * Split text into lines, handling quoted newlines if they were to exist (though rare in simple CSVs)
-     * For now, we assume standard line-by-line unless we implement a full state machine.
-     * Given the requirement for "robust", a state machine is safer for quoted newlines.
+     * Split text into lines. Newlines inside quoted fields are part of the field,
+     * not record separators, so we track quote state while scanning.
      */
     static splitIntoLines(text) {
-        // A simple split by \n is often enough, but let's be slightly more robust if we needed to.
-        // However, for these specific energy files, standard line splitting is fine.
-        // If we want to handle quoted newlines, we need to iterate chars.
-        // Let's stick to split('\n') for simplicity unless we see complex data, 
-        // as the prompt asked for "robust to typical CSV like quoted values including commas".
-        // It didn't explicitly demand quoted newlines.
-        return text.split('\n');
+        const lines = [];
+        let current = '';
+        let inQuotes = false;
+
+        for (let i = 0; i < text.length; i++) {
+            const char = text[i];
+
+            if (char === '"') {
+                inQuotes = !inQuotes;
+                current += char;
+            } else if (char === '\n' && !inQuotes) {
+                lines.push(current);
+                current = '';
+            } else {
+                current += char;
+            }
+        }
+        lines.push(current);
+        return lines;
     }
 
     /**

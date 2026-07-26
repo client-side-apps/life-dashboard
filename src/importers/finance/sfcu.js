@@ -17,12 +17,24 @@ export class SfcuImporter extends BaseImporter {
         const isoDate = new Date(dateStr).getTime();
         const description = row['Description'];
 
-        // Parse amount (Debit or Credit)
+        // Parse amount (Debit or Credit). Amounts may be formatted with
+        // currency symbols and thousands separators (e.g. "$1,234.56"),
+        // which parseFloat would silently truncate at the first comma.
+        const parseAmount = (value) => {
+            const cleaned = value.toString().replace(/[$,\s]/g, '');
+            const parsed = parseFloat(cleaned);
+            return isNaN(parsed) ? null : parsed;
+        };
+
         let amount = 0;
         if (row['Debit']) {
-            amount = -1 * parseFloat(row['Debit']);
+            const debit = parseAmount(row['Debit']);
+            if (debit === null) return null;
+            amount = -1 * debit;
         } else if (row['Credit']) {
-            amount = parseFloat(row['Credit']);
+            const credit = parseAmount(row['Credit']);
+            if (credit === null) return null;
+            amount = credit;
         }
 
         return {

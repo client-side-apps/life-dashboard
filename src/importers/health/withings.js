@@ -65,15 +65,17 @@ export class WithingsImporter extends BaseImporter {
             };
         }
 
-        // 2. Blood Pressure
-        if ('Systolic' in row && 'Diastolic' in row && row.Systolic && row.Diastolic) {
+        // 2. Blood Pressure (also covers heart-rate-only measurements,
+        // which the export stores in the same file with empty Systolic/Diastolic)
+        if ('Systolic' in row && 'Diastolic' in row && (row.Systolic || row.Diastolic || row['Heart rate'])) {
             return {
-                table: 'blood_pressure',
+                table: 'heart',
                 data: {
                     timestamp: new Date(row.Date).getTime(),
-                    systolic_mmhg: parseInt(row.Systolic, 10),
-                    diastolic_mmhg: parseInt(row.Diastolic, 10),
-                    heart_rate_bpm: row['Heart rate'] ? parseInt(row['Heart rate'], 10) : null
+                    systolic_mmhg: row.Systolic ? parseInt(row.Systolic, 10) : null,
+                    diastolic_mmhg: row.Diastolic ? parseInt(row.Diastolic, 10) : null,
+                    heart_rate_bpm: row['Heart rate'] ? parseInt(row['Heart rate'], 10) : null,
+                    note: row.Comments ? row.Comments.trim() : null
                 }
             };
         }
@@ -84,7 +86,8 @@ export class WithingsImporter extends BaseImporter {
                 table: 'height',
                 data: {
                     timestamp: new Date(row.Date).getTime(),
-                    height_m: parseFloat(row['Height (m)'])
+                    height_m: parseFloat(row['Height (m)']),
+                    note: row.Comments ? row.Comments.trim() : null
                 }
             };
         }
@@ -98,7 +101,8 @@ export class WithingsImporter extends BaseImporter {
                     fat_mass_kg: parseFloat(row['Fat mass (kg)'] || 0),
                     bone_mass_kg: parseFloat(row['Bone mass (kg)'] || 0),
                     muscle_mass_kg: parseFloat(row['Muscle mass (kg)'] || 0),
-                    hydration_kg: parseFloat(row['Hydration (kg)'] || 0)
+                    hydration_kg: parseFloat(row['Hydration (kg)'] || 0),
+                    note: row.Comments ? row.Comments.trim() : null
                 }
             };
         }
@@ -110,7 +114,16 @@ export class WithingsImporter extends BaseImporter {
             const deep = parseInt(row['deep (s)'] || 0, 10);
             const rem = parseInt(row['rem (s)'] || 0, 10);
             const awake = parseInt(row['awake (s)'] || 0, 10);
-            const totalSeconds = light + deep + rem;
+            let totalSeconds = light + deep + rem;
+
+            // Manually logged sleep has no stage breakdown (all zeros) but is
+            // still a real night of sleep: fall back to the from/to interval.
+            if (totalSeconds === 0 && row.from && row.to) {
+                const intervalSeconds = (new Date(row.to).getTime() - new Date(row.from).getTime()) / 1000;
+                if (intervalSeconds > 0) {
+                    totalSeconds = Math.round(intervalSeconds) - awake;
+                }
+            }
 
             if (totalSeconds > 0) {
                 return {

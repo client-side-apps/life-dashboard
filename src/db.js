@@ -89,6 +89,17 @@ class DatabaseService {
     ensureSchema() {
         if (!this.db) return;
 
+        // Migration: the 'blood_pressure' table was renamed to 'heart' since it
+        // also stores heart-rate-only measurements. Rename before the CREATE
+        // TABLE statements run, so existing data moves to the new name instead
+        // of being shadowed by a freshly created empty 'heart' table.
+        this.refreshTables();
+        if (this.tables.includes('blood_pressure') && !this.tables.includes('heart')) {
+            console.log('Migrating table blood_pressure: renaming to heart');
+            this.query('ALTER TABLE blood_pressure RENAME TO heart');
+            this.query('DROP INDEX IF EXISTS idx_blood_pressure_timestamp');
+        }
+
         // Define schemas matching create_demo_db
         // Added 'source' column and 'note' column to all tables
         const schemas = [
@@ -102,7 +113,7 @@ class DatabaseService {
             `CREATE TABLE IF NOT EXISTS electricity_hourly (id INTEGER PRIMARY KEY, timestamp INTEGER, grid_import_kwh REAL, grid_export_kwh REAL, solar_kwh REAL, home_consumption_kwh REAL, vehicle_kwh REAL, battery_kwh REAL, cost REAL, source TEXT, note TEXT)`,
             `CREATE TABLE IF NOT EXISTS electricity_grid_daily (id INTEGER PRIMARY KEY, timestamp INTEGER, import_kwh REAL, cost REAL, source TEXT, note TEXT)`,
             `CREATE TABLE IF NOT EXISTS gas_daily (id INTEGER PRIMARY KEY, timestamp INTEGER, usage_therms REAL, cost REAL, source TEXT, note TEXT)`,
-            `CREATE TABLE IF NOT EXISTS blood_pressure (id INTEGER PRIMARY KEY, timestamp INTEGER, systolic_mmhg INTEGER, diastolic_mmhg INTEGER, heart_rate_bpm INTEGER, source TEXT, note TEXT)`,
+            `CREATE TABLE IF NOT EXISTS heart (id INTEGER PRIMARY KEY, timestamp INTEGER, systolic_mmhg INTEGER, diastolic_mmhg INTEGER, heart_rate_bpm INTEGER, source TEXT, note TEXT)`,
             `CREATE TABLE IF NOT EXISTS body_temperature (id INTEGER PRIMARY KEY, timestamp INTEGER, temperature_c REAL, source TEXT, note TEXT)`,
             `CREATE TABLE IF NOT EXISTS height (id INTEGER PRIMARY KEY, timestamp INTEGER, height_m REAL, source TEXT, note TEXT)`,
             `CREATE TABLE IF NOT EXISTS water_daily (id INTEGER PRIMARY KEY, timestamp INTEGER, usage_liters REAL, source TEXT, note TEXT)`,
@@ -269,7 +280,7 @@ class DatabaseService {
             `CREATE INDEX IF NOT EXISTS idx_electricity_hourly_timestamp ON electricity_hourly (timestamp)`,
             `CREATE INDEX IF NOT EXISTS idx_electricity_grid_daily_timestamp ON electricity_grid_daily (timestamp)`,
             `CREATE INDEX IF NOT EXISTS idx_gas_daily_timestamp ON gas_daily (timestamp)`,
-            `CREATE INDEX IF NOT EXISTS idx_blood_pressure_timestamp ON blood_pressure (timestamp)`,
+            `CREATE INDEX IF NOT EXISTS idx_heart_timestamp ON heart (timestamp)`,
             `CREATE INDEX IF NOT EXISTS idx_body_temperature_timestamp ON body_temperature (timestamp)`,
             `CREATE INDEX IF NOT EXISTS idx_height_timestamp ON height (timestamp)`,
             `CREATE INDEX IF NOT EXISTS idx_water_daily_timestamp ON water_daily (timestamp)`,
@@ -286,7 +297,7 @@ class DatabaseService {
         this.refreshTables(); // Ensure this.tables is populated
         const tablesToMigrate = [
             'location', 'weight', 'sleep', 'steps', 'activities', 'accounts',
-            'transactions', 'electricity_hourly', 'electricity_grid_daily', 'gas_daily', 'blood_pressure',
+            'transactions', 'electricity_hourly', 'electricity_grid_daily', 'gas_daily', 'heart',
             'body_temperature', 'height', 'water_daily', 'nutrition_daily', 'nutrition_servings', 'music', 'dives'
         ];
 

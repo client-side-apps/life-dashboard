@@ -99,7 +99,7 @@ test('WithingsImporter', async (t) => {
             const row = rows[1]; // Second row has valid BP data
             const result = WithingsImporter.mapRow(row);
 
-            assert.strictEqual(result.table, 'blood_pressure');
+            assert.strictEqual(result.table, 'heart');
             assert.strictEqual(result.data.systolic_mmhg, 120);
             assert.strictEqual(result.data.diastolic_mmhg, 80);
             assert.strictEqual(result.data.heart_rate_bpm, 70);
@@ -146,6 +146,45 @@ test('WithingsImporter', async (t) => {
 
             const expectedTime = new Date("2026-01-10 08:05:00").getTime();
             assert.strictEqual(result.data.timestamp, expectedTime);
+        });
+    });
+
+    await t.test('Data preservation', async (t) => {
+        await t.test('keeps heart-rate-only measurements from bp.csv', () => {
+            const rows = loadSample('bp.csv');
+            // "2026-01-10 08:30:00",65,,, -> heart rate only, no BP
+            const hrOnlyRow = rows[0];
+            const result = WithingsImporter.mapRow(hrOnlyRow);
+
+            assert.ok(result, 'Heart-rate-only row should not be dropped');
+            assert.strictEqual(result.table, 'heart');
+            assert.strictEqual(result.data.systolic_mmhg, null);
+            assert.strictEqual(result.data.diastolic_mmhg, null);
+            assert.strictEqual(result.data.heart_rate_bpm, 65);
+        });
+
+        await t.test('maps Comments column to note', () => {
+            const result = WithingsImporter.mapRow({
+                'Date': '2025-01-01 08:00:00',
+                'Weight (kg)': '74.98',
+                'Fat mass (kg)': '12.5',
+                'Comments': 'after morning run'
+            });
+            assert.strictEqual(result.data.note, 'after morning run');
+        });
+
+        await t.test('keeps manually logged sleep without stage breakdown', () => {
+            const result = WithingsImporter.mapRow({
+                'from': '2025-01-01T23:00:00Z',
+                'to': '2025-01-02T07:00:00Z',
+                'light (s)': '0',
+                'deep (s)': '0',
+                'rem (s)': '0',
+                'awake (s)': '0'
+            });
+            assert.ok(result, 'Manual sleep entry should not be dropped');
+            assert.strictEqual(result.table, 'sleep');
+            assert.strictEqual(result.data.duration_hours, 8);
         });
     });
 });

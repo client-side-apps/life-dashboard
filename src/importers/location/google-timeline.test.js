@@ -51,6 +51,88 @@ describe('GoogleTimelineImporter', () => {
         assert.ok(row.timestamp > 0);
     });
 
+    it('should record both ends of a visit', () => {
+        const data = {
+            semanticSegments: [
+                {
+                    startTime: "2023-01-01T13:00:00Z",
+                    endTime: "2023-01-01T14:00:00Z",
+                    visit: {
+                        topCandidate: {
+                            placeLocation: { latLng: "46.0, 5.0" }
+                        }
+                    }
+                }
+            ]
+        };
+        const items = GoogleTimelineImporter.extractItems(data);
+        assert.strictEqual(items.length, 2);
+        assert.strictEqual(items[0].time, "2023-01-01T13:00:00Z");
+        assert.strictEqual(items[1].time, "2023-01-01T14:00:00Z");
+    });
+
+    it('should extract activity start/end when no timelinePath exists', () => {
+        const data = {
+            semanticSegments: [
+                {
+                    startTime: "2023-01-01T10:00:00Z",
+                    endTime: "2023-01-01T10:30:00Z",
+                    activity: {
+                        start: { latLng: "45.0, 4.0" },
+                        end: { latLng: "45.1, 4.1" }
+                    }
+                }
+            ]
+        };
+        const items = GoogleTimelineImporter.extractItems(data);
+        assert.strictEqual(items.length, 2);
+        assert.deepStrictEqual(items[0], { point: "45.0, 4.0", time: "2023-01-01T10:00:00Z" });
+        assert.deepStrictEqual(items[1], { point: "45.1, 4.1", time: "2023-01-01T10:30:00Z" });
+    });
+
+    it('should extract items from the legacy timelineObjects format', () => {
+        const data = {
+            timelineObjects: [
+                {
+                    placeVisit: {
+                        location: { latitudeE7: 457521100, longitudeE7: 48321490 },
+                        duration: {
+                            startTimestamp: "2021-05-01T09:00:00Z",
+                            endTimestamp: "2021-05-01T10:00:00Z"
+                        }
+                    }
+                },
+                {
+                    activitySegment: {
+                        startLocation: { latitudeE7: 377490000, longitudeE7: -1224194000 },
+                        endLocation: { latitudeE7: 378490000, longitudeE7: -1224094000 },
+                        duration: {
+                            startTimestamp: "2021-05-01T10:00:00Z",
+                            endTimestamp: "2021-05-01T10:30:00Z"
+                        },
+                        simplifiedRawPath: {
+                            points: [
+                                { latE7: 377500000, lngE7: -1224150000, timestamp: "2021-05-01T10:15:00Z" }
+                            ]
+                        }
+                    }
+                }
+            ]
+        };
+
+        const items = GoogleTimelineImporter.extractItems(data);
+        assert.strictEqual(items.length, 5, 'Visit start+end, raw path point, activity start+end');
+
+        const visitRow = GoogleTimelineImporter.mapRow(items[0]);
+        assert.strictEqual(visitRow.lat, 45.75211);
+        assert.strictEqual(visitRow.lng, 4.832149);
+        assert.strictEqual(visitRow.timestamp, new Date("2021-05-01T09:00:00Z").getTime());
+
+        const pathRow = GoogleTimelineImporter.mapRow(items[2]);
+        assert.strictEqual(pathRow.lat, 37.75);
+        assert.strictEqual(pathRow.lng, -122.415);
+    });
+
     it('should handle synthetic data format (no degrees)', () => {
         const item = { point: "37.7749,-122.4194", time: "2023-10-27T08:15:00.000-07:00" };
         const row = GoogleTimelineImporter.mapRow(item);

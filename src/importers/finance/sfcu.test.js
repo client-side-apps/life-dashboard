@@ -30,4 +30,22 @@ test('SfcuImporter with Real Data', async (t) => {
         const mappedCredit = SfcuImporter.mapRow(creditRow);
         assert.strictEqual(mappedCredit.data.amount, 2500.00);
     });
+
+    await t.test('parses amounts with thousands separators and currency symbols', () => {
+        const debit = SfcuImporter.mapRow({
+            'Post Date': '12/1/2025',
+            'Description': 'Wire Transfer',
+            'Debit': '1,234.56',
+            'Credit': ''
+        });
+        assert.strictEqual(debit.data.amount, -1234.56);
+
+        const credit = SfcuImporter.mapRow({
+            'Post Date': '12/1/2025',
+            'Description': 'Payroll',
+            'Debit': '',
+            'Credit': '$2,500.00'
+        });
+        assert.strictEqual(credit.data.amount, 2500.00);
+    });
 });

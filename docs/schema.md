@@ -88,8 +88,8 @@ Stores non-walking activity sessions (Running, Cycling, Swimming, etc.).
 | `source` | TEXT | Source of the data |
 | `note` | TEXT | User-attached note |
 
-### `blood_pressure`
-Stores blood pressure and heart rate measurements.
+### `heart`
+Stores heart measurements: blood pressure and heart rate. Heart-rate-only measurements have `NULL` systolic/diastolic values.
 
 | Column | Type | Description |
 | :--- | :--- | :--- |

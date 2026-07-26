@@ -57,4 +57,40 @@ describe('SpotifyImporter', () => {
         const mapped = SpotifyImporter.mapRow(invalidRow);
         assert.strictEqual(mapped, null);
     });
+
+    it('maps podcast episodes instead of dropping them', () => {
+        const podcastRow = {
+            ...sampleData[0],
+            master_metadata_track_name: null,
+            master_metadata_album_artist_name: null,
+            master_metadata_album_album_name: null,
+            spotify_track_uri: null,
+            episode_name: 'Episode 42',
+            episode_show_name: 'My Favorite Show',
+            spotify_episode_uri: 'spotify:episode:abc123'
+        };
+        const mapped = SpotifyImporter.mapRow(podcastRow);
+        assert.ok(mapped, 'Podcast play should be imported');
+        assert.strictEqual(mapped.track_name, 'Episode 42');
+        assert.strictEqual(mapped.artist_name, 'My Favorite Show');
+        assert.strictEqual(mapped.track_uri, 'spotify:episode:abc123');
+        assert.strictEqual(mapped.duration_ms, 160768);
+    });
+
+    it('maps audiobook chapters instead of dropping them', () => {
+        const audiobookRow = {
+            ...sampleData[0],
+            master_metadata_track_name: null,
+            spotify_track_uri: null,
+            audiobook_title: 'A Great Book',
+            audiobook_uri: 'spotify:show:book1',
+            audiobook_chapter_title: 'Chapter 3',
+            audiobook_chapter_uri: 'spotify:episode:chap3'
+        };
+        const mapped = SpotifyImporter.mapRow(audiobookRow);
+        assert.ok(mapped, 'Audiobook play should be imported');
+        assert.strictEqual(mapped.track_name, 'Chapter 3');
+        assert.strictEqual(mapped.artist_name, 'A Great Book');
+        assert.strictEqual(mapped.track_uri, 'spotify:episode:chap3');
+    });
 });

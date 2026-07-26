@@ -23,7 +23,7 @@ export class PgeImporter extends BaseImporter {
             if (!dateStr || !timeStr) return null;
 
             const isoTime = new Date(`${dateStr} ${timeStr}`).getTime();
-            const costStr = (row['COST'] || '').replace('$', '');
+            const costStr = (row['COST'] || '').replace(/[$,]/g, '');
             return {
                 table: 'electricity_hourly',
                 data: {
@@ -40,7 +40,7 @@ export class PgeImporter extends BaseImporter {
 
             const isoTime = new Date(`${dateStr} ${timeStr}`).getTime();
             const usage = parseFloat(row['Usage']) || parseFloat(row['USAGE (therms)']) || 0;
-            const costStr = (row['Cost'] || row['COST'] || '').replace('$', '');
+            const costStr = (row['Cost'] || row['COST'] || '').replace(/[$,]/g, '');
             return {
                 table: 'gas_daily',
                 data: {
