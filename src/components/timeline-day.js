@@ -249,26 +249,21 @@ export class TimelineDay extends HTMLElement {
             });
         }
 
-        // Social Posts (Twitter)
-        if (postEvents.length > 0) {
+        // Social Posts (Twitter): one line per post
+        [...postEvents].sort((a, b) => a.timestamp - b.timestamp).forEach(p => {
+            const time = new Date(p.timestamp).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+            const counts = [];
+            if (p.likes) counts.push(`${p.likes} ♥`);
+            if (p.reposts) counts.push(`${p.reposts} ↻`);
+
             stats.push({
                 icon: '🐦',
-                label: 'Posts',
-                value: `${postEvents.length} post${postEvents.length > 1 ? 's' : ''}`,
-                linkId: `posts-toggle-${date}`,
-                expandHtml: `<div class="stat-details-collapsible" id="posts-toggle-${date}" hidden>
-                    <ul class="post-list" style="margin: 0; padding-left: 1.25rem; list-style: disc; opacity: 0.8;">
-                        ${[...postEvents].sort((a, b) => a.timestamp - b.timestamp).map(p => {
-                            const time = new Date(p.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                            const counts = [];
-                            if (p.likes) counts.push(`${p.likes} ♥`);
-                            if (p.reposts) counts.push(`${p.reposts} ↻`);
-                            return `<li><span class="track-time">${time}</span> ${p.text}${counts.length > 0 ? ` <span class="stat-sub">(${counts.join(' · ')})</span>` : ''}${p.note ? ` — 📝 <span class="timeline-inline-note">${p.note}</span>` : ''}</li>`;
-                        }).join('')}
-                    </ul>
-                </div>`
+                label: time,
+                value: p.text,
+                sub: counts.length > 0 ? counts.join(' · ') : null,
+                note: p.note || null
             });
-        }
+        });
 
         // Consolidated Daily Notes
         const dailyNotesList = [];
