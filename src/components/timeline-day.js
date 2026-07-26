@@ -52,6 +52,7 @@ export class TimelineDay extends HTMLElement {
         // Categorize events
         const locationEvents = events.filter(e => e.type === 'location');
         const activityEvents = events.filter(e => e.type === 'activity');
+        const workoutEvents = events.filter(e => e.type === 'workout');
         const weightEvents = events.filter(e => e.type === 'weight');
         const sleepEvents = events.filter(e => e.type === 'sleep');
         const nutritionEvents = events.filter(e => e.type === 'nutrition');
@@ -88,6 +89,40 @@ export class TimelineDay extends HTMLElement {
                 note: stepNotes.length > 0 ? stepNotes.join('; ') : null
             });
         }
+
+        // Workouts (any activity that isn't walking)
+        const workoutIcons = {
+            'Running': '🏃',
+            'Cycling': '🚴',
+            'Swimming': '🏊',
+            'Hiking': '🥾',
+            'Ski': '⛷️',
+            'Multi Sport': '🤸'
+        };
+
+        [...workoutEvents].sort((a, b) => a.timestamp - b.timestamp).forEach(e => {
+            const durationMinutes = e.end_timestamp
+                ? Math.round((e.end_timestamp - e.timestamp) / 60000)
+                : null;
+            const durationStr = durationMinutes
+                ? (durationMinutes >= 60
+                    ? `${Math.floor(durationMinutes / 60)}h ${durationMinutes % 60}m`
+                    : `${durationMinutes}m`)
+                : null;
+
+            const subParts = [];
+            if (e.distance) subParts.push(`${(e.distance / 1000).toFixed(2)} km`);
+            if (e.calories) subParts.push(`${Math.round(e.calories)} kcal`);
+            if (e.hr_average) subParts.push(`${e.hr_average} bpm avg`);
+
+            stats.push({
+                icon: workoutIcons[e.activity_type] || '🏋️',
+                label: e.activity_type,
+                value: durationStr || new Date(e.timestamp).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }),
+                sub: subParts.length > 0 ? subParts.join(' · ') : null,
+                note: e.note || null
+            });
+        });
 
         // Sleep (use max record to avoid double-counting segments)
         let sleepDuration = 0;
@@ -255,6 +290,7 @@ export class TimelineDay extends HTMLElement {
         }
         sleepEvents.forEach(e => { if (e.note) dailyNotesList.push({ type: 'Sleep', note: e.note }); });
         activityEvents.forEach(e => { if (e.note) dailyNotesList.push({ type: 'Activity', note: e.note }); });
+        workoutEvents.forEach(e => { if (e.note) dailyNotesList.push({ type: e.activity_type || 'Workout', note: e.note }); });
         nutritionEvents.forEach(e => {
             e.foods.forEach(f => {
                 if (f.note) dailyNotesList.push({ type: `Food (${e.meal_group})`, note: `${f.name}: ${f.note}` });

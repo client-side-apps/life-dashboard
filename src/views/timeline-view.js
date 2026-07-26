@@ -7,6 +7,7 @@ import { getDaysWindow, toDayKey } from '../utils/day-range.js';
 const TIMELINE_SOURCES = [
     { table: 'location' },
     { table: 'steps', where: 'count > 0' },
+    { table: 'activities', where: "type IS NOT NULL AND type != 'Walking'" },
     { table: 'weight' },
     { table: 'sleep' },
     { table: 'nutrition_servings' },
@@ -165,6 +166,25 @@ export class TimelineView extends DataView {
                 }
             });
         } catch (e) { console.warn('Steps fetch failed', e); }
+
+        // 2b. Fetch Workouts (any activity that isn't walking)
+        try {
+            read('activities').forEach(row => {
+                if (!row.type || row.type === 'Walking') return;
+                events.push({
+                    timestamp: row.timestamp,
+                    type: 'workout',
+                    activity_type: row.type,
+                    end_timestamp: row.end_timestamp,
+                    calories: row.calories,
+                    distance: row.distance,
+                    steps: row.steps,
+                    elevation: row.elevation,
+                    hr_average: row.hr_average,
+                    note: row.note
+                });
+            });
+        } catch (e) { console.warn('Activities fetch failed', e); }
 
         // 3. Fetch Weight
         try {
