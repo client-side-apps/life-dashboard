@@ -58,6 +58,7 @@ export class TimelineDay extends HTMLElement {
         const musicEvents = events.filter(e => e.type === 'music');
         const diveEvents = events.filter(e => e.type === 'dive');
         const postEvents = events.filter(e => e.type === 'post');
+        const calendarEvents = events.filter(e => e.type === 'calendar');
 
         // Calculate Stats
         let stats = [];
@@ -249,6 +250,22 @@ export class TimelineDay extends HTMLElement {
             });
         }
 
+        // Calendar Events
+        [...calendarEvents].sort((a, b) => a.timestamp - b.timestamp).forEach(e => {
+            const formatTime = (ts) => new Date(ts).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+            const timeStr = e.all_day
+                ? 'All day'
+                : (e.end_timestamp ? `${formatTime(e.timestamp)} – ${formatTime(e.end_timestamp)}` : formatTime(e.timestamp));
+
+            stats.push({
+                icon: '📅',
+                label: e.title,
+                value: timeStr,
+                sub: e.location || null,
+                note: e.note || null
+            });
+        });
+
         // Social Posts (Twitter): one line per post
         [...postEvents].sort((a, b) => a.timestamp - b.timestamp).forEach(p => {
             const time = new Date(p.timestamp).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
@@ -279,6 +296,7 @@ export class TimelineDay extends HTMLElement {
         });
         musicEvents.forEach(e => { if (e.note) dailyNotesList.push({ type: 'Music', note: `${e.track_name} by ${e.artist_name}: ${e.note}` }); });
         locationEvents.forEach(e => { if (e.note) dailyNotesList.push({ type: 'Location', note: e.note }); });
+        calendarEvents.forEach(e => { if (e.note) dailyNotesList.push({ type: 'Calendar', note: `${e.title}: ${e.note}` }); });
         postEvents.forEach(e => { if (e.note) dailyNotesList.push({ type: 'Post', note: e.note }); });
         diveEvents.forEach(e => {
             if (e.note) {

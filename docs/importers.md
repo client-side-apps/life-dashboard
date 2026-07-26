@@ -99,6 +99,20 @@ The application supports importing data from various CSV/JSON sources. Below is 
     *   `favorite_count` -> `likes`, `retweet_count` -> `reposts`, `in_reply_to_screen_name` -> `reply_to`, `lang` -> `lang`.
     *   Re-imports match existing posts by `post_id` (falling back to timestamp + text).
 
+## Calendar
+
+### Google Calendar
+*   **File Type**: ICS (iCalendar export from Google Takeout or a calendar's "Export" option)
+*   **Detection**: `.ics` files (or content starting with `BEGIN:VCALENDAR`) whose events hold `DTSTART` and `SUMMARY` properties.
+*   **Data Processed**:
+    *   Imports each `VEVENT` into the `calendar_events` table.
+    *   `DTSTART` -> `timestamp`, `DTEND` -> `end_timestamp`. Date-only values are flagged with `all_day = 1` (an all-day `DTEND` is exclusive, per the iCalendar spec).
+    *   Times with a `Z` suffix are treated as UTC; times with a `TZID` (or floating times) are interpreted in the local timezone.
+    *   `SUMMARY` -> `title`, `DESCRIPTION` -> `description`, `LOCATION` -> `location`, `STATUS` -> `status`.
+    *   Folded lines and escaped text (`\n`, `\,`, `\;`) are handled.
+    *   Recurring events (`RRULE`) are imported as a single event at their first occurrence.
+    *   Re-imports match existing events by start time and title.
+
 ## Location
 
 ### Google Timeline

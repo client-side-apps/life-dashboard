@@ -10,10 +10,12 @@ import { FlumeImporter } from '../importers/water/flume.js';
 import { SpotifyImporter } from '../importers/music/spotify.js';
 import { DiveLogImporter } from '../importers/health/dive-logs.js';
 import { TwitterImporter } from '../importers/social/twitter.js';
+import { GoogleCalendarImporter } from '../importers/calendar/google-calendar.js';
+import { ICSParser } from '../utils/ics-parser.js';
 
 export class DataImporter {
 
-    static importers = [PgeImporter, TeslaImporter, SfcuImporter, WithingsImporter, CronometerImporter, GoogleTimelineImporter, FlumeImporter, SpotifyImporter, DiveLogImporter, TwitterImporter];
+    static importers = [PgeImporter, TeslaImporter, SfcuImporter, WithingsImporter, CronometerImporter, GoogleTimelineImporter, FlumeImporter, SpotifyImporter, DiveLogImporter, GoogleCalendarImporter, TwitterImporter];
 
     static async import(filename, content, options = {}) {
         await dbService.ensureInitialized();
@@ -24,12 +26,15 @@ export class DataImporter {
         // (e.g. `window.YTD.tweets.part0 = [...]`); strip the prefix to get JSON.
         const isArchiveJs = filename.toLowerCase().endsWith('.js') && content.trimStart().startsWith('window.YTD.');
         const isJson = filename.toLowerCase().endsWith('.json') || isArchiveJs;
+        const isIcs = filename.toLowerCase().endsWith('.ics') || content.trimStart().startsWith('BEGIN:VCALENDAR');
 
         try {
             if (isArchiveJs) {
                 jsonData = JSON.parse(content.slice(content.indexOf('=') + 1));
             } else if (isJson) {
                 jsonData = JSON.parse(content);
+            } else if (isIcs) {
+                rows = ICSParser.parse(content);
             } else {
                 // Special handling for PGE preamble which confuses the generic parser header detection
                 if (content.indexOf('TYPE,DATE,START TIME') > 0) {
@@ -55,6 +60,7 @@ export class DataImporter {
             else if (options.provider === 'sfcu') ImporterClass = SfcuImporter;
             else if (options.provider === 'google_timeline') ImporterClass = GoogleTimelineImporter;
             else if (options.provider === 'divelog') ImporterClass = DiveLogImporter;
+            else if (options.provider === 'google_calendar') ImporterClass = GoogleCalendarImporter;
             else if (options.provider === 'twitter') ImporterClass = TwitterImporter;
         } else {
             ImporterClass = this.importers.find(i => isJson ? i.detect(jsonData) : i.detect(rows));
@@ -147,7 +153,7 @@ export class DataImporter {
         // day, two foods logged at the same time). For these, match existing
         // records by a composite key and consume matches one-by-one, so that
         // genuine duplicates are preserved rather than collapsed into one row.
-        const complexKeyTables = ['transactions', 'dives', 'nutrition_servings', 'music', 'posts'];
+        const complexKeyTables = ['transactions', 'dives', 'nutrition_servings', 'music', 'calendar_events', 'posts'];
         const matchTracker = new Map(); // Map<compositeKey, {ids: number[], next: number}>
 
         try {
@@ -243,6 +249,8 @@ export class DataImporter {
             return data.dive_number ? `n|${data.dive_number}` : `t|${data.timestamp}|${data.spot}`;
         } else if (table === 'posts') {
             return data.post_id ? `p|${data.post_id}` : `t|${data.timestamp}|${data.text}`;
+        } else if (table === 'calendar_events') {
+            return `${data.timestamp}|${data.title ?? ''}`;
         }
         return `${data.timestamp}`;
     }
@@ -280,6 +288,11 @@ export class DataImporter {
             } else {
                 result = dbService.query('SELECT id FROM posts WHERE timestamp = ? AND text IS ? ORDER BY id', [data.timestamp, data.text ?? null]);
             }
+        } else if (table === 'calendar_events') {
+            result = dbService.query(
+                'SELECT id FROM calendar_events WHERE timestamp = ? AND title IS ? ORDER BY id',
+                [data.timestamp, data.title ?? null]
+            );
         }
         return result.map(r => r.id);
     }
@@ -460,6 +473,21 @@ export class DataImporter {
                     data.reposts ?? null,
                     data.reply_to || null,
                     data.lang || null,
+                    data.source,
+                    data.note || null
+                ]
+            );
+        } else if (table === 'calendar_events') {
+            dbService.query(
+                'INSERT INTO calendar_events (timestamp, end_timestamp, title, description, location, all_day, status, source, note) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                [
+                    data.timestamp,
+                    data.end_timestamp || null,
+                    data.title,
+                    data.description || null,
+                    data.location || null,
+                    data.all_day || 0,
+                    data.status || null,
                     data.source,
                     data.note || null
                 ]
