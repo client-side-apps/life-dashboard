@@ -13,6 +13,7 @@ const TIMELINE_SOURCES = [
     { table: 'nutrition_servings' },
     { table: 'music' },
     { table: 'dives' },
+    { table: 'posts' },
     { table: 'calendar_events' }
 ];
 
@@ -310,6 +311,21 @@ export class TimelineView extends DataView {
                 });
             });
         } catch (e) { console.warn('Calendar fetch failed', e); }
+
+        // 9. Fetch Social Posts (Twitter)
+        try {
+            read('posts').forEach(row => {
+                events.push({
+                    timestamp: row.timestamp,
+                    type: 'post',
+                    text: row.text,
+                    likes: row.likes,
+                    reposts: row.reposts,
+                    reply_to: row.reply_to,
+                    note: row.note
+                });
+            });
+        } catch (e) { console.warn('Posts fetch failed', e); }
 
         // Group by Day
         const groupedByDay = {};

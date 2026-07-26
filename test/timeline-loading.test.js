@@ -18,6 +18,7 @@ const SOURCES = [
     { table: 'nutrition_servings' },
     { table: 'music' },
     { table: 'dives' },
+    { table: 'posts' },
     { table: 'calendar_events' }
 ];
 

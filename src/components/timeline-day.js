@@ -58,6 +58,7 @@ export class TimelineDay extends HTMLElement {
         const nutritionEvents = events.filter(e => e.type === 'nutrition');
         const musicEvents = events.filter(e => e.type === 'music');
         const diveEvents = events.filter(e => e.type === 'dive');
+        const postEvents = events.filter(e => e.type === 'post');
         const calendarEvents = events.filter(e => e.type === 'calendar');
 
         // Calculate Stats
@@ -300,6 +301,22 @@ export class TimelineDay extends HTMLElement {
             });
         });
 
+        // Social Posts (Twitter): one line per post
+        [...postEvents].sort((a, b) => a.timestamp - b.timestamp).forEach(p => {
+            const time = new Date(p.timestamp).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+            const counts = [];
+            if (p.likes) counts.push(`${p.likes} ♥`);
+            if (p.reposts) counts.push(`${p.reposts} ↻`);
+
+            stats.push({
+                icon: '🐦',
+                label: time,
+                value: p.text,
+                sub: counts.length > 0 ? counts.join(' · ') : null,
+                note: p.note || null
+            });
+        });
+
         // Consolidated Daily Notes
         const dailyNotesList = [];
         if (weightEvents.length > 0 && weightEvents[0].note) {
@@ -316,6 +333,7 @@ export class TimelineDay extends HTMLElement {
         musicEvents.forEach(e => { if (e.note) dailyNotesList.push({ type: 'Music', note: `${e.track_name} by ${e.artist_name}: ${e.note}` }); });
         locationEvents.forEach(e => { if (e.note) dailyNotesList.push({ type: 'Location', note: e.note }); });
         calendarEvents.forEach(e => { if (e.note) dailyNotesList.push({ type: 'Calendar', note: `${e.title}: ${e.note}` }); });
+        postEvents.forEach(e => { if (e.note) dailyNotesList.push({ type: 'Post', note: e.note }); });
         diveEvents.forEach(e => {
             if (e.note) {
                 const loc = [e.spot, e.city, e.country].filter(Boolean).join(', ');
