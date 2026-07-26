@@ -157,7 +157,7 @@ Usage:
   node cli.js import <db_path> <file_or_dir_path> [options]
 
 Options:
-  --provider <name>  Force a specific data provider (e.g. pge, tesla, sfcu, withings, cronometer, google_timeline, spotify, flume, divelog)
+  --provider <name>  Force a specific data provider (e.g. pge, tesla, sfcu, withings, cronometer, google_timeline, google_calendar, spotify, flume, divelog)
   --demo             Seed demo accounts and generate 2025 demo notes
 `);
 }

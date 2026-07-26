@@ -24,6 +24,7 @@ export class HealthActivityView extends DataView {
         this.innerHTML = `
             <div class="dashboard-grid">
                 <chart-card title="Steps" chart-id="activity-steps-chart"></chart-card>
+                <chart-card title="Active Time (7-day total)" chart-id="activity-active-time-chart"></chart-card>
             </div>
              <div class="list-container">
                 <div class="list-header">
@@ -35,7 +36,61 @@ export class HealthActivityView extends DataView {
         `;
 
         this.createChart('activity-steps-chart', 'Steps', 'steps', 'count', getChartColor(ChartColors.Green), startDate, endDate);
+        this.createActiveTimeChart(startDate, endDate);
         this.renderActivityList(startDate, endDate);
+    }
+
+    /**
+     * Charts active time (total duration of activities that aren't walking)
+     * as a 7-day rolling total, one point per day.
+     */
+    async createActiveTimeChart(startDate, endDate) {
+        const chartCard = this.querySelector('chart-card[chart-id="activity-active-time-chart"]');
+        if (!chartCard) return;
+
+        const valid = await this.checkTable('activities');
+        if (!valid) {
+            chartCard.innerHTML += `<p>Table "activities" not found.</p>`;
+            return;
+        }
+
+        const dayMs = 24 * 3600 * 1000;
+        const startTs = new Date(startDate + 'T00:00:00').getTime();
+        const endTs = new Date(endDate + 'T23:59:59.999').getTime();
+
+        // Read 6 extra days back so the first days of the range have a full window.
+        const rows = dataRepository.getTimestampRangeData('activities', startTs - 6 * dayMs, endTs, 'ASC');
+
+        const minutesByDay = new Map();
+        rows.forEach(row => {
+            if (!row.type || row.type === 'Walking') return;
+            if (!row.end_timestamp || row.end_timestamp <= row.timestamp) return;
+            const dayTs = new Date(row.timestamp).setHours(0, 0, 0, 0);
+            const minutes = (row.end_timestamp - row.timestamp) / 60000;
+            minutesByDay.set(dayTs, (minutesByDay.get(dayTs) || 0) + minutes);
+        });
+
+        const data = [];
+        for (let dayTs = startTs; dayTs <= endTs; dayTs = new Date(dayTs + dayMs).setHours(0, 0, 0, 0)) {
+            let weeklyMinutes = 0;
+            for (let i = 0; i < 7; i++) {
+                const windowDayTs = new Date(dayTs - i * dayMs).setHours(0, 0, 0, 0);
+                weeklyMinutes += minutesByDay.get(windowDayTs) || 0;
+            }
+            data.push({ timestamp: dayTs, active_hours: Math.round(weeklyMinutes / 60 * 10) / 10 });
+        }
+
+        chartCard.setDateRange(startDate, endDate);
+        chartCard.setTimeSeriesData(data, {
+            series: [{
+                label: 'Active Time (h)',
+                key: 'active_hours',
+                color: getChartColor(ChartColors.Orange)
+            }],
+            startDate: startDate,
+            endDate: endDate,
+            interval: 'daily'
+        });
     }
 
     async renderActivityList(startDate, endDate) {

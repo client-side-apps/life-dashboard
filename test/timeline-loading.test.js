@@ -12,11 +12,13 @@ import { getDaysWindow, toDayKey } from '../src/utils/day-range.js';
 const SOURCES = [
     { table: 'location' },
     { table: 'steps', where: 'count > 0' },
+    { table: 'activities', where: "type IS NOT NULL AND type != 'Walking'" },
     { table: 'weight' },
     { table: 'sleep' },
     { table: 'nutrition_servings' },
     { table: 'music' },
-    { table: 'dives' }
+    { table: 'dives' },
+    { table: 'calendar_events' }
 ];
 
 const DAYS_PER_CHUNK = 7;
