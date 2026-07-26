@@ -527,21 +527,39 @@ map-view {
     gap: 0.5rem;
 }
 
-.pixel-icon {
-    width: 1em;
-    height: 1em;
-    vertical-align: -0.125em;
+/* Pixel icons: SVG files from icons/, masked so they take the current text
+   color and therefore follow the light/dark theme. */
+.icon {
+    display: inline-block;
+    width: 1.1em;
+    height: 1.1em;
+    vertical-align: -0.2em;
+    background-color: currentColor;
+    -webkit-mask: var(--icon) center / contain no-repeat;
+    mask: var(--icon) center / contain no-repeat;
 }
+
+.icon-steps { --icon: url('icons/steps.svg'); }
+.icon-sleep { --icon: url('icons/sleep.svg'); }
+.icon-nutrition { --icon: url('icons/nutrition.svg'); }
+.icon-weight { --icon: url('icons/weight.svg'); }
+.icon-music { --icon: url('icons/music.svg'); }
+.icon-dive { --icon: url('icons/dive.svg'); }
+.icon-note { --icon: url('icons/note.svg'); }
+.icon-running { --icon: url('icons/running.svg'); }
+.icon-cycling { --icon: url('icons/cycling.svg'); }
+.icon-swimming { --icon: url('icons/swimming.svg'); }
+.icon-hiking { --icon: url('icons/hiking.svg'); }
+.icon-ski { --icon: url('icons/ski.svg'); }
+.icon-multisport { --icon: url('icons/multisport.svg'); }
+.icon-workout { --icon: url('icons/workout.svg'); }
+.icon-calendar { --icon: url('icons/calendar.svg'); }
+.icon-post { --icon: url('icons/post.svg'); }
 
 .stat-icon {
     display: inline-flex;
     align-items: center;
     color: var(--text-color);
-}
-
-.stat-icon .pixel-icon {
-    width: 1.1em;
-    height: 1.1em;
 }
 
 .stat-value {
