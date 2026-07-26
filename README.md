@@ -1,9 +1,12 @@
-# Life Dashboard
+# Life
 
-A personal dashboard to visualize and manage life data including Map, Timeline, Health, Finance, Energy, and Movies. 
+A personal tool to visualize and manage life data including Map, Timeline, Health, Finance, Energy, and Movies. 
 See [supported data sources](docs/importers.md).
 
-Everything happens locally in your browser. All data is stored in a local SQLite database (`.sqlite` file) and never leaves your machine.
+All data is stored in a local SQLite database (`.sqlite` file) and never leaves your machine.
+
+Includes a web UI (fully client side, everything happens locally in your browser) and a CLI (no network call)
+
 
 ## How to serve locally
 
