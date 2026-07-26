@@ -88,6 +88,17 @@ The application supports importing data from various CSV/JSON sources. Below is 
     *   `platform` -> `platform`
     *   Podcast episodes (`episode_name` / `episode_show_name` / `spotify_episode_uri`) and audiobook chapters (`audiobook_*`) are imported too, mapped onto the same columns.
 
+## Social
+
+### Twitter / X
+*   **File Type**: JavaScript (`tweets.js` from the archive's `data/` folder, containing `window.YTD.tweets.part0 = [...]`)
+*   **Detection**: `.js` files starting with `window.YTD.`; events must hold `full_text` and `created_at`.
+*   **Data Processed**:
+    *   Imports each tweet into the `posts` table.
+    *   `created_at` -> `timestamp`, `full_text` -> `text`, `id_str` -> `post_id`.
+    *   `favorite_count` -> `likes`, `retweet_count` -> `reposts`, `in_reply_to_screen_name` -> `reply_to`, `lang` -> `lang`.
+    *   Re-imports match existing posts by `post_id` (falling back to timestamp + text).
+
 ## Location
 
 ### Google Timeline

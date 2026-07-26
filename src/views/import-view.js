@@ -30,6 +30,7 @@ export class ImportView extends HTMLElement {
                             <option value="finance">Finance</option>
                             <option value="health">Health</option>
                             <option value="location">Location</option>
+                            <option value="social">Social</option>
                             <option value="water">Water</option>
                         </select>
                         
@@ -78,6 +79,9 @@ export class ImportView extends HTMLElement {
             ],
             location: [
                 { value: 'google-timeline', label: 'Google Timeline' }
+            ],
+            social: [
+                { value: 'twitter', label: 'Twitter / X' }
             ],
             water: [
                 { value: 'flume', label: 'Flume' }

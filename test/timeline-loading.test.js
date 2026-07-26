@@ -16,7 +16,8 @@ const SOURCES = [
     { table: 'sleep' },
     { table: 'nutrition_servings' },
     { table: 'music' },
-    { table: 'dives' }
+    { table: 'dives' },
+    { table: 'posts' }
 ];
 
 const DAYS_PER_CHUNK = 7;

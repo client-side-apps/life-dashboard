@@ -57,6 +57,7 @@ export class TimelineDay extends HTMLElement {
         const nutritionEvents = events.filter(e => e.type === 'nutrition');
         const musicEvents = events.filter(e => e.type === 'music');
         const diveEvents = events.filter(e => e.type === 'dive');
+        const postEvents = events.filter(e => e.type === 'post');
 
         // Calculate Stats
         let stats = [];
@@ -248,6 +249,27 @@ export class TimelineDay extends HTMLElement {
             });
         }
 
+        // Social Posts (Twitter)
+        if (postEvents.length > 0) {
+            stats.push({
+                icon: '🐦',
+                label: 'Posts',
+                value: `${postEvents.length} post${postEvents.length > 1 ? 's' : ''}`,
+                linkId: `posts-toggle-${date}`,
+                expandHtml: `<div class="stat-details-collapsible" id="posts-toggle-${date}" hidden>
+                    <ul class="post-list" style="margin: 0; padding-left: 1.25rem; list-style: disc; opacity: 0.8;">
+                        ${[...postEvents].sort((a, b) => a.timestamp - b.timestamp).map(p => {
+                            const time = new Date(p.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                            const counts = [];
+                            if (p.likes) counts.push(`${p.likes} ♥`);
+                            if (p.reposts) counts.push(`${p.reposts} ↻`);
+                            return `<li><span class="track-time">${time}</span> ${p.text}${counts.length > 0 ? ` <span class="stat-sub">(${counts.join(' · ')})</span>` : ''}${p.note ? ` — 📝 <span class="timeline-inline-note">${p.note}</span>` : ''}</li>`;
+                        }).join('')}
+                    </ul>
+                </div>`
+            });
+        }
+
         // Consolidated Daily Notes
         const dailyNotesList = [];
         if (weightEvents.length > 0 && weightEvents[0].note) {
@@ -262,6 +284,7 @@ export class TimelineDay extends HTMLElement {
         });
         musicEvents.forEach(e => { if (e.note) dailyNotesList.push({ type: 'Music', note: `${e.track_name} by ${e.artist_name}: ${e.note}` }); });
         locationEvents.forEach(e => { if (e.note) dailyNotesList.push({ type: 'Location', note: e.note }); });
+        postEvents.forEach(e => { if (e.note) dailyNotesList.push({ type: 'Post', note: e.note }); });
         diveEvents.forEach(e => {
             if (e.note) {
                 const loc = [e.spot, e.city, e.country].filter(Boolean).join(', ');
