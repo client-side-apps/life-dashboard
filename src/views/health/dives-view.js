@@ -328,32 +328,8 @@ export class HealthDivesView extends DataView {
                     height: 200px;
                 }
                 
-                .table-pagination {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    margin-top: 0.5rem;
-                    font-size: 0.8rem;
-                }
-                
-                .pagination-btn {
-                    background: none;
-                    border: 1px solid var(--border-color);
-                    color: var(--text-color);
-                    cursor: pointer;
-                    padding: 0.25rem 0.5rem;
-                    font-weight: bold;
-                }
-                
-                .pagination-btn:hover {
-                    background: var(--border-color);
-                }
-                
-                .pagination-btn[disabled] {
-                    opacity: 0.4;
-                    cursor: not-allowed;
-                }
-                
+                /* .table-pagination and .pagination-btn come from style.css */
+
                 .mini-table {
                     width: 100%;
                     border-collapse: collapse;

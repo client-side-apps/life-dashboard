@@ -372,6 +372,38 @@ input:focus {
     color: var(--primary-text);
 }
 
+/* Page controls of a table showing one page of a larger set of rows */
+.table-pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 0.5rem;
+    font-size: 0.8rem;
+}
+
+.table-pagination[hidden] {
+    display: none;
+}
+
+.pagination-btn {
+    background: none;
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    font-weight: bold;
+}
+
+.pagination-btn:hover:not([disabled]) {
+    background: var(--primary-color);
+    color: var(--primary-text);
+}
+
+.pagination-btn[disabled] {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
 
 /* View Specific Padding */
 finance-view,
