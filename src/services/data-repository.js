@@ -57,6 +57,56 @@ export function insertRecord(tableName, data) {
     );
 }
 
+// --- Raw data explorer ---
+
+// Column names that hold the date of a row, by order of preference.
+const DATE_COLUMNS = ['timestamp', 'time', 'date', 'time_watched', 'created_at', 'datetime'];
+
+/**
+ * Reads one page of a table, most recent rows first when the table has a date
+ * column. Only the requested page is read from the database, and the total
+ * number of matching rows is returned so the caller can render page controls.
+ * @param {string} tableName
+ * @param {object} [options]
+ * @param {string} [options.startDate] 'YYYY-MM-DD', only with endDate
+ * @param {string} [options.endDate] 'YYYY-MM-DD', only with startDate
+ * @param {number} [options.page] 1-based page number, clamped to the last page
+ * @param {number} [options.pageSize] rows per page
+ * @returns {{rows: object[], dateColumn: string|null, totalRows: number, page: number, pageCount: number, offset: number}}
+ */
+export function getTablePage(tableName, { startDate, endDate, page = 1, pageSize = 100 } = {}) {
+    const columnNames = getTableColumns(tableName).map(c => c.name);
+    const dateColumn = DATE_COLUMNS.find(col => columnNames.includes(col)) || null;
+
+    if (columnNames.length === 0) {
+        return { rows: [], dateColumn: null, totalRows: 0, page: 1, pageCount: 1, offset: 0 };
+    }
+
+    let where = '';
+    const params = [];
+    if (dateColumn && startDate && endDate) {
+        where = ` WHERE "${dateColumn}" >= ? AND "${dateColumn}" <= ?`;
+        // Local day boundaries
+        params.push(new Date(startDate + 'T00:00:00').getTime());
+        params.push(new Date(endDate + 'T23:59:59.999').getTime());
+    }
+
+    const countRows = dbService.query(`SELECT COUNT(*) AS count FROM "${tableName}"${where}`, params);
+    const totalRows = countRows.length > 0 ? countRows[0].count : 0;
+
+    const pageCount = Math.max(1, Math.ceil(totalRows / pageSize));
+    const currentPage = Math.min(Math.max(1, page), pageCount);
+    const offset = (currentPage - 1) * pageSize;
+
+    let query = `SELECT * FROM "${tableName}"${where}`;
+    if (dateColumn) query += ` ORDER BY "${dateColumn}" DESC`;
+    query += ` LIMIT ? OFFSET ?`;
+
+    const rows = dbService.query(query, [...params, pageSize, offset]);
+
+    return { rows, dateColumn, totalRows, page: currentPage, pageCount, offset };
+}
+
 // --- Finance ---
 
 export function getAccounts() {

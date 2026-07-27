@@ -1,6 +1,8 @@
 import * as dataRepository from '../services/data-repository.js';
 import { DataView } from '../components/data-view/data-view.js';
 
+const ROWS_PER_PAGE = 100;
+
 /** Enables or disables a control, greying it out when disabled. */
 function setEnabled(element, enabled) {
     if (!element) return;
@@ -13,6 +15,8 @@ export class RawDataView extends DataView {
     constructor() {
         super();
         this.currentTable = null;
+        this.page = 1;
+        this.pageCount = 1;
     }
 
     connectedCallback() {
@@ -141,6 +145,7 @@ export class RawDataView extends DataView {
     }
 
     onDateRangeChanged() {
+        this.page = 1;
         this.loadTableData();
     }
 
@@ -165,9 +170,15 @@ export class RawDataView extends DataView {
         const select = this.querySelector('#data-table-select');
         select.addEventListener('change', (e) => {
             this.currentTable = e.target.value;
+            this.page = 1;
             this.resetAddRow();
             this.loadTableData();
         });
+
+        const prevBtn = this.querySelector('#data-page-prev');
+        const nextBtn = this.querySelector('#data-page-next');
+        if (prevBtn) prevBtn.addEventListener('click', () => this.goToPage(this.page - 1));
+        if (nextBtn) nextBtn.addEventListener('click', () => this.goToPage(this.page + 1));
 
         const addRowBtn = this.querySelector('#add-row-btn');
         const addRowForm = this.querySelector('#add-row-form');
@@ -343,53 +354,34 @@ export class RawDataView extends DataView {
         }
     }
 
+    /**
+     * Shows another page of the current table. Out of range pages are ignored,
+     * so the buttons stay harmless at the first and last page.
+     */
+    goToPage(page) {
+        if (page < 1 || page > this.pageCount) return;
+        this.page = page;
+        this.loadTableData();
+    }
+
     async loadTableData() {
         if (!this.currentTable) return;
 
         await this.showLoading();
 
         try {
+            const { rows: data, dateColumn, totalRows, page, pageCount, offset } = dataRepository.getTablePage(
+                this.currentTable,
+                {
+                    startDate: this.startDate,
+                    endDate: this.endDate,
+                    page: this.page,
+                    pageSize: ROWS_PER_PAGE
+                }
+            );
 
-
-            const startDate = this.startDate;
-            const endDate = this.endDate;
-
-            let query = `SELECT * FROM "${this.currentTable}"`;
-            let params = [];
-            let dateColumn = null;
-
-            // Detect date column by checking first row or schema
-            // Simplest way: check column names from a limit 1 query
-            const schemaCheck = dataRepository.executeQuery(`SELECT * FROM "${this.currentTable}" LIMIT 1`);
-            if (schemaCheck.length > 0) {
-                const cols = Object.keys(schemaCheck[0]);
-                // Priority list of date column names
-                const dateCols = ['timestamp', 'time', 'date', 'time_watched', 'created_at', 'datetime'];
-                dateColumn = dateCols.find(col => cols.includes(col));
-            }
-
-            if (dateColumn && startDate && endDate) {
-                query += ` WHERE "${dateColumn}" >= ? AND "${dateColumn}" <= ?`;
-                // Convert to integer timestamp (Local Day)
-                const startTs = new Date(startDate + 'T00:00:00').getTime();
-                const endTs = new Date(endDate + 'T23:59:59.999').getTime();
-                params.push(startTs);
-                params.push(endTs);
-                query += ` ORDER BY "${dateColumn}" DESC`;
-            } else if (dateColumn) {
-                query += ` ORDER BY "${dateColumn}" DESC`;
-            }
-
-            query += ` LIMIT 100`;
-
-            const data = dataRepository.executeQuery(query, params);
-
-            if (data.length > 0) {
-                // Loaded data
-            } else {
-                // If data is empty, we can't easily see columns unless we use PRAGMA
-                const info = dataRepository.executeQuery(`PRAGMA table_info("${this.currentTable}")`);
-            }
+            this.page = page;
+            this.pageCount = pageCount;
 
             const table = this.querySelector('#data-table');
             const thead = table.querySelector('thead');
@@ -402,10 +394,15 @@ export class RawDataView extends DataView {
 
             if (data.length === 0) {
                 tbody.innerHTML = '<tr><td class="table-empty-message">No data found</td></tr>';
+                this.renderPagination(1);
                 return;
             }
 
-            countSpan.textContent = `Showing ${data.length} rows` + (dateColumn ? ` (sorted by ${dateColumn})` : '');
+            const firstRow = offset + 1;
+            const lastRow = offset + data.length;
+            countSpan.textContent = `Showing rows ${firstRow}-${lastRow} of ${totalRows}` +
+                (dateColumn ? ` (sorted by ${dateColumn})` : '');
+            this.renderPagination(pageCount);
 
             // Headers
             const columns = Object.keys(data[0]);
@@ -492,6 +489,23 @@ export class RawDataView extends DataView {
         } finally {
             this.hideLoading();
         }
+    }
+
+    /**
+     * Updates the page controls below the table. They stay hidden as long as
+     * the whole result fits on a single page.
+     */
+    renderPagination(pageCount) {
+        const pagination = this.querySelector('#data-pagination');
+        const prevBtn = this.querySelector('#data-page-prev');
+        const nextBtn = this.querySelector('#data-page-next');
+        const label = this.querySelector('#data-page-label');
+        if (!pagination || !prevBtn || !nextBtn || !label) return;
+
+        pagination.hidden = pageCount <= 1;
+        label.textContent = `Page ${this.page} of ${pageCount}`;
+        prevBtn.disabled = this.page <= 1;
+        nextBtn.disabled = this.page >= pageCount;
     }
 }
 
