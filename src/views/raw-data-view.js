@@ -195,10 +195,135 @@ export class RawDataView extends DataView {
 
         select.addEventListener('change', (e) => {
             this.currentTable = e.target.value;
+            this.resetAddRow();
             this.loadTableData();
         });
 
+        const addRowBtn = this.querySelector('#add-row-btn');
+        const addRowForm = this.querySelector('#add-row-form');
+        if (addRowBtn && addRowForm) {
+            addRowBtn.addEventListener('click', () => this.toggleAddRowForm());
+            addRowForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.submitAddRow();
+            });
+        }
+    }
 
+    /**
+     * Hides the add-row form and its status. Called when the selected table
+     * changes, so a half-filled form never carries over to another table.
+     */
+    resetAddRow() {
+        const btn = this.querySelector('#add-row-btn');
+        const form = this.querySelector('#add-row-form');
+        const status = this.querySelector('#add-row-status');
+
+        if (btn) btn.hidden = !this.currentTable;
+        if (form) {
+            form.replaceChildren();
+            form.hidden = true;
+        }
+        if (status) status.hidden = true;
+    }
+
+    /**
+     * Shows or hides a form with one field per column of the selected table.
+     * 'id' is auto-assigned and 'source' is stamped as 'manual', so neither
+     * gets a field.
+     */
+    toggleAddRowForm() {
+        const form = this.querySelector('#add-row-form');
+        if (!form || !this.currentTable) return;
+
+        if (!form.hidden) {
+            this.resetAddRow();
+            return;
+        }
+
+        const columns = dataRepository.getTableColumns(this.currentTable)
+            .filter(col => col.name !== 'id' && col.name !== 'source');
+
+        form.innerHTML = columns.map(col => {
+            const isNumeric = ['INTEGER', 'REAL', 'NUMERIC'].includes((col.type || '').toUpperCase());
+            const isTimestamp = col.name === 'timestamp' || col.name.endsWith('_timestamp');
+
+            let input;
+            if (isTimestamp) {
+                input = `<input type="datetime-local" id="add-row-field-${col.name}" name="${col.name}">`;
+            } else if (isNumeric) {
+                input = `<input type="number" step="any" id="add-row-field-${col.name}" name="${col.name}">`;
+            } else {
+                input = `<input type="text" id="add-row-field-${col.name}" name="${col.name}">`;
+            }
+
+            return `
+                <label for="add-row-field-${col.name}">${col.name}</label>
+                ${input}
+            `;
+        }).join('') + `
+            <span></span>
+            <button type="submit" class="primary-btn">Add Row</button>
+        `;
+
+        form.hidden = false;
+    }
+
+    async submitAddRow() {
+        const form = this.querySelector('#add-row-form');
+        if (!form || !this.currentTable) return;
+
+        const data = {};
+        for (const input of form.querySelectorAll('input')) {
+            const value = input.value.trim();
+            if (value === '') continue;
+
+            if (input.type === 'datetime-local') {
+                const ts = new Date(value).getTime();
+                if (isNaN(ts)) continue;
+                data[input.name] = ts;
+            } else if (input.type === 'number') {
+                data[input.name] = Number(value);
+            } else {
+                data[input.name] = value;
+            }
+        }
+
+        if (Object.keys(data).length === 0) {
+            this.setAddRowStatus('warning', 'Fill in at least one field.');
+            return;
+        }
+        data.source = 'manual';
+
+        try {
+            dataRepository.insertRecord(this.currentTable, data);
+            let message = `Row added to ${this.currentTable}.`;
+
+            if (dataRepository.hasFileHandle()) {
+                await dataRepository.saveDatabase();
+                message += ' Changes saved to database file.';
+            }
+
+            this.resetAddRow();
+            this.setAddRowStatus('success', message);
+            await this.loadTableData();
+        } catch (err) {
+            console.error('Add row failed', err);
+            this.setAddRowStatus('error', `Error: ${err.message}`);
+        }
+    }
+
+    /**
+     * Shows the add-row status element with the given text. The element lives
+     * in the template; only its text and visibility change.
+     * @param {'success'|'warning'|'error'} kind
+     */
+    setAddRowStatus(kind, text) {
+        const status = this.querySelector('#add-row-status');
+        if (!status) return;
+        status.className = `import-log-item import-log-${kind}`;
+        status.textContent = text;
+        status.hidden = false;
     }
 
     async downloadDatabase() {
