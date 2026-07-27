@@ -2,6 +2,7 @@ import * as dataRepository from '../services/data-repository.js';
 import { DataView } from '../components/data-view/data-view.js';
 import '../components/timeline-day.js';
 import { getDaysWindow, toDayKey } from '../utils/day-range.js';
+import { estimatePendingHeight } from '../utils/timeline-scroll.js';
 
 // Tables feeding the timeline, with the condition qualifying a row as an event.
 const TIMELINE_SOURCES = [
@@ -31,6 +32,7 @@ export class TimelineView extends DataView {
         this.isLoadingChunk = false;
         this.sentinel = null;
         this.sentinelObserver = null;
+        this.spacer = null;
     }
 
     connectedCallback() {
@@ -121,6 +123,7 @@ export class TimelineView extends DataView {
         }
 
         requestAnimationFrame(() => {
+            this.updateSpacer();
             this.updateScale(this.days.slice(0, this.loadedDays));
             // The batch may not fill the viewport: keep loading until it does.
             this.loadMoreIfSentinelVisible();
@@ -341,13 +344,21 @@ export class TimelineView extends DataView {
     }
 
     /**
-     * Appends the element observed to trigger loading of the next batch of days.
+     * Appends the element observed to trigger loading of the next batch of days,
+     * followed by the spacer standing in for the days not rendered yet.
      */
     setupSentinel(content) {
         this.sentinel = document.createElement('div');
         this.sentinel.className = 'timeline-sentinel';
         this.sentinel.textContent = 'Loading more…';
         content.appendChild(this.sentinel);
+
+        // Below the sentinel, so scrolling to the end of the rendered days still
+        // triggers the next batch rather than landing in the reserved space.
+        this.spacer = document.createElement('div');
+        this.spacer.className = 'timeline-spacer';
+        this.spacer.setAttribute('aria-hidden', 'true');
+        content.appendChild(this.spacer);
 
         this.sentinelObserver = new IntersectionObserver(entries => {
             if (entries.some(entry => entry.isIntersecting)) this.loadNextChunk();
@@ -365,6 +376,31 @@ export class TimelineView extends DataView {
             this.sentinel.remove();
             this.sentinel = null;
         }
+        if (this.spacer) {
+            this.spacer.remove();
+            this.spacer = null;
+        }
+    }
+
+    /**
+     * Keeps the scrollbar the size of the whole selected range by reserving, below
+     * the rendered days, the height the days still to render are expected to take.
+     */
+    updateSpacer() {
+        if (!this.spacer) return;
+
+        const content = this.querySelector('#timeline-content');
+        if (!content) return;
+
+        const dayEls = Array.from(content.children).filter(el => el.tagName === 'TIMELINE-DAY');
+        if (dayEls.length === 0) return;
+
+        const first = dayEls[0];
+        const last = dayEls[dayEls.length - 1];
+        const renderedHeight = last.offsetTop + last.offsetHeight - first.offsetTop;
+
+        const pending = estimatePendingHeight(renderedHeight, dayEls.length, this.days.length - this.loadedDays);
+        this.spacer.style.height = `${pending}px`;
     }
 
     /**
@@ -517,6 +553,10 @@ export class TimelineView extends DataView {
 
         this.isScrolling = true;
         this.updateIndicator();
+
+        // A jump into the reserved space leaves the sentinel behind, out of the
+        // observer's reach: check it on every scroll so days keep loading.
+        this.loadMoreIfSentinelVisible();
 
         clearTimeout(this._scrollTimeout);
         this._scrollTimeout = setTimeout(() => {

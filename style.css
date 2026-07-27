@@ -512,6 +512,14 @@ map-view {
     font-size: 0.8rem;
     text-transform: uppercase;
     opacity: 0.7;
+    overflow-anchor: none;
+}
+
+/* Stands in for the days not rendered yet, so the scrollbar reflects the whole selected range */
+.timeline-spacer {
+    pointer-events: none;
+    /* Never anchor scrolling here: days loading above the spacer would push the view down */
+    overflow-anchor: none;
 }
 
 .timeline-content .no-data {
