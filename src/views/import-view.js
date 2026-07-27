@@ -294,6 +294,8 @@ export class ImportView extends HTMLElement {
         status.scrollTop = status.scrollHeight;
 
         if (totalSuccess > 0) {
+            this.dispatchEvent(new CustomEvent('data-imported', { bubbles: true }));
+
             // Auto-save if supported
             if (dataRepository.hasFileHandle()) {
                 const savingMsg = document.createElement('div');
@@ -310,7 +312,11 @@ export class ImportView extends HTMLElement {
                     savingMsg.className = 'import-log-error';
                 }
             } else {
-                console.log('No file handle, skipping auto-save.');
+                const unsavedMsg = document.createElement('div');
+                unsavedMsg.className = 'import-log-warning import-log-item';
+                unsavedMsg.textContent = 'Imported data is not saved to a file yet. Use the Save button at the top of the page to save the database.';
+                status.appendChild(unsavedMsg);
+                status.scrollTop = status.scrollHeight;
             }
         }
     }

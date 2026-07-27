@@ -39,12 +39,18 @@ export const FileStorage = {
             };
 
             request.onsuccess = (e) => {
-                const db = e.target.result;
-                const tx = db.transaction(STORE_NAME, 'readwrite');
-                const store = tx.objectStore(STORE_NAME);
-                store.put(handle, KEY);
-                tx.oncomplete = () => resolve();
-                tx.onerror = reject;
+                try {
+                    const db = e.target.result;
+                    const tx = db.transaction(STORE_NAME, 'readwrite');
+                    const store = tx.objectStore(STORE_NAME);
+                    store.put(handle, KEY);
+                    tx.oncomplete = () => resolve();
+                    tx.onerror = reject;
+                } catch (err) {
+                    // Storing can throw synchronously, e.g. for a handle that
+                    // cannot be structured-cloned. Never leave the caller hanging.
+                    reject(err);
+                }
             };
         });
     },
