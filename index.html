@@ -291,16 +291,19 @@
             </section>
 
             <section class="data-section">
-                <h3>Explore Data</h3>
+                <h3>Explore and Add data</h3>
                 <div class="data-controls">
                     <label for="data-table-select" class="sr-only">Data table</label>
                     <select id="data-table-select" class="select-input data-table-select"
                         aria-label="Select data table">
                         <option value="" disabled selected>Select Table</option>
                     </select>
+                    <button id="add-row-btn" class="secondary-btn" hidden>Add Row</button>
                     <!-- Global date picker used -->
                     <span id="data-count" class="data-count-label"></span>
                 </div>
+                <form id="add-row-form" class="add-row-form" hidden></form>
+                <div id="add-row-status" class="import-log-item" hidden></div>
                 <div class="table-wrapper">
                     <table id="data-table" class="generic-table">
                         <thead></thead>
