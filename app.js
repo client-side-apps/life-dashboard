@@ -1,6 +1,7 @@
 import { dbService } from './src/db.js';
 import * as dataRepository from './src/services/data-repository.js';
 import { FileStorage } from './src/utils/file-storage.js';
+import { describeDbStatus } from './src/utils/db-status.js';
 import { MapView } from './src/views/map-view.js';
 import { TimelineView } from './src/views/timeline-view.js';
 import { HealthView } from './src/views/health-view.js';
@@ -60,6 +61,8 @@ async function init() {
 
     // Listen for DB modifications
     dbService.onModification = () => {
+        // A database can be created by importing data without opening a file first.
+        state.isDbLoaded = !!dbService.db;
         state.isDirty = true;
         updateStatus();
     };
@@ -67,59 +70,83 @@ async function init() {
 
 function updateStatus() {
     const statusEl = elements.statusIndicator;
-    if (!state.isDbLoaded) {
-        statusEl.innerHTML = '';
+    const status = describeDbStatus({
+        hasDatabase: !!dbService.db,
+        fileName: dbService.fileHandle ? dbService.fileHandle.name : null,
+        isDirty: state.isDirty
+    });
+
+    statusEl.innerHTML = '';
+
+    if (status.state === 'saved') {
+        statusEl.className = 'status-indicator status-autosaved';
+        const label = document.createElement('span');
+        label.textContent = `Saved to ${status.fileName}`;
+        statusEl.appendChild(label);
         return;
     }
 
-    if (dbService.fileHandle) {
-        // Auto-saved
-        const name = dbService.fileHandle.name;
-        statusEl.className = 'status-indicator status-autosaved';
-        statusEl.innerHTML = `<span>Saved to ${name}</span>`;
-        // Since it's autosaved, we usually reset isDirty quickly or assume it saves immediately.
-        // But ImportView saves explicitly. 
-        // If we modify via query but don't save, it is dirty effectively.
-        // However, if we rely on "auto-save", individual queries don't auto-save yet in db.js
-        // The user instructions said "Importing... writing data changes back...".
-        // If I haven't implemented auto-save for EVERY query, then specific edits are essentially unsaved until manual save or bulk import save.
-        // BUT user said "If database is autosaved, display 'already autosaved...'"
-        // This implies the mode we are in.
-        // Let's assume for now, if we have a handle, we are in "Auto-Save Mode".
-        // Ideally we should auto-save on every change if performance allows, or debounce it.
-        // Given I implemented saveToDisk in ImportView, other random edits might NOT be saved yet.
-        // To be safe: if dirty and handle exists -> "Unsaved changes (Saving...)" or just save it?
-        // Let's implement a debounce save in db.js or app.js? 
-        // For now, let's just stick to the text requested.
-
-        statusEl.innerHTML = `<span>Saved to ${name}</span>`;
-
-    } else {
-        // Manual Save Mode
-        if (state.isDirty) {
-            statusEl.className = 'status-indicator status-unsaved';
-            statusEl.innerHTML = `
-                <span>Unsaved changes</span>
-                <button id="manual-save-btn" class="btn-small">SAVE</button>
-            `;
-        } else {
-            statusEl.className = 'status-indicator';
-            statusEl.innerHTML = ''; // Or empty
-        }
+    if (status.state === 'unsaved') {
+        statusEl.className = 'status-indicator status-unsaved';
+        const label = document.createElement('span');
+        label.textContent = 'Unsaved changes';
+        const button = document.createElement('button');
+        button.id = 'manual-save-btn';
+        button.className = 'btn-small';
+        button.textContent = 'SAVE';
+        statusEl.append(label, button);
+        return;
     }
+
+    statusEl.className = 'status-indicator';
+}
+
+function databaseFileName() {
+    return `life-dashboard-${new Date().toISOString().slice(0, 10)}.sqlite`;
 }
 
 async function handleManualSave() {
-    // For non-handle mode, this would trigger a download
-    // For handle mode, it forces a save (if we support manual trigger even in auto mode, though prompt says "if autosaved... display already autosaved")
+    // Saving to a file the user picks keeps a handle around, so later changes
+    // are written back to that file instead of downloading a new copy.
+    if ('showSaveFilePicker' in window) {
+        try {
+            const handle = await window.showSaveFilePicker({
+                suggestedName: databaseFileName(),
+                types: [{
+                    description: 'SQLite Database',
+                    accept: { 'application/x-sqlite3': ['.sqlite', '.db', '.sqlite3'] }
+                }]
+            });
 
-    // If we have unsaved changes and NO handle -> Download.
+            await dbService.saveToDisk(handle);
+            dbService.setFileHandle(handle);
+            state.isDirty = false;
+            updateStatus();
+
+            // Remembering the file only affects the next session, so a failure
+            // here must not look like a failed save.
+            try {
+                await FileStorage.set(handle);
+            } catch (err) {
+                console.warn('Could not remember the database file for next time:', err);
+            }
+            return;
+        } catch (err) {
+            if (err.name === 'AbortError') return;
+            console.error('Failed to save to file, falling back to download:', err);
+        }
+    }
+
+    downloadDatabase();
+}
+
+function downloadDatabase() {
     const data = dbService.export();
     const blob = new Blob([data], { type: 'application/octet-stream' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `life-dashboard-${new Date().toISOString().slice(0, 10)}.sqlite`;
+    a.download = databaseFileName();
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

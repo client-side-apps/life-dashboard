@@ -5,15 +5,20 @@ class DatabaseService {
         this.db = null;
         this.tables = [];
         this.fileHandle = null;
+        this.suppressModificationEvents = false;
     }
 
     setFileHandle(handle) {
         this.fileHandle = handle;
     }
 
-    async saveToDisk() {
+    /**
+     * Writes the database to disk. Defaults to the handle the database was
+     * opened with; pass a handle to save a database that has none yet.
+     */
+    async saveToDisk(handle = this.fileHandle) {
         if (!this.db) return false;
-        if (!this.fileHandle) {
+        if (!handle) {
             console.warn('Cannot save to disk: No file handle available.');
             return false;
         }
@@ -23,7 +28,7 @@ class DatabaseService {
             const data = this.export();
 
             console.log('Writing to file...');
-            const writable = await this.fileHandle.createWritable();
+            const writable = await handle.createWritable();
             await writable.write(data);
             await writable.close();
             console.log('Database saved successfully.');
@@ -89,6 +94,17 @@ class DatabaseService {
     ensureSchema() {
         if (!this.db) return;
 
+        // Creating the schema is not a change the user made, so it must not
+        // mark the database as having unsaved changes.
+        this.suppressModificationEvents = true;
+        try {
+            this.createSchema();
+        } finally {
+            this.suppressModificationEvents = false;
+        }
+    }
+
+    createSchema() {
         // Migration: the 'blood_pressure' table was renamed to 'heart' since it
         // also stores heart-rate-only measurements. Rename before the CREATE
         // TABLE statements run, so existing data moves to the new name instead
@@ -442,6 +458,7 @@ class DatabaseService {
     }
 
     notifyModification() {
+        if (this.suppressModificationEvents) return;
         if (this._onModification) {
             this._onModification();
         }

@@ -3,6 +3,14 @@ import { DataView } from '../components/data-view/data-view.js';
 
 const ROWS_PER_PAGE = 100;
 
+/** Enables or disables a control, greying it out when disabled. */
+function setEnabled(element, enabled) {
+    if (!element) return;
+    element.disabled = !enabled;
+    element.style.opacity = enabled ? '1' : '0.5';
+    element.style.cursor = enabled ? 'pointer' : 'not-allowed';
+}
+
 export class RawDataView extends DataView {
     constructor() {
         super();
@@ -26,6 +34,9 @@ export class RawDataView extends DataView {
         const importContainer = this.querySelector('#import-view-container');
         if (importContainer) {
             const importView = document.createElement('import-view');
+            // An import can create the tables of a brand new database, so the
+            // controls that depend on them need to pick the new ones up.
+            importView.addEventListener('data-imported', () => this.refreshTableOptions());
             importContainer.appendChild(importView);
         }
 
@@ -156,48 +167,7 @@ export class RawDataView extends DataView {
             });
         }
         
-        const tables = dataRepository.getTables();
         const select = this.querySelector('#data-table-select');
-        const demoBtn = this.querySelector('#load-demo-btn');
-
-        if (downloadBtn) {
-            if (tables.length === 0) {
-                downloadBtn.disabled = true;
-                downloadBtn.style.opacity = '0.5';
-                downloadBtn.style.cursor = 'not-allowed';
-            } else {
-                downloadBtn.disabled = false;
-                downloadBtn.style.opacity = '1';
-                downloadBtn.style.cursor = 'pointer';
-            }
-        }
-
-        if (tables.length === 0) {
-            select.innerHTML = '<option value="" disabled selected>No tables found</option>';
-            select.disabled = true;
-            select.style.opacity = '0.5';
-            select.style.cursor = 'not-allowed';
-            if (demoBtn) {
-                demoBtn.disabled = false;
-                demoBtn.style.opacity = '1';
-                demoBtn.style.cursor = 'pointer';
-            }
-            return;
-        }
-        
-        select.disabled = false;
-        select.style.opacity = '1';
-        select.style.cursor = 'pointer';
-
-        if (demoBtn) {
-            demoBtn.disabled = true;
-            demoBtn.style.opacity = '0.5';
-            demoBtn.style.cursor = 'not-allowed';
-        }
-
-        select.innerHTML = '<option value="" disabled selected>Select Table</option>' +
-            tables.map(t => `<option value="${t}">${t}</option>`).join('');
-
         select.addEventListener('change', (e) => {
             this.currentTable = e.target.value;
             this.page = 1;
@@ -219,6 +189,33 @@ export class RawDataView extends DataView {
                 this.submitAddRow();
             });
         }
+
+        this.refreshTableOptions();
+    }
+
+    /**
+     * Syncs the table picker and the database buttons with the tables that
+     * currently exist. Safe to call again whenever the database changes.
+     */
+    refreshTableOptions() {
+        const tables = dataRepository.getTables();
+        const select = this.querySelector('#data-table-select');
+        const downloadBtn = this.querySelector('#download-db-btn');
+        const demoBtn = this.querySelector('#load-demo-btn');
+
+        setEnabled(downloadBtn, tables.length > 0);
+        setEnabled(demoBtn, tables.length === 0);
+        setEnabled(select, tables.length > 0);
+
+        if (tables.length === 0) {
+            select.innerHTML = '<option value="" disabled selected>No tables found</option>';
+            return;
+        }
+
+        const selected = this.currentTable;
+        select.innerHTML = '<option value="" disabled selected>Select Table</option>' +
+            tables.map(t => `<option value="${t}">${t}</option>`).join('');
+        if (selected && tables.includes(selected)) select.value = selected;
     }
 
     /**
