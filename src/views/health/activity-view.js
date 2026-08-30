@@ -1,6 +1,7 @@
 import * as dataRepository from '../../services/data-repository.js';
 import { DataView } from '../../components/data-view/data-view.js';
 import { getChartColor, ChartColors } from '../../utils/style.js';
+import { shiftLocalDays } from '../../utils/day-range.js';
 
 export class HealthActivityView extends DataView {
     constructor() {
@@ -54,12 +55,11 @@ export class HealthActivityView extends DataView {
             return;
         }
 
-        const dayMs = 24 * 3600 * 1000;
         const startTs = new Date(startDate + 'T00:00:00').getTime();
         const endTs = new Date(endDate + 'T23:59:59.999').getTime();
 
         // Read 6 extra days back so the first days of the range have a full window.
-        const rows = dataRepository.getTimestampRangeData('activities', startTs - 6 * dayMs, endTs, 'ASC');
+        const rows = dataRepository.getTimestampRangeData('activities', shiftLocalDays(startTs, -6), endTs, 'ASC');
 
         const minutesByDay = new Map();
         rows.forEach(row => {
@@ -71,10 +71,10 @@ export class HealthActivityView extends DataView {
         });
 
         const data = [];
-        for (let dayTs = startTs; dayTs <= endTs; dayTs = new Date(dayTs + dayMs).setHours(0, 0, 0, 0)) {
+        for (let dayTs = startTs; dayTs <= endTs; dayTs = shiftLocalDays(dayTs, 1)) {
             let weeklyMinutes = 0;
             for (let i = 0; i < 7; i++) {
-                const windowDayTs = new Date(dayTs - i * dayMs).setHours(0, 0, 0, 0);
+                const windowDayTs = shiftLocalDays(dayTs, -i);
                 weeklyMinutes += minutesByDay.get(windowDayTs) || 0;
             }
             data.push({ timestamp: dayTs, active_hours: Math.round(weeklyMinutes / 60 * 10) / 10 });

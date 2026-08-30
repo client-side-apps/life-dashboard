@@ -32,3 +32,18 @@ export function getDaysWindow(days, rangeStartTs, rangeEndTs) {
         endTs: Math.min(rangeEndTs, dayEndTs(days[0]))
     };
 }
+
+/**
+ * Local midnight `days` days away from the day `dayTs` falls in.
+ * Unlike the helpers above this works in local time, matching views that
+ * bucket by the day the user lived through. Days are shifted on the calendar
+ * rather than by 24 hours: a daylight saving change makes a day 23 or 25 hours
+ * long, so adding 24 hours and rounding down to midnight lands on the wrong
+ * day, or on the same day forever.
+ */
+export function shiftLocalDays(dayTs, days) {
+    const date = new Date(dayTs);
+    date.setHours(0, 0, 0, 0);
+    date.setDate(date.getDate() + days);
+    return date.getTime();
+}
