@@ -57,7 +57,7 @@ export class RawDataView extends DataView {
                 border-bottom: none;
                 padding-bottom: 0.5rem;
                 margin-bottom: 1rem;
-                text-transform: uppercase;
+                text-transform: var(--label-transform);
                 font-size: 1.1rem;
             }
             .section-controls {

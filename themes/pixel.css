@@ -1,0 +1,179 @@
+/* themes/pixel.css — the original brutalist / pixel look.
+ *
+ * Monospace everywhere, square corners, hard 1px rules, saturated primaries.
+ * Layout lives in app.css; this file only sets the tokens app.css reads,
+ * plus the handful of ornaments that are specific to this theme.
+ */
+
+:root {
+    /* Surfaces & text */
+    --bg-color: #ffffff;
+    --text-color: #000000;
+    --text-muted: #4d4d4d;
+    --nav-bg: #e0e0e0;
+    --surface-muted: #e0e0e0;
+    --card-bg: #ffffff;
+    --border-color: #000000;
+    --hairline-color: rgba(0, 0, 0, 0.05);
+
+    /* Accents */
+    --primary-color: #ffff00;
+    /* Bright Yellow */
+    --primary-text: #000000;
+    --secondary-color: #0000ff;
+    /* Blue */
+    --accent-color: #ff00ff;
+    /* Magenta */
+
+    /* States */
+    --hover-surface: var(--nav-bg);
+    --row-hover-bg: var(--primary-color);
+    --row-hover-text: var(--primary-text);
+    --nav-active-bg: var(--primary-color);
+    --nav-active-text: var(--primary-text);
+    --focus-color: var(--border-color);
+    --scrollbar-thumb: var(--text-color);
+    --overlay-bg: rgba(0, 0, 0, 0.7);
+
+    /* Chart specific palette for variety */
+    --chart-red: #ff0000;
+    --chart-green: #00ff00;
+    --chart-blue: #0000ff;
+    --chart-cyan: #00ffff;
+    --chart-magenta: #ff00ff;
+    --chart-yellow: #ffff00;
+    --chart-orange: #ff9800;
+
+    /* Notes */
+    --note-color: #D97706;
+    --note-bg: #FEF3C7;
+    --note-text: #78350F;
+    --note-inline-color: #b45309;
+
+    /* Type */
+    --font-ui: 'Courier New', Courier, monospace;
+    --font-display: 'Courier New', Courier, monospace;
+    --font-mono: 'Courier New', Courier, monospace;
+    --font-size-base: 14px;
+    --line-height: 1.2;
+    --weight-heading: 900;
+    --weight-strong: bold;
+    --label-transform: uppercase;
+    --label-tracking: normal;
+
+    /* Shape: strictly square, hard edged, no shadows */
+    --radius: 0;
+    --radius-lg: 0;
+    --radius-pill: 0;
+    --border-width: 1px;
+    --border-width-strong: 2px;
+    --table-cell-border: 1px;
+    --card-shadow: none;
+    --shadow-pop: 4px 4px 0 rgba(0, 0, 0, 0.2);
+
+    /* Cards are edge to edge dividers rather than floating panels */
+    --card-padding: 0;
+    --card-border-width: 0;
+    --card-radius: 0;
+    --card-gap: 0;
+    --day-header-bg: var(--nav-bg);
+}
+
+[data-theme="dark"] {
+    --bg-color: #000000;
+    --text-color: #e0e0e0;
+    --text-muted: #9d9d9d;
+    --nav-bg: #222222;
+    --surface-muted: #222222;
+    --card-bg: #000000;
+    --border-color: #e0e0e0;
+    --hairline-color: rgba(255, 255, 255, 0.05);
+
+    --primary-color: #ffff00;
+    --primary-text: #000000;
+    --secondary-color: #00ffff;
+    /* Cyan */
+    --accent-color: #ff00ff;
+
+    --chart-red: #ff0000;
+    --chart-green: #00ff00;
+    --chart-blue: #0000ff;
+    --chart-cyan: #00ffff;
+    --chart-magenta: #ff00ff;
+    --chart-yellow: #ffff00;
+    --chart-orange: #ff9800;
+
+    --note-color: #F59E0B;
+    --note-bg: #78350F;
+    --note-text: #FDE68A;
+    --note-inline-color: #f59e0b;
+}
+
+/* STRICT PIXEL RULE: nothing rounds, everything is monospace — including
+   widgets rendered by vendor CSS. */
+* {
+    border-radius: 0 !important;
+    font-family: 'Courier New', Courier, monospace !important;
+}
+
+/* Title reads as a stamped label */
+.header-left h1 {
+    letter-spacing: -1px;
+    text-transform: uppercase;
+    background: var(--text-color);
+    color: var(--bg-color);
+    padding: 2px 6px;
+}
+
+/* Nav tabs share collapsed borders instead of gaps */
+.main-nav {
+    border-left: 1px solid var(--border-color);
+}
+
+.nav-btn {
+    border-left: 1px solid var(--border-color);
+}
+
+.nav-btn:last-child {
+    border-right: 1px solid var(--border-color);
+}
+
+.nav-btn.active {
+    box-shadow: inset 0 0 0 2px var(--border-color);
+    /* Inner border focus */
+}
+
+/* Buttons physically depress */
+.primary-btn,
+.secondary-btn,
+.icon-btn {
+    transition: transform 0.1s;
+}
+
+.primary-btn:active,
+.secondary-btn:active,
+.icon-btn:active {
+    transform: translate(1px, 1px);
+}
+
+/* Status pill sits on the page background, not a tinted surface */
+#db-status {
+    background: var(--bg-color);
+}
+
+/* Leaflet Overrides */
+.leaflet-bar,
+.leaflet-control-zoom-in,
+.leaflet-control-zoom-out,
+.leaflet-touch .leaflet-bar,
+.leaflet-touch .leaflet-control-zoom-in,
+.leaflet-touch .leaflet-control-zoom-out {
+    border-radius: 0 !important;
+    border: 1px solid var(--border-color) !important;
+    color: var(--text-color) !important;
+    background: var(--bg-color) !important;
+}
+
+.leaflet-container {
+    font-family: 'Courier New', Courier, monospace !important;
+}

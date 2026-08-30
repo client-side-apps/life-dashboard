@@ -1,127 +1,46 @@
+/* app.css — structure and layout for Life Dashboard.
+ *
+ * This file owns geometry only: boxes, flow, sizing, spacing and stacking.
+ * Every colour, font, border weight, corner radius and shadow is read from a
+ * custom property that a theme in themes/*.css defines. Adding a theme should
+ * never require touching this file.
+ *
+ * Tokens a theme must define:
+ *   Surfaces   --bg-color --card-bg --nav-bg --surface-muted --border-color
+ *   Text       --text-color --text-muted
+ *   Accents    --primary-color --primary-text --secondary-color --accent-color
+ *   States     --hover-surface --row-hover-bg --row-hover-text
+ *              --nav-active-bg --nav-active-text --focus-color
+ *   Charts     --chart-red --chart-green --chart-blue --chart-cyan
+ *              --chart-magenta --chart-yellow --chart-orange
+ *   Notes      --note-color --note-bg --note-text --note-inline-color
+ *   Type       --font-ui --font-display --font-mono --font-size-base
+ *              --line-height --weight-heading --weight-strong
+ *              --label-transform --label-tracking
+ *   Shape      --radius --radius-lg --border-width --border-width-strong
+ *              --card-shadow --shadow-pop
+ */
+
 :root {
-    /* Pixel / Brutalist Theme Variables */
-    --bg-color: #ffffff;
-    --text-color: #000000;
-    --nav-bg: #e0e0e0;
-    --border-color: #000000;
-    --primary-color: #ffff00;
-    /* Bright Yellow */
-    --primary-text: #000000;
-    --secondary-color: #0000ff;
-    /* Blue */
-    --accent-color: #ff00ff;
-    /* Magenta */
-    --card-bg: #ffffff;
-    --card-shadow: none;
-
-    /* Chart specific palette for variety */
-    --chart-red: #ff0000;
-    --chart-green: #00ff00;
-    --chart-blue: #0000ff;
-    --chart-cyan: #00ffff;
-    --chart-magenta: #ff00ff;
-    --chart-yellow: #ffff00;
-    --chart-orange: #ff9800;
-    
-    --note-color: #D97706;
-    --note-bg: #FEF3C7;
-    --note-text: #78350F;
-    --note-inline-color: #b45309;
-
+    /* Layout constants: shared by every theme, overridable by any of them. */
     --header-height: 48px;
     --spacing-unit: 8px;
     --control-height: 36px;
-    /* Standardize height */
 
-    font-family: 'Courier New', Courier, monospace;
-    font-size: 14px;
-    line-height: 1.2;
+    font-family: var(--font-ui);
+    font-size: var(--font-size-base);
+    line-height: var(--line-height);
 }
 
-/* ... (skip dark mode) */
-
-/* Buttons */
-.primary-btn,
-.secondary-btn,
-.icon-btn {
-    height: var(--control-height);
-    padding: 0 1rem;
-    /* Horizontal padding only, height set by line-height/height */
-    border: 1px solid var(--border-color);
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 0.8rem;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    text-transform: uppercase;
-    background: var(--bg-color);
-    color: var(--text-color);
-    transition: transform 0.1s;
-    vertical-align: middle;
-}
-
-/* Form Elements */
-.select-input,
-.date-input,
-.file-input,
-input[type="text"],
-input[type="number"],
-input[type="date"],
-select {
-    height: var(--control-height);
-    padding: 0 8px;
-    border: 1px solid var(--border-color);
-    background: var(--bg-color);
-    color: var(--text-color);
-    font-family: 'Courier New', Courier, monospace;
-    font-size: 0.9rem;
-    vertical-align: middle;
-    box-shadow: none;
-}
-
-[data-theme="dark"] {
-    --bg-color: #000000;
-    --text-color: #e0e0e0;
-    --nav-bg: #222222;
-    --border-color: #e0e0e0;
-    --primary-color: #ffff00;
-    --primary-text: #000000;
-    --secondary-color: #00ffff;
-    /* Cyan */
-    --accent-color: #ff00ff;
-    --card-bg: #000000;
-
-    --chart-red: #ff0000;
-    --chart-green: #00ff00;
-    --chart-blue: #0000ff;
-    --chart-cyan: #00ffff;
-    --chart-magenta: #ff00ff;
-    --chart-yellow: #ffff00;
-    --chart-orange: #ff9800;
-
-    --note-color: #F59E0B;
-    --note-bg: #78350F;
-    --note-text: #FDE68A;
-    --note-inline-color: #f59e0b;
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
 }
 
 * {
-    box-sizing: border-box;
     margin: 0;
     padding: 0;
-    border-radius: 0 !important;
-    /* STRICT PIXEL RULE */
-    font-family: 'Courier New', Courier, monospace !important;
-    text-transform: uppercase;
-    /* Optional: enhances brutalist look, maybe too much? Let's try regular case first if user didn't specify caps, but screenshot looks mixed. Stick to normal case for readability but monospace handles the vibe. */
-    text-transform: none;
-}
-
-::selection {
-    background: var(--primary-color);
-    color: var(--primary-text);
 }
 
 body {
@@ -134,6 +53,11 @@ body {
     /* App-like feel */
 }
 
+::selection {
+    background: var(--primary-color);
+    color: var(--primary-text);
+}
+
 /* Scrollbars */
 ::-webkit-scrollbar {
     width: 12px;
@@ -142,12 +66,13 @@ body {
 
 ::-webkit-scrollbar-track {
     background: var(--nav-bg);
-    border-left: 1px solid var(--border-color);
+    border-left: var(--border-width) solid var(--border-color);
 }
 
 ::-webkit-scrollbar-thumb {
-    background: var(--text-color);
-    border: 1px solid var(--nav-bg);
+    background: var(--scrollbar-thumb);
+    border: var(--border-width) solid var(--nav-bg);
+    border-radius: var(--radius);
 }
 
 ::-webkit-scrollbar-corner {
@@ -159,7 +84,7 @@ body {
 .app-header {
     height: var(--header-height);
     background-color: var(--bg-color);
-    border-bottom: 2px solid var(--border-color);
+    border-bottom: var(--border-width-strong) solid var(--border-color);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -170,13 +95,9 @@ body {
 }
 
 .header-left h1 {
+    font-family: var(--font-display);
     font-size: 1rem;
-    font-weight: 900;
-    letter-spacing: -1px;
-    text-transform: uppercase;
-    background: var(--text-color);
-    color: var(--bg-color);
-    padding: 2px 6px;
+    font-weight: var(--weight-heading);
 }
 
 @media (max-width: 1200px) {
@@ -187,8 +108,6 @@ body {
 
 .main-nav {
     display: flex;
-    gap: -1px;
-    /* Remove gaps for border collapse look */
     height: 100%;
     align-items: stretch;
 }
@@ -196,11 +115,10 @@ body {
 .nav-btn {
     background: none;
     border: none;
-    border-left: 1px solid var(--border-color);
     padding: 0 1.5rem;
     color: var(--text-color);
     cursor: pointer;
-    font-weight: bold;
+    font-weight: var(--weight-strong);
     font-size: 0.9rem;
     text-decoration: none;
     display: flex;
@@ -208,19 +126,13 @@ body {
     height: 100%;
 }
 
-.nav-btn:last-child {
-    border-right: 1px solid var(--border-color);
-}
-
 .nav-btn:hover {
-    background-color: var(--nav-bg);
+    background-color: var(--hover-surface);
 }
 
 .nav-btn.active {
-    background-color: var(--primary-color);
-    color: var(--primary-text);
-    box-shadow: inset 0 0 0 2px var(--border-color);
-    /* Inner border focus */
+    background-color: var(--nav-active-bg);
+    color: var(--nav-active-text);
 }
 
 .header-right {
@@ -229,43 +141,75 @@ body {
     gap: 1rem;
 }
 
+/* Settings popover: opened by the header gear, dismissed by Esc or a click
+   outside (native popover behaviour, no JS). */
+.settings-panel {
+    position: fixed;
+    inset: auto 1rem auto auto;
+    top: calc(var(--header-height) + 4px);
+    margin: 0;
+    grid-template-columns: max-content minmax(0, 10rem);
+    gap: 0.5rem 1rem;
+    align-items: center;
+    padding: 1rem;
+    background: var(--card-bg);
+    color: var(--text-color);
+    border: var(--border-width) solid var(--border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-pop);
+}
+
+/* The UA stylesheet hides a closed popover; only reveal it when open. */
+.settings-panel:popover-open {
+    display: grid;
+}
+
+.settings-panel label {
+    font-weight: var(--weight-strong);
+    font-size: 0.85rem;
+    text-transform: var(--label-transform);
+    letter-spacing: var(--label-tracking);
+}
+
+.settings-panel::backdrop {
+    background: transparent;
+}
+
 /* Buttons */
 .primary-btn,
 .secondary-btn,
 .icon-btn {
-    padding: 0.5rem 1rem;
-    border: 1px solid var(--border-color);
+    height: var(--control-height);
+    padding: 0 1rem;
+    border: var(--border-width) solid var(--border-color);
+    border-radius: var(--radius);
     cursor: pointer;
-    font-weight: bold;
+    font-family: var(--font-ui);
+    font-weight: var(--weight-strong);
     font-size: 0.8rem;
     text-decoration: none;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    text-transform: uppercase;
+    text-transform: var(--label-transform);
+    letter-spacing: var(--label-tracking);
     background: var(--bg-color);
     color: var(--text-color);
-    transition: transform 0.1s;
-}
-
-.primary-btn:active,
-.secondary-btn:active,
-.icon-btn:active {
-    transform: translate(1px, 1px);
+    vertical-align: middle;
 }
 
 .primary-btn {
     background-color: var(--primary-color);
     color: var(--primary-text);
+    border-color: var(--primary-border, var(--border-color));
 }
 
 .secondary-btn:hover {
-    background-color: var(--nav-bg);
+    background-color: var(--hover-surface);
 }
 
 .icon-btn {
     padding: 4px;
-    border-radius: 0;
     min-width: 32px;
     min-height: 32px;
 }
@@ -278,17 +222,20 @@ input[type="text"],
 input[type="number"],
 input[type="date"],
 select {
-    padding: 6px;
-    border: 1px solid var(--border-color);
-    background: var(--bg-color);
+    height: var(--control-height);
+    padding: 0 8px;
+    border: var(--border-width) solid var(--border-color);
+    border-radius: var(--radius);
+    background: var(--card-bg);
     color: var(--text-color);
-    font-family: 'Courier New', Courier, monospace;
+    font-family: var(--font-ui);
     font-size: 0.9rem;
+    vertical-align: middle;
 }
 
 /* Focus Indicators */
 :focus-visible {
-    outline: 2px solid var(--border-color);
+    outline: 2px solid var(--focus-color);
     outline-offset: 2px;
 }
 
@@ -299,7 +246,7 @@ select {
 .select-input:focus,
 .date-input:focus,
 input:focus {
-    outline: 2px solid var(--border-color);
+    outline: 2px solid var(--focus-color);
     outline-offset: 1px;
 }
 
@@ -309,15 +256,7 @@ input:focus {
     overflow: hidden;
     position: relative;
     padding: 0;
-    /* Add some breathing room around the grid */
     background-color: var(--bg-color);
-}
-
-/* Make the grid lines very subtle or use a distinct background color for content */
-#app-content::before {
-    content: "";
-    /* Optional overlay to fade grid if needed, or remove grid if too busy */
-    /* For now, sticking to clean background for content containers */
 }
 
 .view-container {
@@ -335,7 +274,8 @@ input:focus {
     height: 100%;
     text-align: center;
     gap: 1rem;
-    border: 1px dashed var(--border-color);
+    border: var(--border-width) dashed var(--border-color);
+    border-radius: var(--radius-lg);
     padding: 1rem;
 }
 
@@ -344,32 +284,34 @@ input:focus {
 .generic-table {
     width: 100%;
     border-collapse: collapse;
-    border: 1px solid var(--border-color);
+    border: var(--border-width) solid var(--border-color);
+    border-radius: var(--radius);
     font-size: 0.85rem;
 }
 
 .data-table th,
 .generic-table th {
-    background: var(--nav-bg);
-    border-bottom: 2px solid var(--border-color);
-    border-right: 1px solid var(--border-color);
+    background: var(--surface-muted);
+    border-bottom: var(--border-width-strong) solid var(--border-color);
+    border-right: var(--table-cell-border) solid var(--border-color);
     padding: 8px;
     text-align: left;
-    text-transform: uppercase;
-    font-weight: 900;
+    text-transform: var(--label-transform);
+    letter-spacing: var(--label-tracking);
+    font-weight: var(--weight-heading);
 }
 
 .data-table td,
 .generic-table td {
-    border-bottom: 1px solid var(--border-color);
-    border-right: 1px solid var(--border-color);
+    border-bottom: var(--border-width) solid var(--border-color);
+    border-right: var(--table-cell-border) solid var(--border-color);
     padding: 6px 8px;
 }
 
 .data-table tr:hover td,
 .generic-table tr:hover td {
-    background-color: var(--primary-color);
-    color: var(--primary-text);
+    background-color: var(--row-hover-bg);
+    color: var(--row-hover-text);
 }
 
 /* Page controls of a table showing one page of a larger set of rows */
@@ -387,16 +329,18 @@ input:focus {
 
 .pagination-btn {
     background: none;
-    border: 1px solid var(--border-color);
+    border: var(--border-width) solid var(--border-color);
+    border-radius: var(--radius);
     color: var(--text-color);
     cursor: pointer;
     padding: 0.25rem 0.5rem;
-    font-weight: bold;
+    font-family: var(--font-ui);
+    font-weight: var(--weight-strong);
 }
 
 .pagination-btn:hover:not([disabled]) {
-    background: var(--primary-color);
-    color: var(--primary-text);
+    background: var(--row-hover-bg);
+    color: var(--row-hover-text);
 }
 
 .pagination-btn[disabled] {
@@ -425,6 +369,11 @@ map-view {
     width: 100%;
 }
 
+/* Health View */
+.health-nav {
+    margin-bottom: 1rem;
+}
+
 /* Finance View */
 .finance-dashboard {
     display: grid;
@@ -438,38 +387,41 @@ map-view {
 .import-card,
 .day-card {
     background: var(--card-bg);
-    padding: 0;
-    border: none;
-    margin-bottom: 0;
-    border-bottom: 1px solid var(--border-color);
+    padding: var(--card-padding);
+    border: var(--card-border-width) solid var(--border-color);
+    border-bottom: var(--border-width) solid var(--border-color);
+    border-radius: var(--card-radius);
+    box-shadow: var(--card-shadow);
+    margin-bottom: var(--card-gap);
 }
 
 .card h3 {
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: var(--border-width) solid var(--border-color);
     padding-bottom: 0.5rem;
     margin-bottom: 0.5rem;
-    text-transform: uppercase;
+    text-transform: var(--label-transform);
+    letter-spacing: var(--label-tracking);
     font-size: 0.9rem;
 }
 
 .amount {
     font-size: 1.5rem;
-    font-weight: 900;
-    font-family: 'Courier New', Courier, monospace;
+    font-weight: var(--weight-heading);
+    font-family: var(--font-mono);
 }
 
 /* Modals */
 .modal-overlay {
-    background: rgba(0, 0, 0, 0.7);
+    background: var(--overlay-bg);
     backdrop-filter: blur(2px);
-    /* Slight blur for modern touch effectively used in retro */
 }
 
 .modal-content {
-    background: var(--bg-color);
+    background: var(--card-bg);
     padding: 1rem;
-    border: 2px solid var(--border-color);
-    border-radius: 0;
+    border: var(--border-width-strong) solid var(--border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-pop);
 }
 
 .close-modal {
@@ -478,10 +430,10 @@ map-view {
     padding: 0.5rem 1rem;
     background: var(--primary-color);
     color: var(--primary-text);
-    border-left: 1px solid var(--border-color);
-    border-bottom: 1px solid var(--border-color);
-    font-family: monospace;
-    font-weight: bold;
+    border-left: var(--border-width) solid var(--border-color);
+    border-bottom: var(--border-width) solid var(--border-color);
+    font-family: var(--font-ui);
+    font-weight: var(--weight-strong);
 }
 
 .close-modal:hover {
@@ -501,8 +453,8 @@ map-view {
 
 #timeline-stats {
     font-size: 0.8rem;
-    text-transform: uppercase;
-    opacity: 0.7;
+    text-transform: var(--label-transform);
+    color: var(--text-muted);
 }
 
 /* Marks the end of the loaded days: scrolling to it loads the next batch */
@@ -510,8 +462,8 @@ map-view {
     padding: 1rem;
     text-align: center;
     font-size: 0.8rem;
-    text-transform: uppercase;
-    opacity: 0.7;
+    text-transform: var(--label-transform);
+    color: var(--text-muted);
     overflow-anchor: none;
 }
 
@@ -523,13 +475,14 @@ map-view {
 }
 
 .timeline-content .no-data {
-    border: 1px dashed var(--border-color);
+    border: var(--border-width) dashed var(--border-color);
+    border-radius: var(--radius);
     padding: 1rem;
     text-align: center;
 }
 
 .timeline-item {
-    border-left: 2px solid var(--border-color);
+    border-left: var(--border-width-strong) solid var(--border-color);
     padding-left: 1rem;
     position: relative;
     margin-left: 0.5rem;
@@ -543,15 +496,17 @@ map-view {
     width: 10px;
     height: 10px;
     background: var(--primary-color);
-    border: 1px solid var(--border-color);
+    border: var(--border-width) solid var(--border-color);
+    border-radius: var(--radius-pill);
 }
 
 .day-header {
-    background: var(--nav-bg);
-    border-bottom: 1px solid var(--border-color);
+    background: var(--day-header-bg);
+    border-bottom: var(--border-width) solid var(--border-color);
     padding: 0.75rem;
-    font-weight: 900;
-    text-transform: uppercase;
+    font-family: var(--font-display);
+    font-weight: var(--weight-heading);
+    text-transform: var(--label-transform);
     font-size: 1.3rem;
 }
 
@@ -620,11 +575,11 @@ map-view {
 }
 
 .stat-value {
-    font-weight: 900;
+    font-weight: var(--weight-heading);
 }
 
 .stat-sub {
-    opacity: 0.7;
+    color: var(--text-muted);
     font-size: 0.9em;
 }
 
@@ -642,12 +597,12 @@ map-view {
     margin: 0;
     padding-left: 1.25rem;
     list-style: disc;
-    opacity: 0.8;
+    color: var(--text-muted);
 }
 
 .nutrition-macros {
     margin-bottom: 0.25rem;
-    font-weight: 600;
+    font-weight: var(--weight-strong);
 }
 
 .nutrition-meal {
@@ -658,22 +613,25 @@ map-view {
     margin: 0;
     padding-left: 1.25rem;
     list-style: disc;
-    opacity: 0.8;
+    color: var(--text-muted);
 }
 
 /* Map */
 .map-overlay {
-    background: var(--bg-color);
-    border: 1px solid var(--border-color);
-    border-radius: 0;
+    background: var(--card-bg);
+    border: var(--border-width) solid var(--border-color);
+    border-radius: var(--radius);
+    box-shadow: var(--card-shadow);
 }
 
 /* Chart Card specific */
 chart-card {
     display: block;
-    border: 1px solid var(--border-color);
+    border: var(--border-width) solid var(--border-color);
+    border-radius: var(--card-radius);
+    box-shadow: var(--card-shadow);
     padding: 1rem;
-    background: var(--bg-color);
+    background: var(--card-bg);
     min-width: 0;
 }
 
@@ -704,31 +662,10 @@ chart-card canvas {
 #db-status {
     font-size: 0.8rem;
     padding: 4px 8px;
-    border: 1px solid var(--border-color);
-    background: var(--bg-color);
+    border: var(--border-width) solid var(--border-color);
+    border-radius: var(--radius);
+    background: var(--surface-muted);
     margin-right: 1rem;
-}
-
-/* Navigation Active State Line */
-.main-nav {
-    border-left: 1px solid var(--border-color);
-}
-
-/* Leaflet Overrides */
-.leaflet-bar,
-.leaflet-control-zoom-in,
-.leaflet-control-zoom-out,
-.leaflet-touch .leaflet-bar,
-.leaflet-touch .leaflet-control-zoom-in,
-.leaflet-touch .leaflet-control-zoom-out {
-    border-radius: 0 !important;
-    border: 1px solid var(--border-color) !important;
-    color: var(--text-color) !important;
-    background: var(--bg-color) !important;
-}
-
-.leaflet-container {
-    font-family: 'Courier New', Courier, monospace !important;
 }
 
 /* Grids for Charts */
@@ -763,7 +700,7 @@ chart-card canvas {
     width: 250px;
     min-width: 250px;
     height: 200px;
-    background: var(--nav-bg);
+    background: var(--surface-muted);
     position: relative;
     z-index: 1;
 }
@@ -786,8 +723,8 @@ chart-card canvas {
     align-items: center;
     z-index: 10;
     font-size: 1.5rem;
-    font-weight: bold;
-    text-transform: uppercase;
+    font-weight: var(--weight-strong);
+    text-transform: var(--label-transform);
     color: var(--text-color);
 }
 
@@ -817,8 +754,8 @@ chart-card canvas {
     padding: 0.5rem 1rem;
     background: var(--text-color);
     color: var(--bg-color);
-    font-weight: bold;
-    border: 2px solid var(--border-color);
+    font-weight: var(--weight-strong);
+    border: var(--border-width-strong) solid var(--border-color);
 }
 
 .skip-link:focus {
@@ -849,11 +786,12 @@ chart-card canvas {
     position: absolute;
     right: 15px; /* Clear the scrollbar */
     font-size: 0.7rem;
-    font-weight: bold;
+    font-weight: var(--weight-strong);
     color: var(--text-color);
-    background: var(--bg-color);
+    background: var(--card-bg);
     padding: 2px 4px;
-    border: 1px solid var(--border-color);
+    border: var(--border-width) solid var(--border-color);
+    border-radius: var(--radius);
     cursor: pointer;
     pointer-events: auto;
     transform: translateY(-50%);
@@ -864,14 +802,14 @@ chart-card canvas {
 
 .scale-marker:hover {
     opacity: 1;
-    background: var(--primary-color);
-    color: var(--primary-text);
+    background: var(--row-hover-bg);
+    color: var(--row-hover-text);
     z-index: 1000;
 }
 
 .scale-marker.major {
-    font-weight: 900;
-    border-width: 2px;
+    font-weight: var(--weight-heading);
+    border-width: var(--border-width-strong);
     right: 15px;
 }
 
@@ -881,76 +819,81 @@ chart-card canvas {
     background: var(--primary-color);
     color: var(--primary-text);
     padding: 4px 8px;
-    font-weight: bold;
-    border: 2px solid var(--border-color);
+    font-weight: var(--weight-strong);
+    border: var(--border-width-strong) solid var(--border-color);
+    border-radius: var(--radius);
     z-index: 10001;
     pointer-events: none;
     display: none; /* Hidden by default */
     white-space: nowrap;
-    box-shadow: 4px 4px 0 rgba(0,0,0,0.2);
+    box-shadow: var(--shadow-pop);
 }
 
 /* Note Component Styles */
 .day-notes-section {
     margin-top: 1rem;
     padding: 0.75rem;
-    border: 1px dashed var(--border-color);
-    background: var(--nav-bg);
+    border: var(--border-width) dashed var(--border-color);
+    border-radius: var(--radius);
+    background: var(--surface-muted);
 }
+
 .day-notes-header {
-    font-weight: bold;
+    font-weight: var(--weight-strong);
     font-size: 0.85rem;
     margin-bottom: 0.5rem;
-    text-transform: uppercase;
+    text-transform: var(--label-transform);
 }
+
 .day-notes-list {
     list-style: none;
     padding: 0;
     margin: 0;
 }
+
 .day-notes-list li {
     font-size: 0.85rem;
     padding: 0.2rem 0;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    border-bottom: 1px solid var(--hairline-color);
 }
-[data-theme="dark"] .day-notes-list li {
-    border-bottom-color: rgba(255, 255, 255, 0.05);
-}
+
 .day-notes-list li:last-child {
     border-bottom: none;
 }
+
 .day-note-type {
-    font-weight: bold;
+    font-weight: var(--weight-strong);
     color: var(--secondary-color);
 }
+
 .day-note-content {
     font-style: italic;
 }
+
 .timeline-inline-note {
     font-style: italic;
     color: var(--note-inline-color);
 }
 
 /* Chart Note Hover Banner */
-chart-card .chart-container {
-    position: relative;
-}
 .chart-note-hover {
     position: absolute;
     top: 35px;
     right: 10px;
     background: var(--note-bg);
-    border: 2px solid var(--note-color);
+    border: var(--border-width-strong) solid var(--note-color);
+    border-radius: var(--radius);
     color: var(--note-text);
     padding: 6px 12px;
     font-size: 0.8rem;
-    font-weight: bold;
+    font-weight: var(--weight-strong);
     z-index: 10;
     max-width: 250px;
-    box-shadow: 4px 4px 0 rgba(0,0,0,0.15);
+    box-shadow: var(--shadow-pop);
     white-space: normal;
     word-wrap: break-word;
 }
+
 /* Add Row form (Explore and Add data section) */
 .add-row-form {
     display: grid;
@@ -961,7 +904,7 @@ chart-card .chart-container {
 }
 
 .add-row-form label {
-    font-weight: bold;
+    font-weight: var(--weight-strong);
     font-size: 0.85rem;
 }
 

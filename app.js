@@ -17,11 +17,28 @@ import './src/components/data-view/data-view.js';
 
 // Main App Entry Point
 
+// Visual themes in themes/*.css. The first one is the default.
+const SKINS = ['pixel', 'cozy'];
+
+// Light/dark preference. 'system' follows the OS and is stored as no value at all.
+const APPEARANCES = ['system', 'light', 'dark'];
+
+function systemTheme() {
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
+function storedAppearance() {
+    const stored = localStorage.getItem('theme');
+    return stored === 'light' || stored === 'dark' ? stored : 'system';
+}
+
 const state = {
     // db is now managed by dbService, but we might keep track of loaded status here
     isDbLoaded: false,
     currentView: 'map',
-    theme: localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'),
+    appearance: storedAppearance(),
+    theme: storedAppearance() === 'system' ? systemTheme() : storedAppearance(),
+    skin: SKINS.includes(localStorage.getItem('skin')) ? localStorage.getItem('skin') : SKINS[0],
     isDirty: false,
     isDirty: false,
     lastSavedTime: null,
@@ -32,21 +49,21 @@ const state = {
 
 // DOM Elements
 const elements = {
-    themeToggle: document.getElementById('theme-toggle'),
     viewContainer: document.getElementById('view-container'),
     navButtons: document.querySelectorAll('.nav-btn'),
     importDataBtn: document.getElementById('import-data-btn'),
     statusIndicator: document.getElementById('db-status'),
-    iconSun: document.querySelector('.icon-sun'),
-    statusIndicator: document.getElementById('db-status'),
-    iconSun: document.querySelector('.icon-sun'),
-    iconMoon: document.querySelector('.icon-moon'),
-    datePicker: document.getElementById('global-date-picker')
+    datePicker: document.getElementById('global-date-picker'),
+    settingsPanel: document.getElementById('settings-panel'),
+    themeSelect: document.getElementById('theme-select'),
+    appearanceSelect: document.getElementById('appearance-select'),
+    themeStylesheet: document.getElementById('theme-stylesheet')
 };
 
 // Initialization
 async function init() {
-    applyTheme(state.theme);
+    applySkin(state.skin);
+    applyAppearance(state.appearance);
 
     // Initialize Date Picker
     if (elements.datePicker) {
@@ -216,16 +233,26 @@ async function handleAutoSaveOpen() {
 
 
 function setupEventListeners() {
-    // Theme Toggle
-    elements.themeToggle.addEventListener('click', () => {
-        state.theme = state.theme === 'light' ? 'dark' : 'light';
-        localStorage.setItem('theme', state.theme);
-        applyTheme(state.theme);
-    });
+    // Settings: theme (skin) selection
+    if (elements.themeSelect) {
+        elements.themeSelect.addEventListener('change', (e) => {
+            const skin = SKINS.includes(e.target.value) ? e.target.value : SKINS[0];
+            state.skin = skin;
+            localStorage.setItem('skin', skin);
+            applySkin(skin);
+        });
+    }
+
+    // Settings: light / dark / system appearance
+    if (elements.appearanceSelect) {
+        elements.appearanceSelect.addEventListener('change', (e) => {
+            applyAppearance(APPEARANCES.includes(e.target.value) ? e.target.value : 'system');
+        });
+    }
 
     // System Theme Listener because why not
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
-        if (!localStorage.getItem('theme')) {
+        if (state.appearance === 'system') {
             state.theme = e.matches ? 'dark' : 'light';
             applyTheme(state.theme);
         }
@@ -320,15 +347,50 @@ function setupEventListeners() {
     }
 }
 
+// Swaps the themes/*.css stylesheet. Charts read their palette from CSS
+// variables at draw time, so the view is re-rendered once the new one is live.
+function applySkin(skin) {
+    document.documentElement.setAttribute('data-skin', skin);
+
+    if (elements.themeSelect) {
+        elements.themeSelect.value = skin;
+    }
+
+    const href = `themes/${skin}.css`;
+    if (!elements.themeStylesheet || elements.themeStylesheet.getAttribute('href') === href) {
+        return;
+    }
+
+    elements.themeStylesheet.addEventListener('load', () => {
+        applyTheme(state.theme);
+        // Re-run routing so the view and its subview redraw with the new palette
+        state.currentView = null;
+        handleRouting();
+    }, { once: true });
+    elements.themeStylesheet.setAttribute('href', href);
+}
+
+// 'system' is stored as the absence of a preference, so the app keeps
+// following the OS after a reload.
+function applyAppearance(appearance) {
+    state.appearance = appearance;
+
+    if (appearance === 'system') {
+        localStorage.removeItem('theme');
+    } else {
+        localStorage.setItem('theme', appearance);
+    }
+
+    if (elements.appearanceSelect) {
+        elements.appearanceSelect.value = appearance;
+    }
+
+    state.theme = appearance === 'system' ? systemTheme() : appearance;
+    applyTheme(state.theme);
+}
+
 function applyTheme(theme) {
     document.documentElement.setAttribute('data-theme', theme);
-    if (theme === 'dark') {
-        elements.iconSun.classList.add('hidden');
-        elements.iconMoon.classList.remove('hidden');
-    } else {
-        elements.iconSun.classList.remove('hidden');
-        elements.iconMoon.classList.add('hidden');
-    }
 
     // Notify current view if it supports theme updates
     if (state.currentViewInstance && typeof state.currentViewInstance.updateTheme === 'function') {

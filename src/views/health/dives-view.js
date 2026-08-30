@@ -200,7 +200,7 @@ export class HealthDivesView extends DataView {
                     font-weight: bold;
                     cursor: pointer;
                     font-size: 0.85rem;
-                    text-transform: uppercase;
+                    text-transform: var(--label-transform);
                     transition: all 0.2s;
                 }
 
@@ -224,7 +224,7 @@ export class HealthDivesView extends DataView {
                 
                 .dives-filter-group label {
                     font-size: 0.75rem;
-                    text-transform: uppercase;
+                    text-transform: var(--label-transform);
                     opacity: 0.8;
                     font-weight: bold;
                 }
@@ -261,7 +261,7 @@ export class HealthDivesView extends DataView {
                 .dives-card h3 {
                     margin: 0;
                     font-size: 0.95rem;
-                    text-transform: uppercase;
+                    text-transform: var(--label-transform);
                     border-bottom: 1px solid var(--border-color);
                     padding-bottom: 0.5rem;
                     letter-spacing: 0.05em;
@@ -310,14 +310,14 @@ export class HealthDivesView extends DataView {
                 
                 .stat-lbl-lg {
                     font-size: 0.85rem;
-                    text-transform: uppercase;
+                    text-transform: var(--label-transform);
                     opacity: 0.8;
                     margin-bottom: 0.25rem;
                 }
                 
                 .stat-lbl-sm {
                     font-size: 0.7rem;
-                    text-transform: uppercase;
+                    text-transform: var(--label-transform);
                     opacity: 0.7;
                     margin-bottom: 0.15rem;
                 }
@@ -328,7 +328,7 @@ export class HealthDivesView extends DataView {
                     height: 200px;
                 }
                 
-                /* .table-pagination and .pagination-btn come from style.css */
+                /* .table-pagination and .pagination-btn come from app.css */
 
                 .mini-table {
                     width: 100%;

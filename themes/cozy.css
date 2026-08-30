@@ -1,0 +1,314 @@
+/* themes/cozy.css — a warm, quiet theme in the spirit of Anthropic / Notion.
+ *
+ * Cream paper, clay accent, humanist sans for the UI and a serif for the
+ * headings that carry meaning (the app title, day dates). Soft 1px rules,
+ * gentle corners, shadows instead of hard borders.
+ * Layout lives in app.css; this file sets tokens plus a few theme ornaments.
+ */
+
+:root {
+    /* Surfaces & text */
+    --bg-color: #faf9f7;
+    --text-color: #1f1e1d;
+    --text-muted: #6b6862;
+    --nav-bg: #f2f0eb;
+    --surface-muted: #f2f0eb;
+    --card-bg: #ffffff;
+    --border-color: #e5e1d8;
+    --hairline-color: rgba(31, 30, 29, 0.07);
+
+    /* Accents: clay, slate and gold */
+    --primary-color: #c96442;
+    --primary-text: #ffffff;
+    --primary-border: #c96442;
+    --secondary-color: #5e7a8f;
+    --accent-color: #b08968;
+
+    /* States */
+    --hover-surface: #f2f0eb;
+    --row-hover-bg: #f7f5f1;
+    --row-hover-text: inherit;
+    --nav-active-bg: #eeebe4;
+    --nav-active-text: #1f1e1d;
+    --focus-color: #c96442;
+    --scrollbar-thumb: #d9d4c8;
+    --overlay-bg: rgba(31, 30, 29, 0.4);
+
+    /* Chart palette: muted earth tones that sit together calmly */
+    --chart-red: #c1584a;
+    --chart-green: #7d8f5a;
+    --chart-blue: #5e7a8f;
+    --chart-cyan: #4f9d8b;
+    --chart-magenta: #a3719b;
+    --chart-yellow: #d4a72c;
+    --chart-orange: #d97757;
+
+    /* Notes */
+    --note-color: #c08a3e;
+    --note-bg: #fbf3e4;
+    --note-text: #6b4a16;
+    --note-inline-color: #a3701f;
+
+    /* Type */
+    --font-ui: ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter,
+        'Helvetica Neue', Arial, sans-serif;
+    --font-display: ui-serif, Georgia, 'Iowan Old Style', 'Times New Roman', serif;
+    --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+    --font-size-base: 15px;
+    --line-height: 1.5;
+    --weight-heading: 600;
+    --weight-strong: 500;
+    --label-transform: none;
+    --label-tracking: normal;
+
+    /* Shape: rounded, hairline, softly shadowed */
+    --radius: 6px;
+    --radius-lg: 12px;
+    --radius-pill: 999px;
+    --border-width: 1px;
+    --border-width-strong: 1px;
+    --table-cell-border: 0;
+    --card-shadow: 0 1px 2px rgba(31, 30, 29, 0.05), 0 1px 3px rgba(31, 30, 29, 0.04);
+    --shadow-pop: 0 8px 24px rgba(31, 30, 29, 0.14);
+
+    /* Cards float as panels rather than sitting flush */
+    --card-padding: 1rem;
+    --card-border-width: 1px;
+    --card-radius: 10px;
+    --card-gap: 0.75rem;
+    --day-header-bg: transparent;
+}
+
+[data-theme="dark"] {
+    --bg-color: #1a1917;
+    --text-color: #edeae4;
+    --text-muted: #a19c93;
+    --nav-bg: #232220;
+    --surface-muted: #232220;
+    --card-bg: #211f1d;
+    --border-color: #37342f;
+    --hairline-color: rgba(255, 255, 255, 0.07);
+
+    --primary-color: #d97757;
+    --primary-text: #1a1917;
+    --primary-border: #d97757;
+    --secondary-color: #8fb0c7;
+    --accent-color: #c9a37e;
+
+    --hover-surface: #2a2825;
+    --row-hover-bg: #2a2825;
+    --row-hover-text: inherit;
+    --nav-active-bg: #2f2c28;
+    --nav-active-text: #f4f1ec;
+    --focus-color: #d97757;
+    --scrollbar-thumb: #45413b;
+    --overlay-bg: rgba(0, 0, 0, 0.6);
+
+    --chart-red: #d4736a;
+    --chart-green: #9cad7a;
+    --chart-blue: #8fb0c7;
+    --chart-cyan: #6fbfa9;
+    --chart-magenta: #c093ba;
+    --chart-yellow: #e0be5c;
+    --chart-orange: #e8916c;
+
+    --note-color: #d9a441;
+    --note-bg: #3a2f1c;
+    --note-text: #f2dfae;
+    --note-inline-color: #d9a441;
+
+    --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-pop: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+/* Slim, borderless scrollbars that fade into the page */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+    border-left: none;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    border-radius: var(--radius-pill);
+}
+
+::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
+/* Header: a quiet rule, a serif wordmark */
+.app-header {
+    background-color: var(--bg-color);
+}
+
+.header-left h1 {
+    letter-spacing: -0.01em;
+    font-size: 1.05rem;
+}
+
+/* Nav items are pills centred in the bar, not full-height tabs */
+.main-nav {
+    gap: 2px;
+    align-items: center;
+}
+
+.nav-btn {
+    height: auto;
+    padding: 6px 12px;
+    border-radius: var(--radius);
+    color: var(--text-muted);
+    transition: background-color 0.12s ease, color 0.12s ease;
+}
+
+.nav-btn:hover {
+    color: var(--text-color);
+}
+
+.nav-btn.active {
+    color: var(--text-color);
+    font-weight: 600;
+}
+
+/* Controls: soft surfaces, no press-shift */
+.primary-btn,
+.secondary-btn,
+.icon-btn {
+    background: var(--card-bg);
+    box-shadow: 0 1px 2px rgba(31, 30, 29, 0.04);
+    transition: background-color 0.12s ease, border-color 0.12s ease;
+}
+
+.primary-btn:hover {
+    background-color: #b4573a;
+}
+
+[data-theme="dark"] .primary-btn:hover {
+    background-color: #e08a6c;
+}
+
+.icon-btn:hover {
+    background-color: var(--hover-surface);
+}
+
+.select-input,
+.date-input,
+.file-input,
+input[type="text"],
+input[type="number"],
+input[type="date"],
+select {
+    box-shadow: inset 0 1px 2px rgba(31, 30, 29, 0.04);
+}
+
+/* Tables read as rows of text, ruled only where a rule helps */
+.data-table,
+.generic-table {
+    border: none;
+}
+
+.data-table th,
+.generic-table th {
+    background: transparent;
+    border-bottom: 1px solid var(--border-color);
+    border-right: none;
+    color: var(--text-muted);
+    font-weight: 500;
+    font-size: 0.8rem;
+}
+
+.data-table td,
+.generic-table td {
+    border-bottom: 1px solid var(--hairline-color);
+    border-right: none;
+    padding: 8px;
+}
+
+/* Cards: floating panels, headings without the rule underneath */
+.card h3 {
+    border-bottom: none;
+    padding-bottom: 0;
+    margin-bottom: 0.25rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    font-size: 0.85rem;
+}
+
+.amount {
+    font-family: var(--font-ui);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+}
+
+/* Day headings are the editorial moment: serif, no banner */
+.day-header {
+    border-bottom: 1px solid var(--hairline-color);
+    font-size: 1.25rem;
+    letter-spacing: -0.01em;
+}
+
+.day-map-container {
+    border-radius: var(--radius);
+    overflow: hidden;
+}
+
+/* Notes: a tinted card rather than a dashed box */
+.day-notes-section {
+    border-style: solid;
+    border-color: var(--note-color);
+    background: var(--note-bg);
+    color: var(--note-text);
+}
+
+.timeline-content .no-data,
+.placeholder-message {
+    border-color: var(--border-color);
+    color: var(--text-muted);
+}
+
+/* Timeline scale markers sit lighter over the content */
+.scale-marker {
+    opacity: 0.55;
+    box-shadow: var(--card-shadow);
+}
+
+.scale-marker:hover {
+    background: var(--primary-color);
+    color: var(--primary-text);
+    border-color: var(--primary-color);
+}
+
+#timeline-date-indicator {
+    border-color: var(--primary-color);
+}
+
+/* Leaflet Overrides */
+.leaflet-bar,
+.leaflet-control-zoom-in,
+.leaflet-control-zoom-out,
+.leaflet-touch .leaflet-bar,
+.leaflet-touch .leaflet-control-zoom-in,
+.leaflet-touch .leaflet-control-zoom-out {
+    border-radius: var(--radius) !important;
+    border: 1px solid var(--border-color) !important;
+    color: var(--text-color) !important;
+    background: var(--card-bg) !important;
+    box-shadow: var(--card-shadow);
+}
+
+.leaflet-container {
+    font-family: var(--font-ui) !important;
+}
+
+/* The pixel-art icons are heavy black artwork; ease them onto warm paper */
+.icon,
+.day-notes-header::before,
+.timeline-inline-note::before {
+    opacity: 0.75;
+}
