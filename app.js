@@ -18,7 +18,7 @@ import './src/components/data-view/data-view.js';
 // Main App Entry Point
 
 // Visual themes in themes/*.css. The first one is the default.
-const SKINS = ['pixel', 'cozy'];
+const SKINS = ['cozy', 'pixel'];
 
 // Light/dark preference. 'system' follows the OS and is stored as no value at all.
 const APPEARANCES = ['system', 'light', 'dark'];

@@ -90,8 +90,8 @@ node cli.js import demo.sqlite data-samples
 *   **Pure CSS**: Use classes and plain CSS. No Tailwind or shadcn/ui.
 *   **Modern Features**: Use CSS variables, color functions, etc.
 *   **Clean Code**: Maintain reusable CSS and avoid presentational class names (e.g., no "centered").
-*   **Layout vs. theme**: `app.css` owns layout and structure and reads every colour, font, border, radius and shadow from a CSS variable. A theme in `themes/` (`pixel.css`, `cozy.css`) defines those variables, plus the few ornaments unique to it. New rules go in `app.css` with tokens; hard-coded colours or fonts outside a theme are a bug.
-*   **Themes**: The header gear opens the settings popover, holding the theme (`pixel`, `cozy`) and the light / dark / system appearance. Each theme covers both appearances via `[data-theme="dark"]`. Choices persist in `localStorage` (`skin`, and `theme` — absent means follow the system).
+*   **Layout vs. theme**: `app.css` owns layout and structure and reads every colour, font, border, radius and shadow from a CSS variable. A theme in `themes/` (`cozy.css`, `pixel.css`) defines those variables, plus the few ornaments unique to it. New rules go in `app.css` with tokens; hard-coded colours or fonts outside a theme are a bug.
+*   **Themes**: The header gear opens the settings popover, holding the theme (`cozy`, the default, or `pixel`) and the light / dark / system appearance. Each theme covers both appearances via `[data-theme="dark"]`. Choices persist in `localStorage` (`skin`, and `theme` — absent means follow the system).
 
 ### Database
 *   **Schema**: Expected tables and columns are documented in [docs/schema.md](docs/schema.md).
