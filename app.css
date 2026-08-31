@@ -43,6 +43,16 @@
     padding: 0;
 }
 
+/* Tells the browser which appearance its own widgets should render in: without
+   it the date input's calendar icon stays black on a dark background. */
+:root {
+    color-scheme: light;
+}
+
+[data-theme="dark"] {
+    color-scheme: dark;
+}
+
 body {
     background-color: var(--bg-color);
     color: var(--text-color);
@@ -660,12 +670,39 @@ chart-card canvas {
 
 /* Status Indicator */
 #db-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
     font-size: 0.8rem;
     padding: 4px 8px;
     border: var(--border-width) solid var(--border-color);
     border-radius: var(--radius);
     background: var(--surface-muted);
     margin-right: 1rem;
+}
+
+/* With no database, or nothing unsaved, the chip has no content: show nothing
+   rather than an empty box. */
+#db-status:empty {
+    display: none;
+}
+
+/* Compact button inside the status chip */
+.btn-small {
+    height: 22px;
+    padding: 0 0.5rem;
+    border: var(--border-width) solid var(--primary-border, var(--border-color));
+    border-radius: var(--radius);
+    background: var(--primary-color);
+    color: var(--primary-text);
+    font-family: var(--font-ui);
+    font-size: 0.75rem;
+    font-weight: var(--weight-strong);
+    text-transform: var(--label-transform);
+    letter-spacing: var(--label-tracking);
+    line-height: 1;
+    cursor: pointer;
 }
 
 /* Grids for Charts */

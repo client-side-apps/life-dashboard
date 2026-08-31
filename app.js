@@ -110,7 +110,7 @@ function updateStatus() {
         const button = document.createElement('button');
         button.id = 'manual-save-btn';
         button.className = 'btn-small';
-        button.textContent = 'SAVE';
+        button.textContent = 'Save';
         statusEl.append(label, button);
         return;
     }
